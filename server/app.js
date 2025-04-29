@@ -23,13 +23,13 @@ app.get("/", (req, res) => {
 
 const routes = require("./routes/userRoutes/userRoutes");
 const cartRoutes = require("./routes/cartRoutes/cartRoutes");
-const productRoutes = require("./routes/productRoutes/");
-// const orderRoutes = require("./routes/orderRoutes/orderRoutes");
+const productRoutes = require("./routes/productRoutes/productRoute.js");
+const orderRoutes = require("./routes/orderRoutes");
 
 app.use("/user",routes);
-// app.use("/product",productRoutes);
+app.use("/product",productRoutes);
 app.use("/cart",cartRoutes);
-// app.use("/orders", orderRoutes);
+app.use("/order", orderRoutes);
 
 
 

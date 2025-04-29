@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema({
   profilePicture: { type: String, default: "" },// URL to the profile image
   address: [
     {
-      label: { type: String, default: "Home" }, // Home, Work, etc.
+      label: { type: String, default: "Home" }, 
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
@@ -20,7 +20,8 @@ const UserSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Cart'
-    }
+    },
+    
   ],
   orders: [
     {

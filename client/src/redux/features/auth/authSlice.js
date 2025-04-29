@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+// import { updateUserData } from "../../../../../server/controllers/userController";
 
 const initialState = {
   user: JSON.parse(localStorage.getItem("user")) || null,
@@ -21,6 +22,11 @@ const authSlice = createSlice({
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
     },
+    
+    updateUserProfile: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+    },
+
     userLoggedOut: (state) => {
       state.user = null;
       state.token = null;
@@ -33,5 +39,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { userLoggedIn, userLoggedOut } = authSlice.actions;
+export const { userLoggedIn, updateUserProfile, userLoggedOut } = authSlice.actions;
 export default authSlice.reducer;

@@ -49,14 +49,13 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-
         // ❌ Validate input fields
         if (!email || !password) {
             return res.status(400).json({ error: "Email and password are required" });
         }
 
         // 🔍 Check if user exists
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select("+password"); // Fetch password to compare
         if (!user) {
             return res.status(400).json({ error: "User not found" });
         }
@@ -67,18 +66,17 @@ const login = async (req, res) => {
             return res.status(400).json({ error: "Invalid credentials" });
         }
 
+         // After comparing password, fetch user again without password
+         const userWithoutPassword = await User.findOne({ email }).select("-password");
+
         // JWT setUp
-        const token = generateToken(res, user); // ✅ capture the returned token
+        const token = generateToken(res, userWithoutPassword); // ✅ capture the returned token
 
         res.status(200).json({
             success: true,
-            message: `Welcome ${user.name} `,
+            message: `Welcome ${userWithoutPassword.name} `,
             token, // ✅ Now it's defined
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-            },
+            user:userWithoutPassword,
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -111,30 +109,34 @@ const profile = async (req, res) => {
         console.log(useremail);
 
     } catch (error) {
-        
+
     }
 }
 
 const updateUser = async (req, res) => {
     try {
-        const userId = req.params.id;
-        const updateData = req.body;
+        console.log(req.body,"body");
+        
+        const { userId, newAddress } = req.body;
 
-        const updatedUser = await User.findByIdAndUpdate(
+        const user = await User.findByIdAndUpdate(
             userId,
-            updateData,
-            { new: true }
+            { $push: { address: newAddress } },  // address is correct here
+            { new: true },
         );
+        console.log("updatedUser:", user);
+
         res.status(200).json({
             success: true,
-            updatedUser: updatedUser,
-        }); console.log("updatedUser", updatedUser);
+            user,
+        });
 
     } catch (error) {
         console.error("Error updating user:", error);
         res.status(500).json({ message: "Something went wrong" });
     }
-}
+};
+
 
 module.exports = {
     register,

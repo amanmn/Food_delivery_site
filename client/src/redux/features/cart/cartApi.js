@@ -6,6 +6,7 @@ export const cartApi = createApi({
   reducerPath: "cartApi",
   baseQuery: fetchBaseQuery({
     baseUrl: CART_API,
+    credentials: "include",
     prepareHeaders: (headers) => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -23,12 +24,20 @@ export const cartApi = createApi({
       }),
     }),
     getCartItems: builder.query({
-        query: () => ({
-          url: "get",
-          method: "GET",
-        }),
+      query: () => "get",
+    }),
+    updateCartItem: builder.mutation({
+      query: ({ itemId, quantity }) => ({
+        url: `update/${itemId}`,
+        method: "PATCH",
+        body: { quantity },
       }),
+    }),
   }),
 });
 
-export const { useAddItemToCartMutation, useGetCartItemsQuery } = cartApi;
+export const {
+  useAddItemToCartMutation,
+  useGetCartItemsQuery,
+  useUpdateCartItemMutation,
+} = cartApi;

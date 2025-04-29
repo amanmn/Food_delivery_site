@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../../middleware/authmiddleware");
+const authMiddleware = require("../../middleware/authmiddleware");
 const {
   register,
   login,
@@ -14,13 +14,10 @@ const {
 router.post("/register", register);
 router.post("/login", login);
 
+
 // Image upload route (optional, if you're using it)
-
-router.post("/upload", verifyToken, upload.single("profileImage"), cloudinaryImg);
-
-// User profile and update
-
-router.get("/profile", verifyToken, profile);
-router.put("/update/:id", updateUser);
+router.post("/upload", authMiddleware, upload.single("profileImage"), cloudinaryImg);
+router.get("/profile", authMiddleware, profile);
+router.put("/update",authMiddleware, updateUser);
 
 module.exports = router;

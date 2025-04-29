@@ -7,7 +7,15 @@ export const authApi = createApi({
     reducerPath: "authApi",
     baseQuery: fetchBaseQuery({
         baseUrl: USER_API,
-        credentials: 'include'
+        credentials: 'include',
+        prepareHeaders: (headers, { getState }) => {
+            const token = getState().auth.token; // assuming you save token in Redux (recommended!)
+
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            return headers;
+        },
     }),
     endpoints: (builder) => ({
         registerUser: builder.mutation({
@@ -23,25 +31,27 @@ export const authApi = createApi({
                 method: "POST",
                 body: formData
             }),
-            async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-                try {
-                    const result = await queryFulfilled;
-                    dispatch(userLoggedIn({ user: result.data.user }))
-                } catch (error) {
-                    console.log("Login failed", error);
-                }
-            }
+        }),
+        updateUserData: builder.mutation({
+            query: ({userId, newAddress}) => ({
+                url: "update",
+                method: "PUT",
+                body: { userId, newAddress }
+            })
         }),
         loadUser: builder.query({
             query: () => ({
                 url: "profile",
                 method: "GET"
-            })
-        })
+            }),
+                        transformResponse: (response) => response.user, // ensure the user data is returned correctly
+
+        }),
     })
 })
 export const {
     useRegisterUserMutation,
+    useUpdateUserDataMutation,
     useLoginUserMutation,
     useLoadUserQuery
 } = authApi
