@@ -23,6 +23,8 @@ export const orderApi = createApi({
                 method: "POST",
                 body: orderData,
             }),
+            invalidatesTags: ["Cart", "Orders", "User"], // ensure state refetch
+
         }),
         getOrderItems: builder.query({
             query: () => "get",

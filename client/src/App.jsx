@@ -1,57 +1,59 @@
-import { lazy, Suspense } from "react";  //lazy-loading for optimizing performance of the application
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
-import { useEffect } from "react";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ProtecteRoute from "./routes/ProtectedRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import { userLoggedIn } from "./redux/features/auth/authSlice";
-// import UserList from "./pages/UsersList";
-// import { fetchUserProfile } from "./redux/slices/userSlice";
+import { useLoadUserQuery } from "./redux/features/auth/authApi";
 
-const Home = lazy(() => import("./pages/Home"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Cart = lazy(() => import("./pages/Cart"));
-const OrderForm = lazy(() => import("./pages/OrderForm"));
-
+// Lazy-loaded pages
+const HomePage = lazy(() => import("./pages/Home"));
+const LoginPage = lazy(() => import("./pages/Login"));
+const RegisterPage = lazy(() => import("./pages/Register"));
+const ProfilePage = lazy(() => import("./pages/Profile"));
+const CartPage = lazy(() => import("./pages/Cart"));
+const OrderPage = lazy(() => import("./pages/OrderForm"));
 
 function App() {
   const dispatch = useDispatch();
+  const {
+    data: user,
+    isSuccess,
+    isLoading,
+  } = useLoadUserQuery();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token");
-
-    if (user && token) {
-      dispatch(userLoggedIn({ user, token }));
+    if (isSuccess && user) {
+      dispatch(userLoggedIn({ user }));
     }
-  }, [dispatch]);
-  
-  return (<>
+  }, [isSuccess, user, dispatch]);
+
+  if (isLoading) {
+    return <div className="text-center mt-10 text-lg">Loading user data...</div>;
+  }
+
+  return (
     <Router>
-    <ToastContainer />
-    <Suspense fallback={<div className="text-center mt-10 text-lg">Loading...</div>}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      <ToastContainer />
+      <Suspense fallback={<div className="text-center mt-10 text-lg">Loading page...</div>}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected Routes */}
-        <Route element={<ProtecteRoute />}>
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/order" element={<OrderForm />} />
-        </Route>
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/order" element={<OrderPage />} />
+          </Route>
 
-        {/* <Route path="/users" element={<UserList />} />    */}
-        <Route path='*' element={<Navigate to="/" />} />
-      </Routes>
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </Suspense>
     </Router>
-  </>
   );
 }
 

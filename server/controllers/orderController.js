@@ -1,32 +1,71 @@
-const Order = require("../models/Order"); // Assuming you have this
+const Order = require("../models/Order");
 const Cart = require("../models/Cart");
+const User = require("../models/User");
+const populate = require("../utils/populateUser");
+const populateUser = require("../utils/populateUser");
 
+// @desc   Place a new order
+// @route  POST /api/orders
+// @access Private
 const placeOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const { items, totalAmount, address } = req.body;
 
+    if (!items || items.length === 0) {
+      return res.status(400).json({ success: false, message: "No items to order" });
+    }
+
     const newOrder = new Order({
       user: userId,
       items,
       totalAmount,
-      deliveryAddress:address,
+      deliveryAddress: address,
       status: "Pending",
     });
 
-    console.log(newOrder,"myOOOOOOOOOOOrder");
-    
+    const savedOrder = await newOrder.save();
 
-    await newOrder.save();
+    await User.findByIdAndUpdate(userId, {
+      $push: { orders: savedOrder._id },
+    });
 
-    // Clear the cart (optional)
     await Cart.findOneAndDelete({ user: userId });
 
-    res.status(200).json({ success: true, message: "Order placed", order: newOrder });
+    res.status(200).json({
+      success: true,
+      message: "Order placed successfully",
+      order: savedOrder,
+    });
   } catch (err) {
-    console.error("Order Error:", err);
+    console.error("Error placing order:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-module.exports = { placeOrder };
+// @desc   Get all orders of a user
+// @route  GET /api/orders
+// @access Private
+const getUserOrders = async (req, res) => {
+  try {
+    const userWithOrders = await User.findById(req.user.id)
+      .populate(populateUser);
+
+    if (!userWithOrders) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      orders: userWithOrders.orders,
+    });
+  } catch (err) {
+    console.error("Error fetching user orders:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = {
+  placeOrder,
+  getUserOrders,
+};

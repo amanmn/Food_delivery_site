@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { addToCart } from "../redux/features/cart/cartSlice";
-import { useAddItemToCartMutation,useUpdateCartItemMutation } from "../redux/features/cart/cartApi";
+import { useAddItemToCartMutation, useUpdateCartItemMutation } from "../redux/features/cart/cartApi";
 import { useGetProductDataQuery } from "../redux/features/product/productApi";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Menu = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [quantities, setQuantities] = useState({});
-  const [isAdding, setIsAdding] = useState({}); // ✅ Track per item
+  const [isAdding, setIsAdding] = useState({});
+
   const [addItemToCart] = useAddItemToCartMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
@@ -18,63 +21,48 @@ const Menu = () => {
 
   const handleAddToCart = async (item) => {
     const quantity = quantities[item._id] || 1;
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      toast.error("Please login first!");
-      navigate("/login", { state: { from: location.pathname } });
-      return;
-    }
 
     try {
-      setIsAdding((prev) => ({ ...prev, [item._id]: true })); 
+      setIsAdding((prev) => ({ ...prev, [item._id]: true }));
 
       const res = await addItemToCart({ productId: item._id, quantity }).unwrap();
-      dispatch(addToCart({ ...item, quantity }));
 
+      dispatch(addToCart({ ...item, quantity }));
       toast.success("Item added to cart!");
     } catch (error) {
-      console.error("Add to cart error:", error);
+      const status = error?.status;
+      const message = error?.data?.message || "Failed to add item to cart";
 
-      const message = error?.data?.message || "Failed to add item to cart!";
-
-      toast.error(message); // ✅ Showing backend error message if exists
+      // ✅ If user is unauthorized (no cookie or expired token)
+      if (status === 401 || status === 403) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login", { state: { from: location.pathname } });
+      } else {
+        toast.error(message);
+      }
     } finally {
-
       setIsAdding((prev) => ({ ...prev, [item._id]: false }));
     }
   };
 
   const handleIncreaseQuantity = async (id) => {
     const newQuantity = (quantities[id] || 1) + 1;
+    setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
 
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: newQuantity,
-    }));
-
-    // Update in Redux store and backend
-    dispatch(updateCartItem({ itemId: id, quantity: newQuantity }));
     try {
-      await updateCartItem({ itemId: id, quantity: newQuantity }).unwrap();
-    } catch (error) {
+      toast.success(`quantity updated to ${newQuantity}`);
+    } catch {
       toast.error("Failed to update quantity!");
     }
   };
 
   const handleDecreaseQuantity = async (id) => {
     const newQuantity = Math.max(1, (quantities[id] || 1) - 1);
+    setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
 
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: newQuantity,
-    }));
-
-    // Update in Redux store and backend
-    dispatch(updateCartItem({ itemId: id, quantity: newQuantity }));
     try {
-      await updateCartItem({ itemId: id, quantity: newQuantity }).unwrap();
-    } catch (error) {
+      toast.success(`quantity updated to ${newQuantity}`);
+    } catch {
       toast.error("Failed to update quantity!");
     }
   };
@@ -107,7 +95,7 @@ const Menu = () => {
                         <div className="flex items-center justify-between mt-2">
                           <button
                             onClick={() => handleAddToCart(item)}
-                            disabled={isAdding[item._id]} // ✅ Disable specific button during adding
+                            disabled={isAdding[item._id]}
                             className="text-white bg-orange-500 hover:bg-orange-600 font-semibold px-4 py-2 rounded-lg"
                           >
                             {isAdding[item._id] ? "Adding..." : "Add to Cart"}

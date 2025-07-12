@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
@@ -26,7 +27,6 @@
     "multer": "^1.4.5-lts.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemon": "^3.1.9",
-    "portfinder": "^1.0.35",
-    "redis": "^4.7.0"
+    "portfinder": "^1.0.35"
   }
 }

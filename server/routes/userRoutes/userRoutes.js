@@ -1,23 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../../middleware/authmiddleware");
+const authMiddleware = require("../../middleware/authMiddleware");
+
 const {
   register,
   login,
+  logout,
   cloudinaryImg,
   profile,
   updateUser,
-  upload, // uploading images
+  upload,
 } = require("../../controllers/userController");
 
-// Auth routes
 router.post("/register", register);
 router.post("/login", login);
+router.get("/logout", logout);
 
-
-// Image upload route (optional, if you're using it)
-router.post("/upload", authMiddleware, upload.single("profileImage"), cloudinaryImg);
 router.get("/profile", authMiddleware, profile);
-router.put("/update",authMiddleware, updateUser);
+router.put("/update", authMiddleware, updateUser);
+
+// Optional image upload
+router.post("/upload", authMiddleware, upload.single("profileImage"), cloudinaryImg);
 
 module.exports = router;

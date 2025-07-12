@@ -1,46 +1,57 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-// import { logout } from "../redux/slices/userSlice";
 import defaultAvatar from "../utils/user.jpg";
 import Navbar from "../components/Navbar";
 import { FaPen } from "react-icons/fa";
-import axios from "axios";
-import EditProfileModal from "./profilePicture"; // adjust path if needed
-import { userLoggedOut } from "../redux/features/auth/authSlice";
-import { useLoadUserQuery } from "../redux/features/auth/authApi";
+import EditProfileModal from "./EditProfileModal";
+import {
+  userLoggedOut,
+  updateUserProfile,
+} from "../redux/features/auth/authSlice";
+import {
+  useLoadUserQuery,
+  useUpdateUserDataMutation,
+  useUploadProfileImageMutation,
+} from "../redux/features/auth/authApi";
 
 const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  const [localUser, setLocalUser] = useState(JSON.parse(localStorage.getItem("user")));
-  const [newImage, setNewImage] = useState(localUser?.profilePicture || "");
+  const { data, isLoading, refetch } = useLoadUserQuery();
+  const [updateUserData] = useUpdateUserDataMutation();
+  const [uploadProfileImage] = useUploadProfileImageMutation();
+
+  const [newImage, setNewImage] = useState(user?.profilePicture || "");
   const [previewImage, setPreviewImage] = useState("");
   const [file, setFile] = useState(null);
   const [isModified, setIsModified] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(user?.name || "");
+  const [newPhone, setNewPhone] = useState(user?.phone || "");
+  const [updatedAddress, setUpdatedAddress] = useState(user?.address || []);
 
-  const [newName, setNewName] = useState(localUser?.name || "");
-  const [newPhone, setNewPhone] = useState(localUser?.phone || "");
-  const [updatedAddress, setUpdatedAddress] = useState(localUser?.address || []);
-
-  const {data,isLoading}=useLoadUserQuery();
-  console.log(data);
-  
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (data) {
+      dispatch(updateUserProfile(data));
+      setNewImage(data.profilePicture);
+      setNewName(data.name);
+      setNewPhone(data.phone);
+      setUpdatedAddress(data.address);
+    }
+  }, [data, dispatch]);
 
   const handleLogout = () => {
     dispatch(userLoggedOut());
-    localStorage.removeItem("authToken");
     navigate("/");
   };
 
   const handleImageChange = (e) => {
     const selectedFile = e.target.files[0];
-    console.log(selectedFile);
-    
     if (selectedFile) {
       setFile(selectedFile);
       const reader = new FileReader();
@@ -64,37 +75,28 @@ const Profile = () => {
         const formData = new FormData();
         formData.append("profileImage", file);
 
-        const res = await axios.post("http://localhost:8000/user/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        imageUrl = res.data.imageUrl;
+        const uploadResponse = await uploadProfileImage(formData).unwrap();
+        imageUrl = uploadResponse.imageUrl;
       }
 
-      const updatedProfile = {
+      const updatedData = {
         name: newName,
+        email: user.email,
         phone: newPhone,
-        profilePicture: imageUrl,
         address: updatedAddress,
-      };
-
-      await dispatch(updateUserProfile({ userId: localUser._id, updatedData: updatedProfile }));
-
-      const updatedUser = {
-        ...localUser,
-        ...updatedProfile,
         profilePicture: imageUrl,
       };
 
-      setLocalUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser)); // Update localStorage
-      setNewImage(imageUrl);
+      const response = await updateUserData(updatedData).unwrap();
+
+      dispatch(updateUserProfile(response));
+      setNewImage(response.profilePicture);
+      setPreviewImage("");
       setIsModified(false);
       alert("Profile updated successfully!");
-    } catch (error) {
-      console.error("Failed to update profile:", error);
+    } catch (err) {
+      console.error("Profile update failed:", err);
+      alert("Failed to update profile");
     }
   };
 
@@ -105,7 +107,7 @@ const Profile = () => {
       </div>
 
       <div className="pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8">
-        <div className="bg-white rounded-3xl shadow-md p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+        <div className="bg-white rounded-3xl shadow-md p-6 flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
             <img
               src={previewImage || newImage || defaultAvatar}
@@ -129,9 +131,10 @@ const Profile = () => {
           </div>
 
           <div className="text-center md:text-left flex-1">
-            <h3 className="text-gray-600 text-2xl">{localUser?.name}</h3>
-            <p className="text-gray-600 text-xl">{localUser?.email}</p>
-            <p className="text-gray-600">{localUser?.phone || "No phone number added"}</p>
+            <h3 className="text-gray-600 text-2xl">{user?.name}</h3>
+            <p className="text-gray-600 text-xl">{user?.email}</p>
+            <p className="text-gray-600">{user?.phone || "No phone number added"}</p>
+
             <div className="mt-4 flex sm:flex-col md:flex-row gap-5 justify-center md:justify-start">
               <button
                 onClick={() => setIsEditing(true)}
@@ -139,18 +142,16 @@ const Profile = () => {
               >
                 Edit Profile
               </button>
-
               <button
                 onClick={handleLogout}
                 className="bg-red-500 text-white px-6 py-2 rounded-xl hover:bg-red-600 transition"
               >
                 Logout
               </button>
-
               {isModified && (
                 <button
                   onClick={handleProfileSave}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition"
+                  className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition"
                 >
                   Save
                 </button>
@@ -162,10 +163,9 @@ const Profile = () => {
         {/* Address Section */}
         <div className="bg-white rounded-3xl shadow-md p-6 mt-8">
           <h3 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">Saved Addresses</h3>
-
-          {localUser?.address?.length > 0 ? (
+          {user?.address?.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {localUser.address.map((addr, idx) => (
+              {user.address.map((addr, idx) => (
                 <div
                   key={idx}
                   className="bg-gray-100 p-5 rounded-2xl shadow-inner border border-gray-200"
@@ -184,33 +184,32 @@ const Profile = () => {
           )}
         </div>
 
-
         {/* Edit Modal */}
         {isEditing && (
           <EditProfileModal
-          user={localUser}
-          onClose={() => setIsEditing(false)}
-          onSave={(updatedUser) => {
-            console.log("onSave triggered");
-            setLocalUser(updatedUser); // Update state with new address
-            localStorage.setItem("user", JSON.stringify(updatedUser)); // Update localStorage
-            setUpdatedAddress(updatedUser.address); // Update the address state
-            setIsEditing(false);
-            setIsModified(false);
-          }}
+            user={user}
+            onClose={() => setIsEditing(false)}
+            onSave={(updatedUser) => {
+              dispatch(updateUserProfile(updatedUser));
+              setUpdatedAddress(updatedUser.address);
+              setNewName(updatedUser.name);
+              setNewPhone(updatedUser.phone);
+              setIsModified(true);
+              setIsEditing(false);
+            }}
           />
         )}
 
         {/* Orders Section */}
         <div className="border-t border-gray-300 pt-6">
           <h3 className="text-lg font-semibold text-gray-700">My Orders</h3>
-          {localUser.orders && localUser.orders.length > 0 ? (
+          {user?.orders?.length > 0 ? (
             <ul className="space-y-3">
-              {localUser.orders.map((order) => (
+              {user.orders.map((order) => (
                 <li key={order.id} className="border border-gray-200 rounded-lg p-4">
                   <p className="text-sm text-gray-600">Order ID: {order.id}</p>
                   <p className="text-sm text-gray-600">Status: {order.status}</p>
-                  <p className="text-sm font-semibold text-gray-800">Total: ${order.total}</p>
+                  <p className="text-sm font-semibold text-gray-800">Total: ₹{order.total}</p>
                 </li>
               ))}
             </ul>
@@ -219,10 +218,8 @@ const Profile = () => {
           )}
         </div>
       </div>
-
     </div>
   );
 };
-
 
 export default Profile;

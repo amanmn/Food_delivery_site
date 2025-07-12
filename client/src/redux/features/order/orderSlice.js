@@ -8,10 +8,11 @@ const orderSlice = createSlice({
     },
     reducers: {
         placeOrder: (state, action) => {
-            const order = action.payload
-            console.log(order);
+            const newOrder = action.payload;
+            state.orderplace.push(newOrder); // Save the order in Redux
         }
+
     }
 })
-export const {orderplace} = orderSlice.actions
+export const { placeOrder } = orderSlice.actions
 export default orderSlice.reducer;

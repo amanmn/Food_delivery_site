@@ -4,11 +4,11 @@ const UserSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
-  phone: { type: String, default: "" }, 
+  phone: { type: String, default: "" },
   profilePicture: { type: String, default: "" },// URL to the profile image
   address: [
     {
-      label: { type: String, default: "Home" }, 
+      label: { type: String, default: "Home" },
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
@@ -16,22 +16,17 @@ const UserSchema = new mongoose.Schema({
       zipCode: { type: String, required: true }
     },
   ],
-  cartProducts: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Cart'
-    },
-    
-  ],
+  // ✅ Add reference to Cart
+  cart: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Cart",
+  },
+
+  // ✅ Add reference to Orders
   orders: [
     {
-      orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-      status: {
-        type: String,
-        enum: ["pending", "preparing", "out_for_delivery", "delivered"],
-        default: "pending",
-      },
-      createdAt: { type: Date, default: Date.now },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
     },
   ],
   role: {

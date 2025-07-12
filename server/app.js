@@ -1,20 +1,20 @@
 const express = require("express");
-const app = express();
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 require("dotenv").config();
-const mongoose = require('./config/db')();
+const app = express();
+app.use(express.json());
+app.use(cookieParser());
+
+const mongoose = require('./config/db.js')();
 
 // mongoose.connect();
 app.use(
   cors({
     origin: "http://localhost:5173", // your frontend
     credentials: true,
-  })
-);
+  }));
 
-app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
 
 // Default Route
 app.get("/", (req, res) => {
@@ -25,12 +25,13 @@ const routes = require("./routes/userRoutes/userRoutes");
 const cartRoutes = require("./routes/cartRoutes/cartRoutes");
 const productRoutes = require("./routes/productRoutes/productRoute.js");
 const orderRoutes = require("./routes/orderRoutes");
+const mapRoutes = require("./routes/mapRoutes.js"); 
 
 app.use("/user",routes);
 app.use("/product",productRoutes);
 app.use("/cart",cartRoutes);
 app.use("/order", orderRoutes);
-
+app.use("/map", mapRoutes); 
 
 
 // Start Server

@@ -35,16 +35,13 @@ const Login = () => {
       toast.error(loginError?.data?.message || "Login failed");
     }
 
-    if (loginIsSuccess && loginData) {
+    if (loginIsSuccess && loginData?.user) {
       toast.success("Login successful");
 
-      // Save token to localStorage
-      localStorage.setItem("token", loginData.token);
+      // ✅ No localStorage or token management
+      dispatch(userLoggedIn({ user: loginData.user }));
 
-      // Dispatch user to Redux
-      dispatch(userLoggedIn({ user: loginData.user, token: loginData.token }));
-
-      // Navigate to dashboard or home
+      // ✅ Navigate after login
       navigate("/");
     }
   }, [loginIsSuccess, loginError, loginData, dispatch, navigate]);
