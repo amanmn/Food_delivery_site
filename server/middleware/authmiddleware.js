@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User"); // ✅ Add this
+const User = require("../models/User");
 
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
@@ -10,15 +10,9 @@ const verifyToken = async (req, res, next) => {
   }
 
   try {
+    // console.log("token");
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-
-    const user = await User.findById(decoded.id).select("-password"); // ✅ Get full user
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    req.user = user; // ✅ Now you can use req.user.id, req.user.name, etc.    
+    req.user = decoded;
     next();
   } catch (error) {
     console.error("Token verification error:", error);
@@ -26,4 +20,22 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-module.exports = verifyToken;
+
+// verify admin middleware
+const adminOnly = (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access only" });
+    }
+    next();
+  } catch (err) {
+    return res.status(500).json({ message: "internal server error" });
+  }
+};
+
+
+
+module.exports = {
+  verifyToken,
+  adminOnly
+};

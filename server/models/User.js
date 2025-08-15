@@ -1,11 +1,26 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-  phone: { type: String, default: "" },
-  profilePicture: { type: String, default: "" },// URL to the profile image
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  phone: {
+    type: String,
+    default: ""
+  },
+  profilePicture: {
+    type: String,
+    default: ""  // URL to the profile image
+  },
   address: [
     {
       label: { type: String, default: "Home" },
@@ -17,10 +32,12 @@ const UserSchema = new mongoose.Schema({
     },
   ],
   // ✅ Add reference to Cart
-  cart: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Cart",
-  },
+  cart: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cart",
+    }
+  ],
 
   // ✅ Add reference to Orders
   orders: [

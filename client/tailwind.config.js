@@ -1,38 +1,30 @@
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}", // ✅ Scans all JSX/TSX files inside "src"
-    "./public/index.html" // ✅ Also include the main HTML file
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/sections/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
-
-  },
-  plugins: [],
-
-  extend: {
-    animation: {
-      'fade-in': 'fadeIn 0.9s ease-in-out',
+    screens: {
+      sm: "375px",
+      md: "768px",
+      lg: "1200px",
     },
-    keyframes: {
-      fadeIn: {
-        '0%': { opacity: 0, transform: 'scale(0.95)' },
-        '50%': { opacity: 1, transform: 'scale(1)' },
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1rem",
+        md: "2rem",
+      }
+    },
+    extend: {
+      fontFamily: {
+        sans: 'var(--font-sans)',
+        serif: 'var(--font-serif)',
       },
     },
-    theme: {
-      extend: {
-        backdropBlur: {
-          xs: '2px',
-        }
-      }
-    }
-  }
-
-
+  },
+  plugins: [],
 }
-
-
-
-

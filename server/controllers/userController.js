@@ -1,102 +1,11 @@
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const multer = require("multer");
 const cloudinary = require("../config/cloudinary");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const { generateToken } = require("../utils/generateToken");
 
 const populateUser = require("../utils/populateUser"); // if using helper
 
-// ✅ Register Controller
-const register = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: "User already exists" });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ name, email, password: hashedPassword });
-        await user.save();
-        console.log(user);
-        
-
-        res.status(201).json({
-            message: "User registered successfully",
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-            },
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-// ✅ Login Controller
-const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: "Email and password are required" });
-        }
-
-        const user = await User.findOne({ email }).select("+password");
-        if (!user) {
-            return res.status(400).json({ error: "User not found" });
-        }
-
-        const isMatched = await bcrypt.compare(password, user.password);
-        if (!isMatched) {
-            return res.status(400).json({ error: "Invalid credentials" });
-        }
-
-        user.password = undefined;
-        const token = generateToken(res, user);
-
-        // ✅ 4. Set token as HTTP-only cookie
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false, // true only in production with HTTPS
-            sameSite: "lax", // or "none" if using HTTPS and cross-origin
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-
-        // 5. Send response
-        res.status(200).json({
-            success: true,
-            message: "Login successful",
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-            },
-        });
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-// ✅ Logout Controller (Clear Cookie)
-const logout = (req, res) => {
-    res.cookie("token", "", {
-        httpOnly: true,
-        expires: new Date(0),
-        sameSite: "Strict",
-        secure: process.env.NODE_ENV === "production",
-    });
-    res.status(200).json({ message: "Logged out successfully" });
-};
 
 // ✅ Multer + Cloudinary Setup
 const storage = new CloudinaryStorage({
@@ -159,8 +68,16 @@ const updateUser = async (req, res) => {
         const updateFields = {};
         if (name) updateFields.name = name;
         if (phone) updateFields.phone = phone;
-        if (address) updateFields.address = address;
-        if (profilePicture) updateFields.profilePicture = profilePicture;
+        // address 
+        if (
+            Array.isArray(address) &&
+            address.length > 0 &&
+            Object.values(address[0]).every(value => value && value.trim() !== "")
+        ) {
+            updateFields.address = address;
+
+        } if (profilePicture) updateFields.profilePicture = profilePicture;
+        
         if (Object.keys(updateFields).length > 0) {
             updateOps.$set = updateFields;
         }
@@ -191,9 +108,6 @@ const updateUser = async (req, res) => {
 
 // ✅ Exports
 module.exports = {
-    register,
-    login,
-    logout,
     cloudinaryImg,
     profile,
     updateUser,

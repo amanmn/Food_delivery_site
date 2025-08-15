@@ -25,24 +25,24 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Just call the login function here
   const handleLogin = async (e) => {
     e.preventDefault();
-    await loginUser(formData);
+    await loginUser(formData); // Don't check loginIsSuccess here
   };
 
+  // ✅ React to login success AFTER state updates
   useEffect(() => {
-    if (loginError) {
-      toast.error(loginError?.data?.message || "Login failed");
+    if (loginIsSuccess && loginData?.user) {
+      dispatch(userLoggedIn(loginData.user)); // Update Redux with user state
+      toast.success("Login successful");
+      console.log("login successful");
+      
+      navigate("/"); // Redirect
     }
 
-    if (loginIsSuccess && loginData?.user) {
-      toast.success("Login successful");
-
-      // ✅ No localStorage or token management
-      dispatch(userLoggedIn({ user: loginData.user }));
-
-      // ✅ Navigate after login
-      navigate("/");
+    if (loginError) {
+      toast.error(loginError?.data?.message || "Login failed");
     }
   }, [loginIsSuccess, loginError, loginData, dispatch, navigate]);
 
@@ -80,7 +80,7 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-red-500 text-white text-lg font-semibold py-3 rounded-lg hover:bg-red-600 transition"
+            className="w-full bg-red-500 cursor-pointer text-white text-lg font-semibold py-3 rounded-lg hover:bg-red-600 transition"
             disabled={loginIsLoading}
           >
             {loginIsLoading ? "Logging in..." : "Login"}

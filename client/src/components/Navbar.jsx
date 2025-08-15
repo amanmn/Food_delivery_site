@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Logo from "../utils/logo.png";
 import defaultAvatar from "../utils/user.jpg";
 import Button from "./Button";
+import { useLogoutUserMutation } from "../redux/features/auth/authApi";
 import { userLoggedOut } from "../redux/features/auth/authSlice";
 import LocationModal from "../components/LocationModal";
 import { MdLocationPin } from "react-icons/md";
@@ -16,15 +17,20 @@ const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useSelector((state) => state.location.location);
+  const [logoutUser] = useLogoutUserMutation();
+
 
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    dispatch(userLoggedOut());
-    setShowDropdown(false);
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await logoutUser().unwrap();  // ✅ CALLS BACKEND
+      dispatch(userLoggedOut());  // ✅ RESET LOCAL STATE
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   const toggleDropdown = () => {
@@ -87,9 +93,9 @@ const Navbar = () => {
               />
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-50">
-                  <button onClick={() => { navigate("/profile"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">My Profile</button>
-                  <button onClick={() => { navigate("/cart"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Cart</button>
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Logout</button>
+                  <button onClick={() => { navigate("/profile"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100">My Profile</button>
+                  <button onClick={() => { navigate("/cart"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100">Cart</button>
+                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100">Logout</button>
                 </div>
               )}
             </div>

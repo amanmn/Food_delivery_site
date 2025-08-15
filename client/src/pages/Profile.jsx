@@ -5,15 +5,14 @@ import defaultAvatar from "../utils/user.jpg";
 import Navbar from "../components/Navbar";
 import { FaPen } from "react-icons/fa";
 import EditProfileModal from "./EditProfileModal";
-import {
-  userLoggedOut,
-  updateUserProfile,
-} from "../redux/features/auth/authSlice";
+import { useLogoutUserMutation } from "../redux/features/auth/authApi";
+import { userLoggedOut } from "../redux/features/auth/authSlice";
+import { updateUserProfile } from "../redux/features/user/userSlice";
 import {
   useLoadUserQuery,
   useUpdateUserDataMutation,
   useUploadProfileImageMutation,
-} from "../redux/features/auth/authApi";
+} from "../redux/features/user/userApi";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -23,7 +22,7 @@ const Profile = () => {
   const { data, isLoading, refetch } = useLoadUserQuery();
   const [updateUserData] = useUpdateUserDataMutation();
   const [uploadProfileImage] = useUploadProfileImageMutation();
-
+  const [logoutUser] = useLogoutUserMutation();
   const [newImage, setNewImage] = useState(user?.profilePicture || "");
   const [previewImage, setPreviewImage] = useState("");
   const [file, setFile] = useState(null);
@@ -45,9 +44,15 @@ const Profile = () => {
     }
   }, [data, dispatch]);
 
-  const handleLogout = () => {
-    dispatch(userLoggedOut());
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      console.log("logout clicked");
+      await logoutUser();  // ✅ CALLS BACKEND
+      dispatch(userLoggedOut());  // ✅ RESET LOCAL STATE
+      // navigate("/login");         // ✅ REDIRECT
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   const handleImageChange = (e) => {
@@ -88,6 +93,7 @@ const Profile = () => {
       };
 
       const response = await updateUserData(updatedData).unwrap();
+      console.log("response", response);
 
       dispatch(updateUserProfile(response));
       setNewImage(response.profilePicture);

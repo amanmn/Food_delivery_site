@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 // import { placeOrder } from "../../../../../server/controllers/orderController";
 
-const ORDER_API = "http://localhost:8000/order";
+const ORDER_API = "http://localhost:8000/api/order";
 
 export const orderApi = createApi({
     reducerPath: "orderApi",

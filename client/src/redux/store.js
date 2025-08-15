@@ -1,8 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import rootReducer from "./reducers/rootReducer";
+import rootReducer from "./rootReducer";
 import { authApi } from "../redux/features/auth/authApi";
-// import {userApi} from "../redux/features/user/userApi"
-import { cartApi } from "../redux/features/cart/cartApi"; 
+import { userApi } from "../redux/features/user/userApi"
+import { cartApi } from "../redux/features/cart/cartApi";
 import { productApi } from "./features/product/productApi";
 import { orderApi } from "./features/order/orderApi";
 
@@ -12,7 +12,7 @@ const store = configureStore({
     getDefaultMiddleware()
       .concat(
         authApi.middleware,
-        // userApi.middleware,
+        userApi.middleware,
         cartApi.middleware,
         productApi.middleware,
         orderApi.middleware

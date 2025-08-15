@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useUpdateUserDataMutation } from "../redux/features/auth/authApi";
+import { useUpdateUserDataMutation } from "../redux/features/user/userApi";
 import { useNavigate } from "react-router-dom";
 
 const EditProfileModal = ({ user, onClose, onSave }) => {

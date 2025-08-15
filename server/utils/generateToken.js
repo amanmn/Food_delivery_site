@@ -1,21 +1,23 @@
 const jwt = require("jsonwebtoken");
 
-const generateToken = (res, user) => {
+const generateToken = (res, user) => {  
   const token = jwt.sign(
     {
-      id: user._id,
+      id: user.id,
       email: user.email,
       name: user.name,
+      role:user.role
     },
     process.env.SECRET_KEY,
     {
-      expiresIn: "7d",
+      expiresIn: "1d",
     }
   );
-
+  
+  // ✅ Set token as HTTP-only cookie
   res.cookie("token", token, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production", // set to true in production
   });

@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { updateUserProfile } from "../redux/features/auth/authSlice";
 import { useSelector, useDispatch } from "react-redux";
 import GetAddressModel from "../components/cartAddressModel";
-import {
-  useUpdateUserDataMutation,
-} from "../redux/features/auth/authApi";
+import {updateUserProfile } from "../redux/features/user/userSlice";
+import { useLoadUserQuery,useUpdateUserDataMutation } from "../redux/features/user/userApi";
 import {
   useGetCartItemsQuery,
   useUpdateCartItemMutation,
@@ -21,6 +19,7 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  // const [loadUser] = useLoadUserQuery();
   const [updateUserData] = useUpdateUserDataMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
 
@@ -29,6 +28,7 @@ const Cart = () => {
   const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
+    // dispatch(loadUser(user));
     if (user?.address?.length === 1) {
       setSelectedAddressId(user.address[0]._id);
     }
@@ -61,8 +61,8 @@ const Cart = () => {
 
     try {
       const result = await placeOrder(orderPayload).unwrap();
-      if(result.success)
-      toast.success("Order placed successfully!");
+      if (result.success)
+        toast.success("Order placed successfully!");
       setCartItems([]);
       navigate("/");
     } catch (error) {

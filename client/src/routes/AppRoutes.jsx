@@ -4,7 +4,6 @@ import Services from "../components/Services";
 import Menu from "../components/Menu";
 import Contact from "../components/Contact";
 // import About from "../pages/About";
-// import Menu from "../pages/Menu";
 
 const AppRouter = () => {
   return (

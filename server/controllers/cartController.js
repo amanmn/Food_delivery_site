@@ -27,20 +27,33 @@ const addToCart = async (req, res) => {
         user: userId,
         items: [{ product: productId, quantity: Number(quantity) }],
       });
+
       await cart.save();
-      await User.findByIdAndUpdate(userId, { cart: cart._id });
+      try {
+        const updatedUser = await User.findByIdAndUpdate(userId, { cart: cart._id }, { new: true });
+        console.log("Updated User:", updatedUser);
+      } catch (error) {
+        console.error("Error updating user with cart:", error);
+      }
+
 
     } else {
       const existingItem = cart.items.find(item => item.product.toString() === productId);
+
       if (existingItem) {
         existingItem.quantity += Number(quantity);
       } else {
         cart.items.push({ product: productId, quantity: Number(quantity) });
       }
+      await cart.save();
+
+      console.log("Before update:", await User.findById(req.user.id));
+      await User.findByIdAndUpdate(req.user.id, { cart: cart._id });
+      console.log("After update:", await User.findById(req.user.id));
+
     }
-    await cart.save();
-    
     const populatedCart = await Cart.findById(cart._id).populate("items.product");
+    console.log(populatedCart);
 
     res.status(200).json({ success: true, message: "Item added to cart", cart: populatedCart });
   } catch (err) {
@@ -51,9 +64,12 @@ const addToCart = async (req, res) => {
 
 // Example in cart controller:
 const getUserCart = async (req, res) => {
-
-  const cart = await Cart.findOne({ user: req.user._id }).populate("items.product");
-  console.log(cart,">>>carttt");
+  const userId = req.user.id;
+  const cart = await Cart.findOne({ user: userId }).populate("items.product")
+    .populate({
+      path: "user",
+      select: "name address phone",  // ⬅️ pick required fields only
+    })
   if (!cart) {
     return res.status(404).json({ items: [] });
   }
@@ -77,6 +93,8 @@ const updateCartItem = async (req, res) => {
     }
 
     const item = cart.items.id(itemId);
+    console.log(item,"itemmmm");
+    
     if (!item) {
       return res.status(404).json({ message: "Item not found in cart" });
     }

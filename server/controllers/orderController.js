@@ -1,7 +1,6 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const User = require("../models/User");
-const populate = require("../utils/populateUser");
 const populateUser = require("../utils/populateUser");
 
 // @desc   Place a new order
