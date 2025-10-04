@@ -5,13 +5,23 @@ import {
   FaUsers,
   FaCog,
 } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 
 export default function Sidebar({ closeSidebar }) {
   return (
-    <aside className="h-full w-80 px-3 bg-gray-900 text-white">
+    <aside className="h-full w-80 px-3 bg-gray-900 text-white relative">
+      {/* Close button for mobile */}
+      <button
+        className="absolute top-4.5 bg-blue-500 cursor-pointer right-4 md:hidden text-white text-3xl focus:outline-none"
+        onClick={closeSidebar}
+      >
+        <FaTimes />
+      </button>
+
       <h2 className="text-2xl font-bold p-4 border-b border-gray-700 text-blue-500">
         Admin Dashboard
       </h2>
+
       <nav className="flex flex-col p-4 space-y-2 gap-2">
         <a
           href="#"

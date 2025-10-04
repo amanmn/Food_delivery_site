@@ -1,5 +1,3 @@
-// 1. Updated `authApi.js` to include `uploadProfileImage`
-
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$|^\/+/g, "") || "http://localhost:8000";
@@ -35,6 +33,11 @@ export const authApi = createApi({
       }),
       invalidatesTags: ["Auth"],
     }),
+    // ✅ fetch logged in user from backend
+    loadUserData: builder.query({
+      query: () => "me", // backend route: GET /api/auth/me
+      providesTags: ["Auth"],
+    }),
   }),
 });
 
@@ -42,7 +45,7 @@ export const {
   useRegisterUserMutation,
   useLoginUserMutation,
   useLogoutUserMutation,
+  useLoadUserDataQuery, // ✅ fetch user on refresh
   // useUpdateUserDataMutation,
   // useUploadProfileImageMutation,
-  // useLoadUserQuery,
 } = authApi;
