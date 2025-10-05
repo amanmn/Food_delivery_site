@@ -1,5 +1,4 @@
 const nodemailer = require("nodemailer");
-// const dotenv = require("dotenv")
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     port: 465,
@@ -22,4 +21,4 @@ const sendOtpMail = async (to, otp) => {
     console.log("Message sent:", info.messageId);
 };
 
-module.exports = sendOtpMail ;
+module.exports = sendOtpMail;
