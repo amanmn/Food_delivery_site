@@ -1,8 +1,8 @@
-import React from 'react'
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { useNavigate } from 'react-router-dom';
-
+import { data, useNavigate } from 'react-router-dom';
+import { useResetPasswordMutation, useSendOtpMutation, useVerifyOtpMutation } from '../redux/features/auth/authApi';
+import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -12,6 +12,80 @@ const ForgotPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const navigate = useNavigate();
+
+  const [sendOtp, {
+    data: OtpSend,
+    error: otpSendError,
+    isLoading: otpSendIsLoading,
+    isSuccess: otpSendIsSuccess
+  }] = useSendOtpMutation();
+
+  const [verifyOtp, {
+    data: verify,
+    error: verificationError,
+    isLoading: verificationIsLoading,
+    isSuccess: verificationIsSuccess
+  }] = useVerifyOtpMutation();
+
+  const [resetPassword, {
+    data: reset,
+    error: resetPasswordError,
+    isLoading: resetPasswordIsLoading,
+    isSuccess: resetPasswordIsSuccess,
+  }] = useResetPasswordMutation();
+
+  useEffect(() => {
+    if (step === 1) {
+      if (otpSendError) {
+        toast.error(otpSendError?.data?.message || "request rejected");
+      }
+      if (otpSendIsSuccess) {
+        toast.success(sendOtp?.message || "Otp Sent")
+        setStep(2);
+      }
+    }
+
+    if (step === 2) {
+      if (verificationError) {
+        toast.error(verificationError?.data?.message || "verification rejected");
+      }
+      if (verificationIsSuccess) {
+        toast.success(verificationIsSuccess?.message || "Verification successful")
+        setStep(3);
+      }
+    }
+
+    if (step === 3) {
+      if (resetPasswordError) {
+        toast.error(resetPasswordError?.data?.message || "verification rejected");
+        navigate("/forgot-password");
+      }
+      if (resetPasswordIsSuccess) {
+        toast.success(resetPasswordIsSuccess?.message || "Verification successful")
+        navigate("/login");
+      }
+    }
+
+  }, [otpSendError, otpSendIsSuccess, verificationError, verificationIsSuccess, resetPasswordError, resetPasswordIsSuccess])
+
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    await sendOtp({ email });
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    await verifyOtp({ email, otp });
+  }
+
+  const handleResetPassword = async (e) => {
+    if (newPassword !== confirmPassword) {
+      return null;
+    }
+    e.preventDefault();
+    await resetPassword({ email, newPassword });
+  }
 
   return (
     <div className='flex w-full items-center justify-center min-h-screen p-4 bg-pink-50'>
@@ -36,8 +110,9 @@ const ForgotPassword = () => {
               />
             </div>
             <button
-              className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600"
-                }`}
+              onClick={handleSendOtp}
+              className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600
+                `}
             >
               Send Otp
             </button>
@@ -59,6 +134,7 @@ const ForgotPassword = () => {
               />
             </div>
             <button
+              onClick={handleVerifyOtp}
               className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600"
                 }`}
             >
@@ -73,7 +149,7 @@ const ForgotPassword = () => {
             <div className='mb-3'>
               <label htmlFor="newPassword" className="block text-gray-600 text-base font-medium mb-2">New Password</label>
               <input
-                type="text"
+                type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full p-2 text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-2"
@@ -94,6 +170,7 @@ const ForgotPassword = () => {
               />
             </div>
             <button
+              onClick={handleResetPassword}
               className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600"
                 }`}
             >
@@ -101,7 +178,6 @@ const ForgotPassword = () => {
             </button>
           </div>
         }
-
       </div>
     </div>
   )

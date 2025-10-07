@@ -14,12 +14,10 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
-    select: false 
+    select: false
   },
   phone: {
     type: String,
-    required: true,
     default: ""
   },
   profilePicture: {
@@ -56,16 +54,24 @@ const UserSchema = new mongoose.Schema({
     required: true,
     default: "user",
   },
-  resetOtp:{
-    type:String,
+  resetOtp: {
+    type: String,
   },
-  isOtpVerified:{
-    type:Boolean,
-    default:false,
+  isOtpVerified: {
+    type: Boolean,
+    default: false,
   },
-  otpExpires:{
-    type:Date,
-  }
+  otpExpires: {
+    type: Date,
+  },
+  googleId: {
+    type: String,
+    index: true,
+    unique: true,
+    sparse: true
+  },
+  refreshToken: String,
+  createdAt: { type: Date, default: Date.now },
 
 }, { timestamps: true });
 

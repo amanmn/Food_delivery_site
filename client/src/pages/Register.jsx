@@ -49,6 +49,10 @@ const Register = () => {
     await registerUser({ ...formData, role });
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:8000/auth/google";
+  }
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-pink-50 p-4">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
@@ -149,7 +153,9 @@ const Register = () => {
           >
             {registerIsLoading ? "Signing up..." : "Sign Up"}
           </button>
-          <button className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 border rounded-lg focus:outline-none px-4 py-1 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer">
+          <button
+            onClick={handleGoogleLogin}
+            className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 border rounded-lg focus:outline-none px-4 py-1 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer">
             <FcGoogle size={22} />
             <span>Sign up with Google</span>
           </button>

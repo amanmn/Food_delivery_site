@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -6,7 +6,8 @@ import { FcGoogle } from "react-icons/fc";
 import { useLoginUserMutation } from "../redux/features/auth/authApi";
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [err, setErr] = useState("");
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -18,7 +19,11 @@ const Login = () => {
     password: "",
   });
 
-  const [loginUser, { isLoading }] = useLoginUserMutation();
+  const [loginUser, {
+    isLoading,
+    isSuccess,
+    isError
+  }] = useLoginUserMutation();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,13 +32,19 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      if(isError) setErr(isError.data.message)
       await loginUser(formData).unwrap();
       toast.success("Login successful");
       navigate("/"); // App.jsx + ProtectedRoute will handle auth + role
     } catch (err) {
+      setErr(err?.data.message);
       toast.error(err?.data?.message || "Login failed");
     }
   };
+
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:8000/auth/google";
+  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-pink-50 p-4">
@@ -101,7 +112,10 @@ const Login = () => {
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
-          <button className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 px-4 py-2 transition duration-200 border rounded-lg focus:outline-none border-gray-400 hover:bg-gray-100 cursor-pointer">
+          <p className="text-red-500 text-center my-[10px]">*{err}</p>
+          <button
+            onClick={handleGoogleLogin}
+            className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 px-4 py-2 transition duration-200 border rounded-lg focus:outline-none border-gray-400 hover:bg-gray-100 cursor-pointer">
             <FcGoogle size={22} />
             <span>Login with Google</span>
           </button>

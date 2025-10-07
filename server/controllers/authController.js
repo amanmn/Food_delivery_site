@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User.js");
 const { generateToken, setTokenCookie } = require("../utils/generateToken");
-const { userApi } = require("../../client/src/redux/features/user/userApi.js");
+const sendOtpNodeMailer = require("../utils/nodemailer.js");
 
 // ✅ Register Controller
 const register = async (req, res) => {
@@ -34,7 +34,6 @@ const register = async (req, res) => {
         const token = generateToken({ id: user._id, email: user.email, role: user.role });
 
         await user.save();
-        console.log(user, "registered User");
 
         // Set token as cookie
         setTokenCookie(res, token);
@@ -73,7 +72,6 @@ const login = async (req, res) => {
         }
 
         const isMatched = await bcrypt.compare(password, user.password);
-        console.log(user, isMatched);
 
         if (!isMatched) {
             return res.status(400).json({ success: false, error: "Invalid credentials" });
@@ -135,13 +133,15 @@ const sendOtpMail = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) return res.status(400).json({ success: false, message: "User does not exists." });
+
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
         user.resetOtp = otp;
-        user.otpExpires = date.now() + 5 * 60 * 1000;
+        user.otpExpires = Date.now() + 5 * 60 * 1000;
         user.isOtpVerified = false;
         await user.save();
 
-        await sendOtpMail(email, otp);
+        await sendOtpNodeMailer(email, otp);
         return res.status(200).json({ success: "true", message: "otp sent successfully" });
 
     } catch (error) {
@@ -153,7 +153,7 @@ const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
         const user = await User.findOne({ email });
-        if (!user || user.resetOtp != otp || user.otpExpires < date.now()) return res.status(400).json({ success: false, message: "invalid or expired otp" });
+        if (!user || user.resetOtp != otp || user.otpExpires < Date.now()) return res.status(400).json({ success: false, message: "invalid or expired otp" });
 
         user.isOtpVerified = true;
         user.resetOtp = undefined;
@@ -170,18 +170,22 @@ const resetPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
         const user = await User.findOne({ email });
+        console.log(user,"verification");
+        
         if (!user || !user.isOtpVerified) return res.status(400).json({ success: false, message: "User does not exist." });
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
+
         user.password = hashedPassword;
         user.isOtpVerified = false;
         await user.save();
+
+        console.log(user, ":user");
         return res.status(200).json({ success: true, message: "password reset successfully" })
 
     } catch (error) {
         return res.status(500).json(`reset password error ${error}`)
     }
-
 }
 
 
@@ -192,4 +196,5 @@ module.exports = {
     getMe,
     sendOtpMail,
     verifyOtp,
+    resetPassword,
 }

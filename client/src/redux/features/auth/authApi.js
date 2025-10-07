@@ -26,6 +26,27 @@ export const authApi = createApi({
       }),
       invalidatesTags: ["Auth"],
     }),
+    sendOtp: builder.mutation({
+      query: ({ email }) => ({
+        url: "send-otp",
+        method: "POST",
+        body: { email },
+      }),
+    }),
+    verifyOtp: builder.mutation({
+      query: ({ email, otp }) => ({
+        url: "verify-otp",
+        method: "POST",
+        body: { email, otp },
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: ({ email, newPassword }) => ({
+        url: "reset-password",
+        method: "POST",
+        body: { email, newPassword },
+      }),
+    }),
     logoutUser: builder.mutation({
       query: () => ({
         url: "logout",
@@ -44,6 +65,9 @@ export const authApi = createApi({
 export const {
   useRegisterUserMutation,
   useLoginUserMutation,
+  useSendOtpMutation,
+  useVerifyOtpMutation,
+  useResetPasswordMutation,
   useLogoutUserMutation,
   useLoadUserDataQuery, // ✅ fetch user on refresh
   // useUpdateUserDataMutation,

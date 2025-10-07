@@ -3,11 +3,11 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 require("dotenv").config();
 const BASEURL = require("./config/URI.js");
+const passport = require('passport');
+const session = require('express-session');
+
 const app = express();
 app.use(express.json());
-app.use(cookieParser());
-
-const mongoose = require('./config/db.js')();
 
 // mongoose.connect();
 app.use(
@@ -17,6 +17,25 @@ app.use(
     credentials: true,
   }));
 
+app.use(cookieParser());
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // set true in prod on HTTPS
+    httpOnly: true,
+    sameSite: 'lax',
+  }
+}));
+
+require('./config/googleOAuth2.js')
+app.use(passport.initialize());
+app.use(passport.session());
+
+const mongoose = require('./config/db.js')();
+
 
 // Default Route
 app.get("/", (req, res) => {
@@ -24,6 +43,7 @@ app.get("/", (req, res) => {
 });
 
 const authRoutes = require("./routes/authRoute.js");
+const googleOAuth = require("./routes/googleOAuth.js");
 const userRoutes = require("./routes/userRoutes.js");
 const adminRoutes = require("./routes/adminRoute.js");
 const cartRoutes = require("./routes/cartRoutes.js");
@@ -33,8 +53,9 @@ const mapRoutes = require("./routes/mapRoutes.js");
 
 
 app.use("/api/auth", authRoutes);
+app.use("/", googleOAuth);
 app.use("/api/user", userRoutes);
-app.use("/api/admin",adminRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
