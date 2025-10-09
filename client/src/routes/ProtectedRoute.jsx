@@ -12,8 +12,12 @@ const ProtectedRoute = ({ role }) => {
     return <Navigate to="/login" replace />;
   }
 
+  if (role && !user) return <Navigate to="/login" replace />
+
   if (role && user?.role !== role) {
-    return <Navigate to={role === "admin" ? "/" : "/dash"} replace />;
+    console.log(user.role, role);
+    const redirectPath = role === "admin" ? "/dash" : "/";
+    return <Navigate to={redirectPath} replace />;
   }
 
   return <Outlet />;

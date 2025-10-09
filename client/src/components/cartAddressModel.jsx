@@ -27,8 +27,8 @@ const EnterAddressModal = ({ onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full  bg-opacity-60 backdrop-blur-sm flex items-start justify-center pt-1 z-50">
-      <div className="bg-gray-900 p-8 rounded-lg shadow-2xl w-full max-w-md">
+    <div className="fixed top-0 left-0 w-full bg-opacity-60 backdrop-blur-sm flex items-start justify-center pt-1 z-50">
+      <div className="bg-gray-900 p-8 rounded-lg shadow-2xl w-full max-w-md h-screen sm:h-auto sm:max-h-screen overflow-y-auto">
         <h2 className="text-2xl font-bold mb-6 text-white text-center">Add New Address</h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Label */}

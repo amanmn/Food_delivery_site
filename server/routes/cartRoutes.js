@@ -8,7 +8,7 @@ const {
   clearCart,
 } = require("../controllers/cartController");
 
-const { verifyToken } = require("../middleware/authMiddleware");
+const { verifyToken } = require("../middleware/authmiddleware");
 
 // Routes
 router.get("/get", verifyToken, getUserCart);

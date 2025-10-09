@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { API_URL } from "../config";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from "react-icons/fc";
 import { useLoginUserMutation } from "../redux/features/auth/authApi";
 
 const Login = () => {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [err, setErr] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [apiError, setApiError] = useState("");
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword(prev => !prev);
   };
 
   const [formData, setFormData] = useState({
@@ -26,24 +27,25 @@ const Login = () => {
   }] = useLoginUserMutation();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setApiError("");
     try {
-      if(isError) setErr(isError.data.message)
       await loginUser(formData).unwrap();
       toast.success("Login successful");
-      navigate("/"); // App.jsx + ProtectedRoute will handle auth + role
-    } catch (err) {
-      setErr(err?.data.message);
-      toast.error(err?.data?.message || "Login failed");
+      navigate("/");
+    } catch (error) {
+      const message = error?.data?.message || error?.message || "Login failed";
+      setApiError(message);
+      toast.error(message);
     }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8000/auth/google";
+    window.location.href = `${API_URL}/auth/google`;
   }
 
   return (
@@ -56,10 +58,11 @@ const Login = () => {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-gray-600 text-base font-medium mb-1">
+            <label htmlFor="email" className="block text-gray-600 text-base font-medium mb-1">
               Email
             </label>
             <input
+              id="email"
               name="email"
               type="email"
               value={formData.email}
@@ -71,11 +74,12 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-gray-600 text-base font-medium mb-1">
+            <label htmlFor="password" className="block text-gray-600 text-base font-medium mb-1">
               Password
             </label>
             <div className="relative">
               <input
+                id="password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
@@ -85,6 +89,7 @@ const Login = () => {
                 required
               />
               <span
+                type="button"
                 onClick={togglePasswordVisibility}
                 style={{
                   fontSize: '1.2rem',
@@ -101,9 +106,13 @@ const Login = () => {
             </div>
           </div>
 
-          <div type="button" onClick={() => navigate("/forgot-password")} className="text-right text-red-500 cursor-pointer text-base font-medium mb-4">
+          <button
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className=" float-right text-red-500 cursor-pointer text-base font-medium mb-4"
+          >
             forgot password
-          </div>
+          </button>
 
           <button
             type="submit"
@@ -112,8 +121,13 @@ const Login = () => {
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
-          <p className="text-red-500 text-center my-[10px]">*{err}</p>
+
+          {apiError && (
+            <p className="text-red-500 text-center my-[px]">{apiError}</p>
+          )}
+
           <button
+            type="button"
             onClick={handleGoogleLogin}
             className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 px-4 py-2 transition duration-200 border rounded-lg focus:outline-none border-gray-400 hover:bg-gray-100 cursor-pointer">
             <FcGoogle size={22} />
@@ -123,12 +137,12 @@ const Login = () => {
 
         <p className="text-gray-600 text-base text-center mt-4">
           Don't have an account?
-          <span
+          <button
             className="text-red-500 font-medium cursor-pointer hover:underline"
             onClick={() => navigate("/register")}
           >
             {" "}Sign up
-          </span>
+          </button>
         </p>
       </div>
     </div>

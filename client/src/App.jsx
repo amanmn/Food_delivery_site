@@ -8,6 +8,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserQuery } from "./redux/features/user/userApi";
 import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
+import { ColorRing } from 'react-loader-spinner'
 import './index.css';
 import { updateUserProfile } from "./redux/features/user/userSlice";
 // import AdminDashboard from "../admin/pages/AdminDashboard";
@@ -25,31 +26,52 @@ const AdminDashboard = lazy(() => import('../admin/pages/Dashboard'));
 function App() {
   const dispatch = useDispatch();
 
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  // const { isAuthenticated } = useSelector((state) => state.auth);
 
   const {
-    data: user,
+    data: userData,
     isSuccess,
     isLoading,
     isError,
+    error,
   } = useLoadUserDataQuery(undefined, { refetchOnMountOrArgChange: true });
 
   useEffect(() => {
-    if (isSuccess && user) {
-      dispatch(userLoggedIn({ user }));
-      dispatch(updateUserProfile(user)); // sets full profile in userSlice
+    if (isSuccess) {
+      if (userData) {
+        dispatch(userLoggedIn({ user: userData }));
+        dispatch(updateUserProfile(userData)); // sets full profile in userSlice
+      } else {
+        dispatch(userLoggedOut());
+      }
+      return;
     }
-    console.log("userLoading: ", isSuccess, user);
-  }, [isSuccess, user, dispatch]);
+    console.log("userLoading: ", isSuccess, userData);
+  }, [isSuccess, userData, isError, error, dispatch]);
+
 
   if (isLoading) {
-    return <div className="text-center mt-10 text-lg">Loading user data...</div>;
+    return <div className=" flex justify-center items-center h-screen text-lg">Loading user data...</div>;
   }
 
   return (
     <>
       <ToastContainer />
-      <Suspense fallback={<div className="text-center mt-10 text-lg">Loading page...</div>}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen">
+            <ColorRing
+              visible={true}
+              height="100"
+              width="100"
+              ariaLabel="color-ring-loading"
+              wrapperStyle={{}}
+              wrapperClass="color-ring-wrapper"
+              colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
+            />
+          </div>
+        }
+      >
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />

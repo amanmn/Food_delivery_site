@@ -4,26 +4,36 @@ const User = require("../models/User.js");
 const { generateToken, setTokenCookie } = require("../utils/generateToken");
 const sendOtpNodeMailer = require("../utils/nodemailer.js");
 
+const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
+const OTP_TTL_MS = 5 * 60 * 1000;
+
+// consistent error responses
+const handleServerError = (res, err, msg = "Server error") => {
+    console.error(msg, err);
+    return res.status(500).json({ success: false, message: msg });
+};
+
 // ✅ Register Controller
 const register = async (req, res) => {
     try {
         const { name, email, password, phone, role } = req.body;
-        if (!name || !email || !password || !phone || !role) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
+        // if (!name || !email || !password || !phone || !role) {
+        //     return res.status(400).json({ error: "All fields are required" });
+        // }
+
+        // if (phone.length < 10) {
+        //     return res.status(400).json({ success: false, message: "phone number must be atleast 10 digits." })
+        // }
+        // if (password.length < 6) {
+        //     return res.status(400).json({ success: false, message: "password must be atleast 6 characters." })
+        // }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ success: false, error: "User already exists" });
-        }
-        if (password.length < 6) {
-            return res.status(400).json({ success: false, error: "password must be atleast 6 characters." })
-        }
-        if (phone.length < 10) {
-            return res.status(400).json({ success: false, message: "phone number must be atleast 10 digits." })
+            return res.status(400).json({ success: false, message: "User already exists" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
         const user = new User({
             name,
             email,
@@ -31,11 +41,9 @@ const register = async (req, res) => {
             phone,
             password: hashedPassword,
         });
-        const token = generateToken({ id: user._id, email: user.email, role: user.role });
-
         await user.save();
 
-        // Set token as cookie
+        const token = generateToken({ id: user._id });
         setTokenCookie(res, token);
 
         return res.status(201).json(
@@ -51,7 +59,10 @@ const register = async (req, res) => {
                 },
             });
     } catch (err) {
-        return res.status(500).json({ success: false, error: err.message });
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, message: "Email already in use." });
+        }
+        return handleServerError(res, err, "Registration failed");
     }
 };
 
@@ -61,23 +72,22 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: "Email and password are required" });
-        }
+        // if (!email || !password) {
+        //     return res.status(400).json({ success: false, message: "Email and password are required" });
+        // }
 
         const user = await User.findOne({ email }).select('+password');
-
         if (!user) {
-            return res.status(400).json({ success: false, error: "User not found" });
+            return res.status(400).json({ success: false, message: "User not found" });
         }
 
         const isMatched = await bcrypt.compare(password, user.password);
 
         if (!isMatched) {
-            return res.status(400).json({ success: false, error: "Invalid credentials" });
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
 
-        const token = generateToken({ id: user._id, email: user.email, role: user.role });
+        const token = generateToken({ id: user._id });
         setTokenCookie(res, token);
 
         const userData = {
@@ -96,7 +106,7 @@ const login = async (req, res) => {
         });
 
     } catch (err) {
-        return res.status(500).json({ error: err.message });
+        return handleServerError(res, err, "Login failed");
     }
 };
 
@@ -104,12 +114,11 @@ const login = async (req, res) => {
 const logout = (req, res) => {
     try {
         // clears cookies and expires immediately
-        res.clearCookie("token");
-
-        return res.status(200).json({ message: "Logged out successfully" });
+        res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
+        return res.status(200).json({ success: true, message: "Logged out successfully" });
     }
     catch (error) {
-        return res.status(500).json({ error: err.message });
+        return handleServerError(res, err, "Logout failed");
     }
 
 };
@@ -117,77 +126,87 @@ const logout = (req, res) => {
 const getMe = (req, res) => {
     try {
         if (!req.user) {
-            return res.status(401).json({ message: "Unauthorized" });
+            return res.status(401).json({ success: false, message: "Unauthorized" });
         }
-
-        res.json({ user: req.user });
+        console.log("req.user:", req.user);
+        return res.status(200).json({ success: true, user: req.user });
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        return handleServerError(res, err, "Fetch user failed");
     }
 };
-
 
 const sendOtpMail = async (req, res) => {
     try {
         const { email } = req.body;
-        const user = await User.findOne({ email });
+        // if (!email) return res.status(400).json({ success: false, message: "Email is required." })
 
-        if (!user) return res.status(400).json({ success: false, message: "User does not exists." });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User does not exists." });
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
         user.resetOtp = otp;
-        user.otpExpires = Date.now() + 5 * 60 * 1000;
+        user.otpExpires = Date.now() + OTP_TTL_MS;
         user.isOtpVerified = false;
         await user.save();
 
-        await sendOtpNodeMailer(email, otp);
-        return res.status(200).json({ success: "true", message: "otp sent successfully" });
-
-    } catch (error) {
-        return res.status(500).json(`send otp error ${error}`)
+        try {
+            await sendOtpNodeMailer(email, otp);
+        } catch (mailerErr) {
+            console.error("Failed to send OTP email:", mailerErr);
+            user.resetOtp = undefined;
+            user.otpExpires = undefined;
+            await user.save();
+            return res.status(500).json({ success: false, message: "Failed to send OTP email." });
+        }
+        return res.status(200).json({ success: "true", message: "OTP sent successfully" });
+    }
+    catch (error) {
+        return handleServerError(res, err, "Send OTP failed");
     }
 }
 
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
+        // if (!email || !otp) return res.status(400).json({ success: false, message: "Email and OTP are required." });
+
         const user = await User.findOne({ email });
-        if (!user || user.resetOtp != otp || user.otpExpires < Date.now()) return res.status(400).json({ success: false, message: "invalid or expired otp" });
+        if (!user || user.resetOtp != otp || user.otpExpires < Date.now()) return res.status(400).json({ success: false, message: "invalid or expired OTP." });
 
         user.isOtpVerified = true;
         user.resetOtp = undefined;
         user.otpExpires = undefined;
         await user.save();
 
-        return res.status(200).json({ success: true, message: "otp verified successfully" })
+        return res.status(200).json({ success: true, message: "OTP verified successfully.   " })
     } catch (error) {
-        return res.status(500).json(`verify otp error ${error}`)
+        return handleServerError(res, err, "Verify OTP failed");
     }
 }
 
 const resetPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
+        // if (!email || !newPassword) return res.status(400).json({ success: false, message: "Email and newPassword are required." });
+        // if (newPassword.length < 6) {
+        //     return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
+        // }
+
         const user = await User.findOne({ email });
-        console.log(user,"verification");
-        
-        if (!user || !user.isOtpVerified) return res.status(400).json({ success: false, message: "User does not exist." });
+        if (!user || !user.isOtpVerified) return res.status(400).json({ success: false, message: "Unauthorized or OTP not verified." });
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-
         user.password = hashedPassword;
+        user.passwordChangedAt = Date.now();
         user.isOtpVerified = false;
         await user.save();
 
-        console.log(user, ":user");
         return res.status(200).json({ success: true, message: "password reset successfully" })
-
     } catch (error) {
-        return res.status(500).json(`reset password error ${error}`)
+        return handleServerError(res, err, "Reset password failed");
     }
 }
-
 
 module.exports = {
     register,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import { toast } from 'react-toastify';
 import { useRegisterUserMutation } from "../redux/features/auth/authApi";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -8,11 +9,10 @@ import { FcGoogle } from "react-icons/fc";
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("user");
+  const [apiError, setApiError] = useState("");
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const togglePasswordVisibility = () => setShowPassword(prev => !prev)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,28 +29,43 @@ const Register = () => {
     isSuccess: registerIsSuccess
   }] = useRegisterUserMutation();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   useEffect(() => {
     if (registerError) {
-      toast.error(registerError?.data?.message || "Signup Failed");
+      const message = registerError?.data?.message || registerError?.message || "Signup Failed"
+      toast.error(message);
+      setApiError(message)
     }
+    else {
+      setApiError("");
+    }
+
     if (registerIsSuccess) {
-      toast.success(registerData?.message || "Registration Successful");
+      const message = registerData?.message || "Registration Successful";
+      toast.success(message);
       navigate("/login");
     }
 
-  }, [registerIsSuccess, registerIsLoading, registerError]);
+  }, [registerIsSuccess, registerError]);
+
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    await registerUser({ ...formData, role });
+    setApiError("");
+    try {
+      await registerUser({ ...formData, role }).unwrap();
+    } catch (error) {
+      const message = err?.data?.message || err?.message || "Signup failed";
+      setApiError(message);
+      toast.error(message);
+    }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8000/auth/google";
+    if (registerIsLoading) return;
+    window.location.href = `${API_URL}/auth/google`;
   }
 
   return (
@@ -62,6 +77,7 @@ const Register = () => {
           <div>
             <label htmlFor="name" className="block text-gray-600 text-base font-medium mb-1">Full Name</label>
             <input
+              id="name"
               type="text"
               name="name"
               value={formData.name}
@@ -75,6 +91,7 @@ const Register = () => {
           <div>
             <label htmlFor="email" className="block text-gray-600 text-base font-medium mb-1">Email</label>
             <input
+              id="email"
               type="email"
               name="email"
               value={formData.email}
@@ -88,6 +105,7 @@ const Register = () => {
           <div>
             <label htmlFor="mobile" className="block text-gray-600 text-base font-medium mb-1">Mobile</label>
             <input
+              id="mobile"
               type="number"
               name="phone"
               value={formData.phone}
@@ -99,9 +117,10 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-gray-600 text-base font-medium mb-1">Password</label>
+            <label htmlFor="password" className="block text-gray-600 text-base font-medium mb-1">Password</label>
             <div className="relative">
               <input
+                id="password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
@@ -134,6 +153,7 @@ const Register = () => {
                 <button
                   className="flex-1 bg-white text-gray-700 cursor-pointer hover:outline-none rounded-lg px-3 py-2 text-center font-medium transition-colors"
                   key={r}
+                  id={r}
                   type="button"
                   onClick={() => setRole(r)}
                   style={
@@ -153,9 +173,16 @@ const Register = () => {
           >
             {registerIsLoading ? "Signing up..." : "Sign Up"}
           </button>
+
+          {apiError &&
+            <p className="text-red-500 text-center" role="alert">{apiError}</p>
+          }
+
           <button
             onClick={handleGoogleLogin}
-            className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 border rounded-lg focus:outline-none px-4 py-1 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer">
+            disabled={registerIsLoading}
+            className="w-full mt-2 flex justify-center items-center text-gray-700 gap-2 border rounded-lg focus:outline-none px-4 py-1 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer"
+          >
             <FcGoogle size={22} />
             <span>Sign up with Google</span>
           </button>
@@ -163,12 +190,13 @@ const Register = () => {
 
         <p className="text-gray-600 text-base text-center mt-4">
           Already have an account?
-          <span
-            className="text-red-500 font-medium cursor-pointer hover:underline"
+          <button
+            type="button"
+            className="text-red-500 font-medium cursor-pointer hover:underline ml-1"
             onClick={() => navigate("/login")}
           >
-            {" "}Login
-          </span>
+            Login
+          </button>
         </p>
       </div >
     </div >

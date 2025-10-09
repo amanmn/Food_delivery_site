@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$|^\/+/g, "") || "http://localhost:8000";
+const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, "") || "http://localhost:8000";
 const AUTH_API = `${BASE_URL}/api/auth`;
 
 export const authApi = createApi({
@@ -17,6 +17,7 @@ export const authApi = createApi({
         method: "POST",
         body: formData
       }),
+      invalidatesTags: [],
     }),
     loginUser: builder.mutation({
       query: (formData) => ({
@@ -56,7 +57,11 @@ export const authApi = createApi({
     }),
     // ✅ fetch logged in user from backend
     loadUserData: builder.query({
-      query: () => "me", // backend route: GET /api/auth/me
+      query: () => ({
+        url: "me", // backend route: GET /api/auth/me
+        method: "GET"
+      }),
+      transformResponse: (response) => response?.user ?? null,
       providesTags: ["Auth"],
     }),
   }),

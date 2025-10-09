@@ -9,18 +9,12 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <div id="home">
-        <HeroSection />
-      </div>
-      <div id="services">
-        <Services />
-      </div>
-      <div id="menu">
-        <Menu />
-      </div>
-      <div id="contact">
-        <Contact />
-      </div>
+      <main>
+        <section id="home"><HeroSection /></section>
+        <section id="services"><Services /></section>
+        <section id="menu"><Menu /></section>
+        <section id="contact"><Contact /></section>
+      </main>
       <Footer />
     </>
   );

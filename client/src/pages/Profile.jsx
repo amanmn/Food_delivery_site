@@ -46,10 +46,9 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      console.log("logout clicked");
-      await logoutUser();  // ✅ CALLS BACKEND
-      dispatch(userLoggedOut());  // ✅ RESET LOCAL STATE
-      // navigate("/login");         // ✅ REDIRECT
+      await logoutUser();  
+      dispatch(userLoggedOut());  
+      // navigate("/login");       
     } catch (err) {
       console.error("Logout failed:", err);
     }

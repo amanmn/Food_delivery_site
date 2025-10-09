@@ -8,6 +8,7 @@ const session = require('express-session');
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 // mongoose.connect();
 app.use(
@@ -17,7 +18,6 @@ app.use(
     credentials: true,
   }));
 
-app.use(cookieParser());
 
 app.use(session({
   secret: process.env.SESSION_SECRET,

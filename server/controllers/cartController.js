@@ -70,6 +70,8 @@ const getUserCart = async (req, res) => {
       path: "user",
       select: "name address phone",  // ⬅️ pick required fields only
     })
+  console.log(cart);
+
   if (!cart) {
     return res.status(404).json({ items: [] });
   }
@@ -93,8 +95,8 @@ const updateCartItem = async (req, res) => {
     }
 
     const item = cart.items.id(itemId);
-    console.log(item,"itemmmm");
-    
+    console.log(item, "itemmmm");
+
     if (!item) {
       return res.status(404).json({ message: "Item not found in cart" });
     }
