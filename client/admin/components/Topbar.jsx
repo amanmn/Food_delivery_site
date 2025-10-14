@@ -27,7 +27,7 @@ export default function Topbar({ onMenuClick }) {
 
       {/* Right side - User info */}
       <div className="flex items-center space-x-2">
-        <span className="hidden sm:block text-md font-medium">Super Admin</span>
+        <span className="hidden sm:block text-gray-600 font-bold text-md">Owner Dashboard</span>
         <FaUserCircle size={36} className="text-gray-600" />
       </div>
     </header>

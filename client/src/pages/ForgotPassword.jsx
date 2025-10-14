@@ -77,7 +77,7 @@ const ForgotPassword = () => {
       }
       if (resetPasswordIsSuccess) {
         setErr("");
-        toast.success(resetPasswordIsSuccess?.data.message || "Verification successful")
+        toast.success(resetPasswordIsSuccess?.message || "Verification successful")
         navigate("/login");
       }
     }
@@ -128,7 +128,9 @@ const ForgotPassword = () => {
       <div className='bg-white rounded-xl shadow-xl w-full max-w-md p-8'>
         <div className='flex items-center gap-5 mb-4'>
           <IoIosArrowRoundBack onClick={() => navigate("/login")} size={35} className='text-red-500 cursor-pointer mt-1' />
-          <h1 className='text-2xl font-bold text-center text-red-500'>Forgot Password</h1>
+          <h1 className='text-2xl font-bold text-center text-red-500'>
+            Forgot Password
+          </h1>
         </div>
         {step == 1
           &&
@@ -152,10 +154,11 @@ const ForgotPassword = () => {
 
             <button
               onClick={handleSendOtp}
+              disabled={otpSendIsLoading}
               className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600
                 `}
             >
-              Send Otp
+              {otpSendIsLoading ? "Sending OTP..." : "Send OTP"}
             </button>
 
           </div>
@@ -184,10 +187,11 @@ const ForgotPassword = () => {
             <button
               type='button'
               onClick={handleVerifyOtp}
+              disabled={verificationIsLoading}
               className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600"
                 }`}
             >
-              Verify
+              {verificationIsLoading ? "verifying..." : "verify"}
             </button>
 
           </div>
@@ -228,10 +232,11 @@ const ForgotPassword = () => {
 
             <button
               onClick={handleResetPassword}
+              disabled={resetPasswordIsLoading}
               className={`w-full text-white cursor-pointer text-lg font-semibold py-3 transition-color duration-200 rounded-lg transition bg-red-500 hover:bg-red-600"
                 }`}
             >
-              Reset Password
+              {resetPasswordIsLoading ? "Resetting Password..." : "Reset Password"}
             </button>
 
           </div>

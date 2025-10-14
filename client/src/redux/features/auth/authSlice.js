@@ -4,7 +4,7 @@ import { authApi } from "./authApi"; // Make sure the path is correct
 const initialState = {
   user: null,
   isAuthenticated: false,
-  role: null,   //  user/admin
+  role: null,   //  user/owner/deliveryBoy
   loading: true,
 
 };

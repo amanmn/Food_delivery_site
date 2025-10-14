@@ -19,7 +19,7 @@ export default function Sidebar({ closeSidebar }) {
       </button>
 
       <h2 className="text-2xl font-bold p-4 border-b border-gray-700 text-blue-500">
-        Admin Dashboard
+        Owner Dashboard
       </h2>
 
       <nav className="flex flex-col p-4 space-y-2 gap-2">
@@ -52,8 +52,8 @@ export default function Sidebar({ closeSidebar }) {
           <FaUsers /> Customers
         </a>
         <a
-          href="#"
-          onClick={closeSidebar}
+          href="/settings"
+          // onClick={closeSidebar}
           className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
         >
           <FaCog /> Settings

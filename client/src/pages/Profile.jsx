@@ -46,8 +46,8 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      await logoutUser();  
-      dispatch(userLoggedOut());  
+      await logoutUser();
+      dispatch(userLoggedOut());
       // navigate("/login");       
     } catch (err) {
       console.error("Logout failed:", err);
@@ -210,8 +210,8 @@ const Profile = () => {
           <h3 className="text-lg font-semibold text-gray-700">My Orders</h3>
           {user?.orders?.length > 0 ? (
             <ul className="space-y-3">
-              {user.orders.map((order) => (
-                <li key={order.id} className="border border-gray-200 rounded-lg p-4">
+              {user?.orders.map((order, index) => (
+                <li key={order.id || index} className="border border-gray-200 rounded-lg p-4">
                   <p className="text-sm text-gray-600">Order ID: {order.id}</p>
                   <p className="text-sm text-gray-600">Status: {order.status}</p>
                   <p className="text-sm font-semibold text-gray-800">Total: ₹{order.total}</p>

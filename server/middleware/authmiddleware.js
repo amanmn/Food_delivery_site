@@ -5,27 +5,24 @@ const JWT_SECRET = process.env.SECRET_KEY;
 const unauthorized = (res, msg = 'Not authenticated') => res.status(401).json({ success: false, message: msg });
 
 const verifyToken = async (req, res, next) => {
-  let token = req.cookies?.token || req.headers.authorization?.split(" ")[1];;
-  console.log("token", token);
-
-  if (!token) {
-    req.user = null;
-    return next();
-  }
-
   try {
+    let token = req.cookies?.token || req.headers.authorization?.split(" ")[1];;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: "token not found" });
+    }
     // verify token
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
+      if (!decoded) return res.status(400).json({ success: false, message: "token not verified" })
     } catch (error) {
-      console.error('JWT verify error:', err);
       return unauthorized(res, 'No token provided');
     }
 
     const user = await User.findById(decoded.id)
       .select("-password -__v -refreshToken");
-    console.log(user);
+    // console.log(user);
 
     if (!user) return unauthorized(res, 'User not found');
 
@@ -37,11 +34,12 @@ const verifyToken = async (req, res, next) => {
     }
 
     req.user = user || null; // now req.user.role will be available
+    // console.log(req.user);
+
     next();
 
   } catch (error) {
-    req.user = null;
-    next();
+    return res.status(500).json({ success: false, message: "request failed" });
   }
 };
 

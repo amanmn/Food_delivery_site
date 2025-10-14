@@ -21,7 +21,9 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const CartPage = lazy(() => import("./pages/Cart"));
 const OrderPage = lazy(() => import("./pages/OrderForm"));
-const AdminDashboard = lazy(() => import('../admin/pages/Dashboard'));
+const OwnerDashboard = lazy(() => import('../admin/pages/Dashboard'));
+const Settings = lazy(() => import('../admin/pages/Settings'));
+const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'))
 
 function App() {
   const dispatch = useDispatch();
@@ -40,13 +42,13 @@ function App() {
     if (isSuccess) {
       if (userData) {
         dispatch(userLoggedIn({ user: userData }));
+        console.log("userLoading: ", isSuccess, userData);
         dispatch(updateUserProfile(userData)); // sets full profile in userSlice
       } else {
         dispatch(userLoggedOut());
       }
       return;
     }
-    console.log("userLoading: ", isSuccess, userData);
   }, [isSuccess, userData, isError, error, dispatch]);
 
 
@@ -86,8 +88,13 @@ function App() {
           </Route>
 
           {/* Admin Routes */}
-          <Route element={<ProtectedRoute role="admin" />}>
-            <Route path="/dash" element={<AdminDashboard />} />
+          <Route element={<ProtectedRoute role="owner" />}>
+            <Route path="/dash" element={<OwnerDashboard />} />
+            <Route path='/settings' element={<Settings />} />
+          </Route>
+
+          <Route element={<ProtectedRoute role="deliveryBoy" />}>
+            <Route path="/delivery" element={<DeliveryDashboard />} />
           </Route>
 
           {/* Catch-all route */}

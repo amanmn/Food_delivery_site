@@ -21,9 +21,9 @@ const register = async (req, res) => {
         //     return res.status(400).json({ error: "All fields are required" });
         // }
 
-        // if (phone.length < 10) {
-        //     return res.status(400).json({ success: false, message: "phone number must be atleast 10 digits." })
-        // }
+        if (phone.length < 10) {
+            return res.status(400).json({ success: false, message: "phone number must be atleast 10 digits." })
+        }
         // if (password.length < 6) {
         //     return res.status(400).json({ success: false, message: "password must be atleast 6 characters." })
         // }
