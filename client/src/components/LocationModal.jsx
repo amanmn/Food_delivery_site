@@ -3,46 +3,22 @@ import { IoMdClose } from "react-icons/io";
 import { GoLocation } from "react-icons/go";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { setLocation as updateLocation } from "../redux/features/location/locationSlice";
+import { setCity } from "../redux/features/user/userSlice";
 
 const LocationModal = ({ isOpen, setIsOpen }) => {
-  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const BASE_URL = import.meta.env.VITE_BASEURL;
+  const { user } = useSelector((state) => state.user);
+  const APIKEY = import.meta.env.VITE_GEOAPIKEY;
 
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch location suggestions
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (manualLocation.trim() === "") {
-        setSuggestions([]);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const res = await fetch(`${BASE_URL}/map/search?q=${manualLocation.trim()}`);
-        const data = await res.json();
-        setSuggestions(data);
-      } catch (error) {
-        console.error("Failed to fetch suggestions", error);
-        toast.error("Failed to fetch suggestions");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(debounce);
-  }, [manualLocation]);
-
   // Handle selecting a suggestion
   const handleSuggestionClick = (place) => {
     const selected = place.display_name;
-    dispatch(updateLocation(selected));
+    dispatch(setCity(selected));
     setManualLocation("");
     setSuggestions([]);
     setIsOpen(false);
@@ -57,14 +33,14 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            const res = await fetch(`${BASE_URL}/map/reverse?lat=${latitude}&lon=${longitude}`);
+            const res = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${APIKEY}`);
             const data = await res.json();
             const city =
-              data.address?.city ||
-              data.address?.town ||
-              data.address?.village ||
+              data.results[0]?.city ||
+              data.results[0]?.town ||
+              data.results[0]?.village ||
               "Unknown";
-            dispatch(updateLocation(city)); 
+            dispatch(setCity(city));
             setIsOpen(false);
             toast.success("Location detected");
           } catch (error) {
@@ -86,6 +62,32 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
 
   // Handle outside click
   useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (manualLocation.trim() === "") {
+        setSuggestions([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetch(`${BASE_URL}/map/search?q=${manualLocation.trim()}`);
+        const data = await res.json();
+        console.log(data);
+        setSuggestions(data);
+      } catch (error) {
+        console.error("Failed to fetch suggestions", error);
+        toast.error("Failed to fetch suggestions");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounce);
+
+  }, [manualLocation]);
+
+  useEffect(() => {
     const handleOutsideClick = (e) => {
       if (e.target.classList.contains("bg-black/70")) {
         setIsOpen(false);
@@ -93,7 +95,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
     };
     window.addEventListener("click", handleOutsideClick);
     return () => window.removeEventListener("click", handleOutsideClick);
-  }, []);
+  }, [setIsOpen]);
 
   if (!isOpen || !user) return null;
 
@@ -116,6 +118,8 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
         <input
           type="text"
           aria-label="Search location"
+          autoFocus
+          disabled={loading}
           value={manualLocation}
           onChange={(e) => setManualLocation(e.target.value)}
           placeholder="Search your address"
@@ -141,6 +145,10 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
               </li>
             ))}
           </ul>
+        )}
+
+        {!loading && manualLocation && suggestions.length === 0 && (
+          <p className="text-sm text-gray-500 mt-2">No results found</p>
         )}
 
         {/* Divider */}

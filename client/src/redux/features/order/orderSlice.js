@@ -11,7 +11,6 @@ const orderSlice = createSlice({
             const newOrder = action.payload;
             state.orderplace.push(newOrder); // Save the order in Redux
         }
-
     }
 })
 export const { placeOrder } = orderSlice.actions

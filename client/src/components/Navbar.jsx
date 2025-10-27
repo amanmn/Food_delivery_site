@@ -13,7 +13,7 @@ import { FiShoppingCart } from "react-icons/fi";
 import { IoIosSearch } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { RiMenuLine } from "react-icons/ri";
-import { setLocation } from "../redux/features/location/locationSlice"; // ✅ ADD THIS
+import { setCity } from "../redux/features/user/userSlice"; // ✅ ADD THIS
 import { toast } from "react-toastify";
 
 const Navbar = () => {
@@ -23,11 +23,11 @@ const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showInputBox, setshowInputBox] = useState(false);
 
-  const location = useSelector((state) => state.location.location);
   const [logoutUser] = useLogoutUserMutation();
 
-
   const { user } = useSelector((state) => state.auth);
+  const { city } = useSelector((state) => state.user) || "Add";
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -75,7 +75,11 @@ const Navbar = () => {
               className="lg:text-red-500 md:text-red-500 pr-2 rounded-md flex text-gray-800 lg:hover:text-red-600 transition text-lg items-center"
               aria-label="Location"
             >
-              <span className="w-[75%] truncate m-1 ">{location ? { location } : "indore"}</span>
+              {city &&
+                <span className="w-[75%] truncate m-1 ">
+                  {city}
+                </span>
+              }
               <FaLocationDot size={25} className="cursor-pointer lg:text-red-500 md:text-red-500 text-gray-800" />
             </button>
             <div className='w-[80%] flex items-center gap-[10px]'>
@@ -87,15 +91,6 @@ const Navbar = () => {
             </div>
           </div>
         }
-
-        {/* <div className=' flex items-center gap-[10px]'> */}
-        {/* <input
-              type="text"
-              placeholder='search delicious food...'
-              className='px-[10px] text-gray-700 outline-0 w-full' 
-              /> */}
-        {/* </div> */}
-
 
         {!isMobile && (
           <div className="flex space-x-12 text-lg text-gray-700 font-semibold tracking-wide">
@@ -139,7 +134,7 @@ const Navbar = () => {
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-50">
                   <button onClick={() => { navigate("/profile"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">My Profile</button>
-                  <button onClick={() => { navigate("/orders"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">Orders</button>
+                  <button onClick={() => { navigate("/order"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">Orders</button>
                   <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer hover:bg-gray-100 font-semibold tracking-wide">Logout</button>
                 </div>
               )}
@@ -168,7 +163,7 @@ const Navbar = () => {
       <LocationModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        onSetLocation={(location) => dispatch(setLocation(location))}
+        onSetLocation={(location) => dispatch(setCity(location))}
       />
 
       {

@@ -11,6 +11,7 @@ import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
 import { ColorRing } from 'react-loader-spinner'
 import './index.css';
 import { updateUserProfile } from "./redux/features/user/userSlice";
+import LocationModal from "./components/LocationModal";
 // import AdminDashboard from "../admin/pages/AdminDashboard";
 // Lazy-loaded pages
 
@@ -27,9 +28,6 @@ const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'))
 
 function App() {
   const dispatch = useDispatch();
-
-  // const { isAuthenticated } = useSelector((state) => state.auth);
-
   const {
     data: userData,
     isSuccess,
