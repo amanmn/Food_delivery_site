@@ -45,21 +45,24 @@ app.get("/", (req, res) => {
 const authRoutes = require("./routes/authRoute.js");
 const googleOAuth = require("./routes/googleOAuth.js");
 const userRoutes = require("./routes/userRoutes.js");
-const adminRoutes = require("./routes/adminRoute.js");
 const cartRoutes = require("./routes/cartRoutes.js");
 const productRoutes = require("./routes/productRoute.js");
 const orderRoutes = require("./routes/orderRoutes");
 const mapRoutes = require("./routes/mapRoutes.js");
-
+const shopRoutes = require("./routes/shopRoute.js");
+const itemRoutes = require("./routes/itemRoutes.js")
 
 app.use("/api/auth", authRoutes);
 app.use("/", googleOAuth);
 app.use("/api/user", userRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/map", mapRoutes);
+
+
+app.use("/api/shop", shopRoutes);
+app.use("/api/item", itemRoutes);
 
 
 // Start Server

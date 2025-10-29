@@ -3,7 +3,7 @@ import { IoMdClose } from "react-icons/io";
 import { GoLocation } from "react-icons/go";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { setCity } from "../redux/features/user/userSlice";
+import { setCity, setState } from "../redux/features/user/userSlice";
 
 const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
@@ -41,6 +41,8 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
               data.results[0]?.village ||
               "Unknown";
             dispatch(setCity(city));
+            dispatch(setState(data.results[0]?.state));
+
             setIsOpen(false);
             toast.success("Location detected");
           } catch (error) {

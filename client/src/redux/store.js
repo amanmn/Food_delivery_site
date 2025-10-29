@@ -6,6 +6,7 @@ import { cartApi } from "../redux/features/cart/cartApi";
 import { productApi } from "./features/product/productApi";
 import { orderApi } from "./features/order/orderApi";
 
+
 const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>

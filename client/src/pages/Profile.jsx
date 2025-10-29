@@ -48,7 +48,6 @@ const Profile = () => {
     try {
       await logoutUser();
       dispatch(userLoggedOut());
-      // navigate("/login");       
     } catch (err) {
       console.error("Logout failed:", err);
     }

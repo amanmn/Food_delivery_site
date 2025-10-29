@@ -4,13 +4,13 @@ import userReducer from "./features/user/userSlice";
 import cartReducer from "./features/cart/cartSlice";
 import orderReducer from "./features/order/orderSlice";
 import locationReducer from "./features/location/locationSlice";
+import ownerReducer from "./features/owner/ownerSlice";
 
 import { authApi } from "./features/auth/authApi";
 import { userApi } from "./features/user/userApi";
 import { cartApi } from "./features/cart/cartApi";
 import { productApi } from "./features/product/productApi";
 import { orderApi } from "./features/order/orderApi";
-
 
 const rootReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
@@ -23,6 +23,7 @@ const rootReducer = combineReducers({
     cart: cartReducer,
     order: orderReducer,
     location: locationReducer,
+    owner: ownerReducer
 });
 
 export default rootReducer;

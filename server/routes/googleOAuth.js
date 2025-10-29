@@ -18,7 +18,7 @@ router.get('/auth/google/callback',
         // Successful authentication.
         // Option A: Issue JWT and set as httpOnly cookie
         const user = req.user;
-        console.log(user);
+        console.log("google-auth-user",user);
 
         const token = generateToken({ id: user._id });
 
@@ -32,7 +32,6 @@ router.get('/auth/google/callback',
 
 // optional endpoints
 router.get('/auth/failure', (req, res) => res.send('Google auth failed'));
-
 
 // Logout (clear cookie and optionally revoke refresh token)
 router.post('/auth/logout', (req, res) => {

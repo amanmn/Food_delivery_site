@@ -4,6 +4,7 @@ import { userApi } from "./userApi";
 const initialState = {
     user: null,
     city: null,
+    state:null,
     selectedAddress: null,
     loading: true,
 };
@@ -23,6 +24,9 @@ const userSlice = createSlice({
         },
         setCity: (state, action) => {
             state.city = action.payload
+        },
+        setState: (state, action) => {
+            state.state = action.payload
         },
     },
     extraReducers: (builder) => {
@@ -45,6 +49,7 @@ const userSlice = createSlice({
 export const {
     updateUserProfile,
     updateSelectedAddress,
-    setCity
+    setCity,
+    setState,
 } = userSlice.actions;
 export default userSlice.reducer;

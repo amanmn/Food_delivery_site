@@ -1,12 +1,16 @@
-import { FaUserCircle } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
+import { BsFillBagCheckFill } from "react-icons/bs";
+import { useSelector } from "react-redux";
 
 export default function Topbar({ onMenuClick }) {
+  const { myShopData } = useSelector(state => state.owner);
+
   return (
     <header className="flex items-center justify-between bg-white px-4 py-4 shadow">
       {/* Left side - Mobile menu button */}
       <div className="flex items-center">
         <button
-          className="md:hidden text-gray-600 focus:outline-none" // Hide button from tablet & up
+          className="md:hidden text-gray-600 focus:outline-none cursor-pointer" // Hide button from tablet & up
           onClick={onMenuClick}
         >
           <svg
@@ -26,10 +30,30 @@ export default function Topbar({ onMenuClick }) {
       </div>
 
       {/* Right side - User info */}
-      <div className="flex items-center space-x-2">
-        <span className="hidden sm:block text-gray-600 font-bold text-md">Owner Dashboard</span>
-        <FaUserCircle size={36} className="text-gray-600" />
-      </div>
+      {myShopData &&
+        (
+          <div className="flex gap-2">
+            <div>
+              <button className="hidden md:flex items-center text-blue-500 bg-blue-100 gap-1 p-2 font-bold cursor-pointer rounded-3xl">
+                <FaPlus size={20} />
+                <span >Add food item</span>
+              </button>
+              <button className="md:hidden flex items-center text-blue-500 bg-blue-100 p-2 font-bold cursor-pointer rounded-full">
+                <FaPlus size={20} />
+              </button>
+            </div>
+            <div className="hidden md:flex items-center gap-2 cursor-pointer relative rounded-3xl text-blue-500 bg-blue-100 px-3 py-1 font-bold">
+              <BsFillBagCheckFill size={20} />
+              <span>My Orders</span>
+              <span className="absolute -right-2 -top-2 text-md text-blue-200 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">0</span>
+            </div>
+            <div className="md:hidden flex items-center gap-2 cursor-pointer rounded-3xl text-blue-500 bg-blue-100 px-3 py-1 font-bold">
+              <BsFillBagCheckFill size={20} />
+              <span className="absolute right-2 top-2 text-md text-blue-200 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">0</span>
+            </div>
+          </div>
+        )
+      }
     </header>
   );
 }

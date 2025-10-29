@@ -12,6 +12,7 @@ import { ColorRing } from 'react-loader-spinner'
 import './index.css';
 import { updateUserProfile } from "./redux/features/user/userSlice";
 import LocationModal from "./components/LocationModal";
+import CreateEditShop from "../admin/pages/CreateEditShop";
 // import AdminDashboard from "../admin/pages/AdminDashboard";
 // Lazy-loaded pages
 
@@ -37,26 +38,36 @@ function App() {
   } = useLoadUserDataQuery(undefined, { refetchOnMountOrArgChange: true });
 
   useEffect(() => {
-    if (isSuccess) {
-      if (userData) {
-        dispatch(userLoggedIn({ user: userData }));
-        console.log("userLoading: ", isSuccess, userData);
-        dispatch(updateUserProfile(userData)); // sets full profile in userSlice
-      } else {
-        dispatch(userLoggedOut());
-      }
-      return;
+    if (isSuccess && userData) {
+      dispatch(userLoggedIn({ user: userData }));
+      dispatch(updateUserProfile(userData)); // sets full profile in userSlice
+      console.log("userLoading: ", isSuccess, userData);
+    } else if (isError) {
+      dispatch(userLoggedOut());
+      console.error("Error loading user:", error);
     }
+    return;
+
   }, [isSuccess, userData, isError, error, dispatch]);
 
 
   if (isLoading) {
-    return <div className=" flex justify-center items-center h-screen text-lg">Loading user data...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <ColorRing
+          visible={true}
+          height="100"
+          width="100"
+          ariaLabel="color-ring-loading"
+          colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
+        />
+      </div>
+    )
   }
 
   return (
     <>
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={2000} />
       <Suspense
         fallback={
           <div className="flex justify-center items-center h-screen">
@@ -65,33 +76,48 @@ function App() {
               height="100"
               width="100"
               ariaLabel="color-ring-loading"
-              wrapperStyle={{}}
-              wrapperClass="color-ring-wrapper"
               colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
             />
           </div>
         }
       >
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute role="user" />}>
+          {/* Restrict / for roles */}
+          <Route
+            path="/"
+            element={
+              userData?.role === "owner" ? (
+                <Navigate to="/dash" replace />
+              ) : userData?.role === "deliveryboy" ? (
+                <Navigate to="/delivery" replace />
+              ) : (
+                <HomePage />
+              )
+            }
+          />
+
+          {/* Protected Routes (User) */}
+          <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
+            {/* <Route path="/" element={<HomePage />} /> */}
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order" element={<OrderPage />} />
           </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute role="owner" />}>
+          {/* Owner Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["owner"]} />}>
             <Route path="/dash" element={<OwnerDashboard />} />
+            <Route path="/create-edit-shop" element={<CreateEditShop />} />
             <Route path='/settings' element={<Settings />} />
           </Route>
 
-          <Route element={<ProtectedRoute role="deliveryBoy" />}>
+          {/* DeliveryBoy Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["deliveryboy"]} />}>
             <Route path="/delivery" element={<DeliveryDashboard />} />
           </Route>
 

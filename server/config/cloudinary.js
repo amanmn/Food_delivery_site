@@ -1,9 +1,21 @@
 const cloudinary = require('cloudinary').v2;
+const fs = require("fs");
 
-cloudinary.config({
-  cloud_name: "doj5ju1ui",
-  api_key: "815388756454477",
-  api_secret: "RyjQ7gCPEc0WmWmVG3xc9d_5Sts",
-});
+const uploadOnCloudinary = async (file) => {
+  cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.APIKEY,
+    api_secret: process.env.API_SECRET,
+  });
 
-module.exports = cloudinary;
+  try {
+    const result = await cloudinary.uploader.upload(file)
+    fs.unlinkSync(file);
+    return result.secure_url
+  } catch (error) {
+    fs.unlinkSync(file)
+    console.log(error);
+  }
+}
+
+module.exports = uploadOnCloudinary;

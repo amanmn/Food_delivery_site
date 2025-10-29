@@ -9,15 +9,16 @@ const verifyToken = async (req, res, next) => {
     let token = req.cookies?.token || req.headers.authorization?.split(" ")[1];;
 
     if (!token) {
-      return res.status(400).json({ success: false, message: "token not found" });
+      return unauthorized(res, "No token provided")
     }
+
     // verify token
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-      if (!decoded) return res.status(400).json({ success: false, message: "token not verified" })
+ 
     } catch (error) {
-      return unauthorized(res, 'No token provided');
+      return unauthorized(res, "Invalid or expired token");
     }
 
     const user = await User.findById(decoded.id)
@@ -33,30 +34,35 @@ const verifyToken = async (req, res, next) => {
       }
     }
 
-    req.user = user || null; // now req.user.role will be available
-    // console.log(req.user);
-
+    req.user = user // || null; // now req.user.role will be available
     next();
 
   } catch (error) {
-    return res.status(500).json({ success: false, message: "request failed" });
+    console.error("verifyToken error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
 const requireRole = (...allowedRoles) => (req, res, next) => {
   try {
     if (!req.user) return unauthorized(res, 'Not authenticated');
-    if (!allowedRoles.includes(req.user.role)) return res.status(403).json({ success: false, message: 'Insufficient permissions' });
+
+    if (!allowedRoles.includes(req.user.role)) return res.status(403).json({ success: false, message: 'Access Denied: Insufficient permissions' });
+    // console.log(req.user);
+
     return next();
   } catch (error) {
     console.error('requireRole error:', err);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
 
 
-// verify admin middleware
-const adminOnly = requireRole('admin');
+// specific role middleware
+const ownerOnly = requireRole("owner");
+const deliveryOnly = requireRole("deliveryboy");
+// const userOnly = requireRole("user");
+
 
 // const adminOnly = () => (req, res, next) => {
 //   try {
@@ -74,5 +80,6 @@ const adminOnly = requireRole('admin');
 module.exports = {
   verifyToken,
   requireRole,
-  adminOnly
+  ownerOnly,
+  deliveryOnly
 };

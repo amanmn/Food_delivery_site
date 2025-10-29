@@ -6,7 +6,6 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const populateUser = require("../utils/populateUser"); // if using helper
 
-
 // ✅ Multer + Cloudinary Setup
 const storage = new CloudinaryStorage({
     cloudinary,
@@ -48,7 +47,7 @@ const profile = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            user : req.user,
+            user: req.user,
         });
     } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -77,7 +76,7 @@ const updateUser = async (req, res) => {
             updateFields.address = address;
 
         } if (profilePicture) updateFields.profilePicture = profilePicture;
-        
+
         if (Object.keys(updateFields).length > 0) {
             updateOps.$set = updateFields;
         }
