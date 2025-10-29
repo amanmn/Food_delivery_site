@@ -11,6 +11,7 @@ import { userApi } from "./features/user/userApi";
 import { cartApi } from "./features/cart/cartApi";
 import { productApi } from "./features/product/productApi";
 import { orderApi } from "./features/order/orderApi";
+import { ownerApi } from "./features/owner/ownerApi";
 
 const rootReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
     [productApi.reducerPath]: productApi.reducer,
     [cartApi.reducerPath]: cartApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,
+    [ownerApi.reducerPath]:ownerApi.reducer,
     auth: authReducer,
     user: userReducer,
     cart: cartReducer,

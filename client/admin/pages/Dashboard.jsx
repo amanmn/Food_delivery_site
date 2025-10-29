@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Topbar";
 import AdminDashboard from "./AdminDashboard";
-import { useSelector } from "react-redux";
 import { FaUtensils } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useLoadMyShopDataQuery } from "../../src/redux/features/owner/ownerApi";
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { myShopData } = useSelector(state => state.owner);
+  const { data: myShopData, isLoading } = useLoadMyShopDataQuery();
+
+  // useEffect(() => {
+  //   console.log(myShopData);
+  // })
+
+  if (isLoading) {
+    return <p className="text-center mt-10">Loading your shop data...</p>;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -33,13 +41,6 @@ export default function Dashboard() {
       <div className="flex flex-col flex-1">
         <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-        {/* Page content */}
-        {myShopData && (
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-            <AdminDashboard />
-          </main>
-        )}
-
         {!myShopData &&
           <div className="flex justify-center items-center p-4 sm:p-6">
             <div className="w-full bg-gray-100 shadow-lg rounded-2xl p-8 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
@@ -55,6 +56,12 @@ export default function Dashboard() {
             </div>
           </div>
         }
+
+        {myShopData && (
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <AdminDashboard shopData={myShopData} />
+          </main>
+        )}
       </div>
     </div>
   );

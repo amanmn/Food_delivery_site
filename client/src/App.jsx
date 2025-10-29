@@ -11,8 +11,9 @@ import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
 import { ColorRing } from 'react-loader-spinner'
 import './index.css';
 import { updateUserProfile } from "./redux/features/user/userSlice";
-import LocationModal from "./components/LocationModal";
 import CreateEditShop from "../admin/pages/CreateEditShop";
+import MyShop from "../admin/pages/MyShop";
+import AddFoodItem from "../admin/pages/AddFoodItem";
 // import AdminDashboard from "../admin/pages/AdminDashboard";
 // Lazy-loaded pages
 
@@ -113,11 +114,13 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={["owner"]} />}>
             <Route path="/dash" element={<OwnerDashboard />} />
             <Route path="/create-edit-shop" element={<CreateEditShop />} />
+            <Route path="/add-food-item" element={<AddFoodItem />} />
+            <Route path="/my-shop" element={<MyShop />} />
             <Route path='/settings' element={<Settings />} />
           </Route>
 
           {/* DeliveryBoy Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["deliveryboy"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={["deliveryBoy"]} />}>
             <Route path="/delivery" element={<DeliveryDashboard />} />
           </Route>
 

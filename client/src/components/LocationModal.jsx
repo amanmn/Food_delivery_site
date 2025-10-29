@@ -4,6 +4,7 @@ import { GoLocation } from "react-icons/go";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { setCity, setState } from "../redux/features/user/userSlice";
+import useDetectLocation from "../hooks/useDetectLocation";
 
 const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
@@ -15,6 +16,13 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const detectLocation = useDetectLocation();
+
+  const handleDetect = async () => {
+    await detectLocation();
+    setIsOpen(false);
+  };
+
   // Handle selecting a suggestion
   const handleSuggestionClick = (place) => {
     const selected = place.display_name;
@@ -23,43 +31,6 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
     setSuggestions([]);
     setIsOpen(false);
     toast.success("Location selected");
-  };
-
-  // Handle detect current location
-  const detectLocation = () => {
-    if (navigator.geolocation) {
-      setLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const res = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${APIKEY}`);
-            const data = await res.json();
-            const city =
-              data.results[0]?.city ||
-              data.results[0]?.town ||
-              data.results[0]?.village ||
-              "Unknown";
-            dispatch(setCity(city));
-            dispatch(setState(data.results[0]?.state));
-
-            setIsOpen(false);
-            toast.success("Location detected");
-          } catch (error) {
-            console.error("Reverse geolocation failed", error);
-            toast.error("Failed to detect location");
-          } finally {
-            setLoading(false);
-          }
-        },
-        () => {
-          toast.error("Permission denied");
-          setLoading(false);
-        }
-      );
-    } else {
-      toast.error("Geolocation not supported");
-    }
   };
 
   // Handle outside click
@@ -122,11 +93,26 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
           aria-label="Search location"
           autoFocus
           disabled={loading}
-          value={manualLocation}
+          value={manualLocation || ""}
           onChange={(e) => setManualLocation(e.target.value)}
-          placeholder="Search your address"
+          placeholder="Search or type your city"
           className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
         />
+
+        {/* Manual city confirm button */}
+        {manualLocation && suggestions.length === 0 && (
+          <button
+            onClick={() => {
+              dispatch(setCity(manualLocation.trim()));
+              setManualLocation("");
+              setIsOpen(false);
+              toast.success("City saved manually");
+            }}
+            className="mt-3 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
+          >
+            Use “{manualLocation}”
+          </button>
+        )}
 
         {/* Loader */}
         {loading && <p className="text-sm text-gray-500 mt-2">Loading...</p>}
@@ -170,7 +156,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
             </div>
           </div>
           <button
-            onClick={detectLocation}
+            onClick={handleDetect}
             className="border border-red-500 text-red-500 font-semibold px-3 py-1 text-sm rounded-lg hover:bg-red-500 hover:text-white transition"
             disabled={loading}
           >

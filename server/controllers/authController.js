@@ -126,9 +126,9 @@ const getMe = async (req, res) => {
             return res.status(401).json({ success: false, message: "Unauthorized" });
         }
         // console.log("req.user:", req.user);
-        return res.status(200).json({ success: true, user});
+        return res.status(200).json({ success: true, user });
     } catch (error) {
-        return handleServerError(res, err, "Fetch user failed");
+        return handleServerError(res, error, "Fetch user failed");
     }
 };
 

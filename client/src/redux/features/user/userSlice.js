@@ -4,7 +4,7 @@ import { userApi } from "./userApi";
 const initialState = {
     user: null,
     city: null,
-    state:null,
+    state: null,
     selectedAddress: null,
     loading: true,
 };

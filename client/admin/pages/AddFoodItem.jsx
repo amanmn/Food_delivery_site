@@ -4,60 +4,49 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import useDetectLocation from "../../src/hooks/useDetectLocation";
 import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
 import { updateUserProfile } from '../../src/redux/features/user/userSlice';
 import { API_URL } from '../../src/config';
 import { useLoadMyShopDataQuery } from '../../src/redux/features/owner/ownerApi';
 
-const CreateEditShop = () => {
+const AddFoodItem = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const detectLocation = useDetectLocation();
-    const { data:myShopData } = useLoadMyShopDataQuery();
-    const { city, state, selectedAddress } = useSelector(state => state.user);
+    const { data: myShopData } = useLoadMyShopDataQuery();
 
-    const [name, setName] = useState(myShopData?.name || "");
-    const [address, setAddress] = useState(myShopData?.address || "");
-    const [cityName, setCityName] = useState(myShopData?.city || "");
-    const [stateName, setStateName] = useState(myShopData?.state || "");
-    const [frontendImage, setFrontendImage] = useState(myShopData?.image || null)
+    const [name, setName] = useState("");
+    const [price, setPrice] = useState(0);
+
+    const [frontendImage, setFrontendImage] = useState(null)
     const [backendImage, setBackendImage] = useState(null);
     const handleImage = (e) => {
         const file = e.target.files[0];
         setBackendImage(file);
         setFrontendImage(URL.createObjectURL(file));
     }
+    const [category, setCategory] = useState("");
+    const [foodType, setFoodType] = useState("veg");
+    const categories = [
+        "Snacks",
+        "Main Course",
+        "Desserts",
+        "Pizza",
+        "Burgers",
+        "Sandwiches",
+        "South Indian",
+        "North Indian",
+        "Chinese",
+        "Fast Food",
+        "Others",
+    ];
 
-    useEffect(() => {
-
-        const getLocation = async () => {
-            try {
-                await detectLocation();
-            } catch (err) {
-                console.error("Location access denied:", err);
-            }
-        };
-        getLocation();
-    }, [])
-
-    useEffect(() => {
-        if (city || state || selectedAddress) {
-            setCityName(city || "");
-            setStateName(state || "");
-            setAddress(selectedAddress || "");
-        }
-
-    }, [city, state, selectedAddress]);
 
     const handleSave = async (e) => {
         e.preventDefault();
         try {
             const formData = new FormData();
             formData.append("name", name);
-            formData.append("city", city);
-            formData.append("state", state);
-            formData.append("address", address);
+
             if (backendImage) formData.append("image", backendImage);
             const result = await axios.post(`${API_URL}/api/shop/create-edit`, formData,
                 { withCredentials: true })
@@ -86,16 +75,10 @@ const CreateEditShop = () => {
                         <FaUtensils className='w-16 h-16 text-blue-500' size={25} />
                     </div>
                     <div className='text-3xl font-extrabold text-gray-900'>
-                        {myShopData ? "Edit Shop" : "Add Shop"}
+                        Add delicious foods
                     </div>
 
                 </div>
-
-                {!city && (
-                    <p className="text-sm text-gray-500 mb-2">
-                        Detecting your location... Please allow access.
-                    </p>
-                )}
 
                 <form className='space-y-5' onSubmit={handleSave}>
                     <div>
@@ -104,12 +87,12 @@ const CreateEditShop = () => {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder='Enter Shop Name'
+                            placeholder='Enter Item Name'
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                     </div>
                     <div>
-                        <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Shop Image</label>
+                        <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Food Image</label>
                         <input
                             type="file"
                             accept='image/*'
@@ -121,43 +104,35 @@ const CreateEditShop = () => {
                                 <img src={frontendImage} alt="" className='w-full h-48 object-cover rounded-lg border' />
                             </div>
                         }
-
-                    </div>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                        <div>
-                            <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>City</label>
-                            <input
-                                type="text"
-                                value={cityName}
-                                onChange={(e) => setCityName(e.target.value)}
-                                placeholder='Enter City'
-                                className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>State</label>
-                            <input
-                                type="text"
-                                value={stateName}
-                                onChange={(e) => setStateName(e.target.value)}
-                                placeholder='Enter State'
-                                className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-                            />
-                        </div>
                     </div>
                     <div>
-                        <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Address</label>
+                        <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Price</label>
                         <input
-                            type="text"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            placeholder='Enter Shop Address'
+                            type="Number"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            placeholder='Enter Item Price'
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                     </div>
+                    <div>
+                        <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Select Category</label>
+                        <select
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+
+                            className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        >
+                            <option value="">select category</option>
+                            {categories.map((cat, index) => (
+                                <option  key={index}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <button
                         className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'
-                    >Save
+                    >Add Item
                     </button>
                 </form>
             </div>
@@ -165,4 +140,4 @@ const CreateEditShop = () => {
     )
 }
 
-export default CreateEditShop
+export default AddFoodItem

@@ -5,11 +5,13 @@ import { API_URL } from "../config";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from "react-icons/fc";
 import { useLoginUserMutation } from "../redux/features/auth/authApi";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const togglePasswordVisibility = () => {
     setShowPassword(prev => !prev);
@@ -34,9 +36,19 @@ const Login = () => {
     e.preventDefault();
     setApiError("");
     try {
-      await loginUser(formData).unwrap();
+      const response = await loginUser(formData).unwrap();      
+      const userRole = response?.user?.role;
+      console.log(userRole);
+
       toast.success("Login successful");
-      navigate("/");
+      if (userRole === "owner") {
+        // dispatch(fetchMyShop());
+        navigate("/dash");
+      } else if (userRole === "deliveryboy") {
+        navigate("/delivery");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       const message = error?.data?.message || error?.message || "Login failed";
       setApiError(message);

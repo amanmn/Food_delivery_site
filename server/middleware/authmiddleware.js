@@ -16,7 +16,7 @@ const verifyToken = async (req, res, next) => {
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
- 
+      req.userId = decoded.id;
     } catch (error) {
       return unauthorized(res, "Invalid or expired token");
     }

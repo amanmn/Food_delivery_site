@@ -4,7 +4,7 @@ const fs = require("fs");
 const uploadOnCloudinary = async (file) => {
   cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.APIKEY,
+    api_key: process.env.CLOUD_APIKEY,
     api_secret: process.env.API_SECRET,
   });
 

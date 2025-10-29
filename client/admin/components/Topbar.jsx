@@ -30,8 +30,6 @@ export default function Topbar({ onMenuClick }) {
       </div>
 
       {/* Right side - User info */}
-      {myShopData &&
-        (
           <div className="flex gap-2">
             <div>
               <button className="hidden md:flex items-center text-blue-500 bg-blue-100 gap-1 p-2 font-bold cursor-pointer rounded-3xl">
@@ -52,8 +50,6 @@ export default function Topbar({ onMenuClick }) {
               <span className="absolute right-2 top-2 text-md text-blue-200 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">0</span>
             </div>
           </div>
-        )
-      }
     </header>
   );
 }

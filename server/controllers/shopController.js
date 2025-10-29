@@ -1,5 +1,5 @@
 const uploadOnCloudinary = require("../config/cloudinary");
-const { default: Shop } = require("../models/shopmodel");
+const Shop = require("../models/shopmodel");
 
 
 const createEditShop = async (req, res) => {
@@ -11,17 +11,21 @@ const createEditShop = async (req, res) => {
         }
 
         let shop = await Shop.findOne({ owner: req.userId });
+
         if (!shop) {
             shop = await Shop.create({
                 name, city, state, address, image, owner: req.userId
             })
+
         } else {
             shop = await Shop.findByIdAndUpdate(shop._id, {
                 name, city, state, address, image, owner: req.userId
             }, { new: true })
         }
 
-        await shop.populate("owner");
+        shop = await Shop.findById(shop._id).populate("owner"); // ✅ correct populate
+        console.log(shop);
+
         return res.status(201).json(shop);
     } catch (error) {
         return res.status(500).json({ message: `create shop error ${error}` })
@@ -29,8 +33,9 @@ const createEditShop = async (req, res) => {
 }
 
 const getMyShop = async (req, res) => {
-    try {
-        const shop = await Shop.findOne({ owner: req.userId }).populate("owner items");
+    try {        
+        const shop = await Shop.findOne({ owner: req.userId }).populate("owner");
+        
         if (!shop) return null;
 
         return res.status(200).json(shop);

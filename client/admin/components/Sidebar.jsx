@@ -5,6 +5,7 @@ import {
   FaUsers,
   FaCog,
 } from "react-icons/fa";
+import { FaShop } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 
 export default function Sidebar({ closeSidebar }) {
@@ -24,11 +25,18 @@ export default function Sidebar({ closeSidebar }) {
 
       <nav className="flex flex-col p-4 space-y-2 gap-2">
         <a
-          href="#"
+          href="/dash"
           onClick={closeSidebar}
           className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
         >
           <FaHome /> Home
+        </a>
+        <a
+          href="/my-shop"
+          onClick={closeSidebar}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+        >
+          <FaShop /> MyShop
         </a>
         <a
           href="#"

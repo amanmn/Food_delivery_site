@@ -6,7 +6,6 @@ const initialState = {
   isAuthenticated: false,
   role: null,   //  user/owner/deliveryBoy
   loading: true,
-
 };
 
 const authSlice = createSlice({
@@ -18,14 +17,13 @@ const authSlice = createSlice({
       state.user = user;
       state.role = user.role;
       state.isAuthenticated = true;
-      state.success = true;
       state.loading = false;
     },
 
-    userLoggedOut: (state, action) => {
+    userLoggedOut: (state) => {
       state.user = null;
-      state.isAuthenticated = false;
       state.role = null;
+      state.isAuthenticated = false;
       state.loading = false;
     },
   },
