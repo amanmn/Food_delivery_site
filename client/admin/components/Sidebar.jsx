@@ -4,16 +4,19 @@ import {
   FaShoppingCart,
   FaUsers,
   FaCog,
+  FaTimes,
 } from "react-icons/fa";
 import { FaShop } from "react-icons/fa6";
-import { FaTimes } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function Sidebar({ closeSidebar }) {
+  const navigate = useNavigate();
+
   return (
-    <aside className="h-full w-80 px-3 bg-gray-900 text-white relative">
+    <aside className="h-full w-64 px-3 bg-gray-900 text-white relative">
       {/* Close button for mobile */}
       <button
-        className="absolute top-4.5 bg-blue-500 cursor-pointer right-4 md:hidden text-white text-3xl focus:outline-none"
+        className="absolute top-4 right-4 md:hidden bg-blue-500 cursor-pointer text-white text-2xl p-1 rounded focus:outline-none"
         onClick={closeSidebar}
       >
         <FaTimes />
@@ -23,49 +26,66 @@ export default function Sidebar({ closeSidebar }) {
         Owner Dashboard
       </h2>
 
-      <nav className="flex flex-col p-4 space-y-2 gap-2">
-        <a
-          href="/dash"
-          onClick={closeSidebar}
-          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+      <nav className="flex flex-col p-4 space-y-2">
+        <button
+          onClick={() => {
+            navigate("/dash");
+            closeSidebar();
+          }}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaHome /> Home
-        </a>
-        <a
-          href="/my-shop"
-          onClick={closeSidebar}
-          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+        </button>
+
+        <button
+          onClick={() => {
+            navigate("/my-shop");
+            closeSidebar();
+          }}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaShop /> MyShop
-        </a>
-        <a
-          href="#"
-          onClick={closeSidebar}
-          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+        </button>
+
+        <button
+          onClick={() => {
+            navigate("/orders");
+            closeSidebar();
+          }}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaShoppingCart /> Orders
-        </a>
-        <a
-          href="#"
-          onClick={closeSidebar}
-          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+        </button>
+
+        <button
+          onClick={() => {
+            navigate("/item-product");
+            closeSidebar();
+          }}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaBoxOpen /> Products
-        </a>
-        <a
-          href="#"
-          onClick={closeSidebar}
-          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+        </button>
+
+        <button
+          onClick={() => {
+            navigate("/customers");
+            closeSidebar();
+          }}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaUsers /> Customers
-        </a>
-        <a
-          href="/settings"
-          // onClick={closeSidebar}
-          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded"
+        </button>
+
+        <button
+          onClick={() => {
+            navigate("/settings");
+            closeSidebar();
+          }}
+          className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaCog /> Settings
-        </a>
+        </button>
       </nav>
     </aside>
   );

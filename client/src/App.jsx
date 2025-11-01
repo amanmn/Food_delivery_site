@@ -14,6 +14,8 @@ import { updateUserProfile } from "./redux/features/user/userSlice";
 import CreateEditShop from "../admin/pages/CreateEditShop";
 import MyShop from "../admin/pages/MyShop";
 import AddFoodItem from "../admin/pages/AddFoodItem";
+import ItemProduct from "../admin/pages/ItemProduct";
+import EditItem from "../admin/pages/EditItem";
 // import AdminDashboard from "../admin/pages/AdminDashboard";
 // Lazy-loaded pages
 
@@ -116,6 +118,8 @@ function App() {
             <Route path="/create-edit-shop" element={<CreateEditShop />} />
             <Route path="/add-food-item" element={<AddFoodItem />} />
             <Route path="/my-shop" element={<MyShop />} />
+            <Route path="/item-product" element={<ItemProduct />} />
+            <Route path="/edit-item/:itemId" element={<EditItem />} />
             <Route path='/settings' element={<Settings />} />
           </Route>
 

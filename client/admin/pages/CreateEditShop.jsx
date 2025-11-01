@@ -62,6 +62,7 @@ const CreateEditShop = () => {
             const result = await axios.post(`${API_URL}/api/shop/create-edit`, formData,
                 { withCredentials: true })
             dispatch(setMyShopData(result.data))
+            navigate("/dash");
             console.log(result.data);
 
         } catch (error) {

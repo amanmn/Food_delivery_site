@@ -1,32 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from "axios"
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
 import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
 import { API_URL } from '../../src/config';
-import { useLoadMyShopDataQuery } from '../../src/redux/features/owner/ownerApi';
+// import { useLoadMyShopDataQuery } from '../../src/redux/features/owner/ownerApi';
 import { toast } from 'react-toastify';
-import { Loader2Icon } from 'lucide-react';
 
-const AddFoodItem = () => {
+
+const EditItem = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { data: myShopData, refetch } = useLoadMyShopDataQuery();
+    const { itemId } = useParams();
+    // const shopData = useSelector(state=>state.owner.myShopData)
 
-    const [loading, setLoading] = useState(false);
+    const [currentItem, setCurrentItem] = useState(null);
     const [name, setName] = useState("");
     const [price, setPrice] = useState(0);
     const [frontendImage, setFrontendImage] = useState(null)
     const [backendImage, setBackendImage] = useState(null);
     const [category, setCategory] = useState("");
-    const [foodType, setFoodType] = useState("veg");
-
+    const [foodType, setFoodType] = useState("");
     const handleImage = (e) => {
         const file = e.target.files[0];
         setBackendImage(file);
-        setFrontendImage(URL.createObjectURL(file));
     }
     const categories = [
         "Snacks",
@@ -44,36 +43,55 @@ const AddFoodItem = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!name || !category || !price || !foodType || !backendImage) {
+
+        if (!name || !category || !price || !foodType || !frontendImage) {
             alert("Please fill in all fields before saving");
             return;
         }
-        setLoading(true);
-
         try {
             const formData = new FormData();
             formData.append("name", name);
             formData.append("category", category);
             formData.append("foodType", foodType);
             formData.append("price", price);
-
             if (backendImage) formData.append("image", backendImage);
-            const result = await axios.post(`${API_URL}/api/item/add-item`,
+
+            const result = await axios.put(`${API_URL}/api/item/edit-item/${itemId}`,
                 formData,
                 { withCredentials: true })
-            await refetch();
+                
             dispatch(setMyShopData(result.data))
-            setLoading(false);
             navigate("/dash");
             console.log(result.data);
-            toast.success("Item added successfully");
+            toast.success("Item updated successfully");
 
         } catch (error) {
-            setLoading(false);
             console.log(error);
-            toast.alert("Failed to add item");
+            toast.error("Failed to update item");
         }
     };
+
+    useEffect(() => {
+        const handleGetItemById = async () => {
+            try {
+                const result = await axios.get(`${API_URL}/api/item/get-item/${itemId}`,
+                    { withCredentials: true });
+                setCurrentItem(result.data);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        handleGetItemById();
+    }, [itemId]);
+
+    useEffect(() => {
+        setName(currentItem?.name || "");
+        setPrice(currentItem?.price || 0);
+        setCategory(currentItem?.category || "");
+        setFoodType(currentItem?.foodType || "");
+        setFrontendImage(currentItem?.image || "");
+        console.log(currentItem?.image);
+    }, [currentItem])
 
     return (
         <div className='flex justify-center flex-col items-center p-6  bg-gradient-to-br from-blue-50 relative to-white min-h-screen'>
@@ -89,9 +107,8 @@ const AddFoodItem = () => {
                         <FaUtensils className='w-16 h-16 text-blue-500' size={25} />
                     </div>
                     <div className='text-3xl font-extrabold text-gray-900'>
-                        Add delicious foods
+                        Edit Product
                     </div>
-
                 </div>
 
                 <form className='space-y-5' onSubmit={handleSave}>
@@ -115,7 +132,7 @@ const AddFoodItem = () => {
                         />
                         {frontendImage &&
                             <div className="mt-4">
-                                <img src={frontendImage} alt="" className='w-full h-48 object-cover rounded-lg border' />
+                                <img src={frontendImage} alt="food-item" className='w-full h-48 object-cover rounded-lg border' />
                             </div>
                         }
                     </div>
@@ -159,10 +176,7 @@ const AddFoodItem = () => {
 
                     <button
                         className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'
-                        disabled={loading}
-                    >
-                        {loading ? <Loader2Icon size={20} /> : "Add Item"}
-
+                    >Add Item
                     </button>
                 </form>
             </div>
@@ -170,4 +184,4 @@ const AddFoodItem = () => {
     )
 }
 
-export default AddFoodItem
+export default EditItem;

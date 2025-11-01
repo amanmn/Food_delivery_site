@@ -24,7 +24,7 @@ const createEditShop = async (req, res) => {
         }
 
         shop = await Shop.findById(shop._id).populate("owner"); // ✅ correct populate
-        console.log(shop);
+        // console.log(shop);
 
         return res.status(201).json(shop);
     } catch (error) {
@@ -33,9 +33,14 @@ const createEditShop = async (req, res) => {
 }
 
 const getMyShop = async (req, res) => {
-    try {        
-        const shop = await Shop.findOne({ owner: req.userId }).populate("owner");
-        
+    try {
+        const shop = await Shop.findOne({ owner: req.userId })
+            .populate("owner")
+            .populate({
+                path: "items",
+                options: { sort: { updatedAt: -1 } }
+            });
+
         if (!shop) return null;
 
         return res.status(200).json(shop);
