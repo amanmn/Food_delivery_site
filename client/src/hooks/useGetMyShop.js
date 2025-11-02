@@ -13,19 +13,15 @@ const useGetMyShop = () => {
                 const result = await axios.get(`${API_URL}/api/shop/get-myshop`,
                     { withCredentials: true })
                 dispatch(setMyShopData(result.data));
+                console.log("Fetched shop:", result.data);
 
             } catch (error) {
+                console.log(error);
 
             }
         }
         fetchShop();
-    }, [])
-
-    return (
-        <div>
-
-        </div>
-    )
+    }, [dispatch])
 }
 
 export default useGetMyShop

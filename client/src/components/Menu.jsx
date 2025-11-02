@@ -1,15 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { addToCart } from "../redux/features/cart/cartSlice";
-import { useAddItemToCartMutation, useUpdateCartItemMutation } from "../redux/features/cart/cartApi";
-import { useGetProductDataQuery } from "../redux/features/product/productApi";
+import {
+  useAddItemToCartMutation,
+  useUpdateCartItemMutation,
+} from "../redux/features/cart/cartApi";
+import { useGetItemByCityQuery } from "../redux/features/product/itemApi";
 import { toast } from "react-toastify";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FaStar } from "react-icons/fa"
+import { FaRegStar } from "react-icons/fa"
+
 
 const Menu = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 🏙️ Get user's current city from Redux
+  const { city } = useSelector((state) => state.user);
+  const { data: itemsData, isLoading, error, refetch } = useGetItemByCityQuery(city, { skip: !city });
 
   const [quantities, setQuantities] = useState({});
   const [isAdding, setIsAdding] = useState({});
@@ -17,14 +27,15 @@ const Menu = () => {
   const [addItemToCart] = useAddItemToCartMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
-  const { data: menuData, isLoading, error } = useGetProductDataQuery();
+  useEffect(() => {
+    if (city) refetch();
+  }, [city, refetch]);
 
   const handleAddToCart = async (item) => {
     const quantity = quantities[item._id] || 1;
 
     try {
       setIsAdding((prev) => ({ ...prev, [item._id]: true }));
-
       const res = await addItemToCart({ productId: item._id, quantity }).unwrap();
 
       dispatch(addToCart({ ...item, quantity }));
@@ -33,7 +44,6 @@ const Menu = () => {
       const status = error?.status;
       const message = error?.data?.message || "Failed to add item to cart";
 
-      // ✅ If user is unauthorized (no cookie or expired token)
       if (status === 401 || status === 403) {
         toast.error("Session expired. Please login again.");
         navigate("/login", { state: { from: location.pathname } });
@@ -45,88 +55,131 @@ const Menu = () => {
     }
   };
 
-  const handleIncreaseQuantity = async (id) => {
+  const handleIncreaseQuantity = (id) => {
     const newQuantity = (quantities[id] || 1) + 1;
     setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
-
-    try {
-      toast.success(`quantity updated to ${newQuantity}`);
-    } catch {
-      toast.error("Failed to update quantity!");
-    }
+    toast.info(`Quantity updated to ${newQuantity}`);
   };
 
-  const handleDecreaseQuantity = async (id) => {
+  const handleDecreaseQuantity = (id) => {
+    
     const newQuantity = Math.max(1, (quantities[id] || 1) - 1);
     setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
-
-    try {
-      toast.success(`quantity updated to ${newQuantity}`);
-    } catch {
-      toast.error("Failed to update quantity!");
-    }
+    toast.info(`Quantity updated to ${newQuantity}`);
   };
 
-  if (isLoading) return <p className="text-center text-lg font-medium">Loading menu...</p>;
-  if (error) return <p className="text-center text-lg text-red-500">Failed to load menu items.</p>;
+  // 🕒 Loading / Error States
+  if (!city)
+    return (
+      <p className="text-center text-lg font-medium text-gray-600 my-10">
+        Please select your city to view available items.
+      </p>
+    );
+
+  if (isLoading)
+    return (
+      <p className="text-center text-lg font-medium text-gray-700 my-10">
+        Loading menu...
+      </p>
+    );
+
+  if (error)
+    return (
+      <p className="text-center text-lg text-red-500 my-10">
+        Failed to load menu items.
+      </p>
+    );
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        (i < rating) ? (< FaStar className='text-yellow-500 text-lg' />) : (<FaRegStar className='text-yellow-500 text-lg' />)
+      )
+    }
+    return stars;
+  }
 
   return (
-    <section className="py-24 my-5 px-12 lg:px-32 bg-grey-50 overflow-hidden">
+    <section className="py-10 my-5 px-12 lg:px-32 bg-gray-50 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <h3 className="text-red-500 uppercase text-lg font-bold tracking-wide">Our Menu</h3>
-        <h3 className="text-5xl lg:text-5xl font-bold text-gray-900 mt-4">
-          Menu That Always <br /> Makes You Fall In Love
+        <h3 className="text-red-500 uppercase text-lg font-bold tracking-wide">
+          Our Menu
         </h3>
+        <h2 className="text-5xl lg:text-5xl font-bold text-gray-900 mt-4">
+          Menu That Always <br /> Makes You Fall In Love
+        </h2>
 
-        <div className="relative overflow-x-auto scrollbar-hide mt-4">
-          <div className="flex br-15 space-x-8 px-6 lg:px-0 whitespace-nowrap">
-            {menuData?.length > 0 ? (
-              menuData.map((item) => (
-                <div key={item._id} className="min-w-[350px] lg:min-w-[350px]">
-                  <div
-                    className="relative bg-cover bg-center h-72 lg:h-90 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300"
-                    style={{ backgroundImage: `url(${item.image || item.images?.[0]})` }}
-                  >
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-transparent to-transparent p-6 rounded-b-xl">
-                      <h3 className="font-bold text-xl">{item.name}</h3>
-                      <p className="text-red-00 text-2xl font-bold mt-2">₹{item.price}</p>
+        {/* Menu Items */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
+          {itemsData?.length > 0 ? (
+            itemsData.map((item) => (
+              <div
+                key={item._id}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-300 overflow-hidden"
+              >
+                <div
+                  className="relative h-60 bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url(${item.image || "/placeholder-food.jpg"})`,
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                </div>
 
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between mt-2">
-                          <button
-                            onClick={() => handleAddToCart(item)}
-                            disabled={isAdding[item._id]}
-                            className="text-white bg-orange-500 hover:bg-orange-600 font-semibold px-4 py-2 rounded-lg"
-                          >
-                            {isAdding[item._id] ? "Adding..." : "Add to Cart"}
-                          </button>
+                <div className="p-5 flex flex-col justify-between h-48">
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800 truncate">
+                      {item.name}
+                    </h3>
+                    <div className='flex flex-center gap-1 mt-1'>
+                      {renderStars(0)}
+                      <span className='text-xs text-gray-500'>
+                        {0}
+                      </span>
+                    </div>
+                    <p className="text-red-500 text-2xl font-bold mt-3">
+                      ₹{item.price}
+                    </p>
+                  </div>
 
-                          <div className="flex items-center">
-                            <button
-                              onClick={() => handleDecreaseQuantity(item._id)}
-                              className="text-white cursor-pointer font-bold px-3 py-1 bg-orange-500 hover:bg-orange-600 rounded-full"
-                            >
-                              -
-                            </button>
-                            <p className="text-white font-bold mx-4">{quantities[item._id] || 1}</p>
-                            <button
-                              onClick={() => handleIncreaseQuantity(item._id)}
-                              className="text-white cursor-pointer font-bold px-3 py-1 bg-orange-500 hover:bg-orange-600 rounded-full"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      </div>
 
+
+                  <div className="flex gap-2 items-center justify-between">
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      disabled={isAdding[item._id]}
+                      className="text-white bg-red-500 hover:bg-red-600 font-semibold px-4 py-2 rounded-lg w-[60%] text-center"
+                    >
+                      {isAdding[item._id] ? "Adding..." : "Add to Cart"}
+                    </button>
+
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => handleDecreaseQuantity(item._id)}
+                        className="text-white cursor-pointer font-bold px-3 py-1 bg-red-500 hover:bg-red-600 rounded-full"
+                      >
+                        −
+                      </button>
+                      <p className="text-gray-800 font-semibold w-4 text-center">
+                        {quantities[item._id] || 1}
+                      </p>
+                      <button
+                        onClick={() => handleIncreaseQuantity(item._id)}
+                        className="text-white cursor-pointer font-bold px-3 py-1 bg-red-500 hover:bg-red-600 rounded-full"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-lg text-red-500">No items found</p>
-            )}
-          </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-lg text-red-500 col-span-full">
+              No items found in your city.
+            </p>
+          )}
         </div>
       </div>
     </section>

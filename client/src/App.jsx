@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from "react-redux";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
-import { useLoadUserQuery } from "./redux/features/user/userApi";
 import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
 import { ColorRing } from 'react-loader-spinner'
 import './index.css';
@@ -16,9 +15,11 @@ import MyShop from "../admin/pages/MyShop";
 import AddFoodItem from "../admin/pages/AddFoodItem";
 import ItemProduct from "../admin/pages/ItemProduct";
 import EditItem from "../admin/pages/EditItem";
-// import AdminDashboard from "../admin/pages/AdminDashboard";
-// Lazy-loaded pages
+import useGetShopByCity from "./hooks/useGetShopByCity";
+import useGetItemByCity from "./hooks/useGetItemByCity";
+import useDetectLocation from "./hooks/useDetectLocation";
 
+// Lazy-loaded pages
 const HomePage = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./pages/Login"));
 const RegisterPage = lazy(() => import("./pages/Register"));
@@ -32,13 +33,15 @@ const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'))
 
 function App() {
   const dispatch = useDispatch();
-  const {
-    data: userData,
-    isSuccess,
-    isLoading,
-    isError,
-    error,
-  } = useLoadUserDataQuery(undefined, { refetchOnMountOrArgChange: true });
+  const { isAuthenticated } = useSelector(state => state.auth);
+  const { city } = useSelector((state) => state.user);
+  // const { user } = useSelector((state) => state.user);
+
+  const { data: userData, isSuccess, isLoading, isError, error } =
+    useLoadUserDataQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+      skip: !isAuthenticated, // ✅ skip when logged out
+    });
 
   useEffect(() => {
     if (isSuccess && userData) {
@@ -53,6 +56,10 @@ function App() {
 
   }, [isSuccess, userData, isError, error, dispatch]);
 
+  // useGetMyShop();
+  useDetectLocation();
+  useGetShopByCity();
+  useGetItemByCity();
 
   if (isLoading) {
     return (

@@ -15,6 +15,8 @@ import { RxCross2 } from "react-icons/rx";
 import { RiMenuLine } from "react-icons/ri";
 import { setCity } from "../redux/features/user/userSlice"; // ✅ ADD THIS
 import { toast } from "react-toastify";
+import { persistor } from "../redux/store";
+
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -35,6 +37,7 @@ const Navbar = () => {
     try {
       await logoutUser().unwrap();  // ✅ CALLS BACKEND
       dispatch(userLoggedOut());  // ✅ RESET LOCAL STATE
+      await persistor.purge(); // ✅ clears persisted data
       toast.warning("Logout successful");
     } catch (err) {
       console.error("Logout failed:", err);

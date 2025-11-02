@@ -1,5 +1,9 @@
+// rootReducer.js
 import { combineReducers } from "@reduxjs/toolkit";
-import authReducer from "./features/auth/authSlice";
+import { persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // uses localStorage for web
+
+import authReducer, { userLoggedOut } from "./features/auth/authSlice";
 import userReducer from "./features/user/userSlice";
 import cartReducer from "./features/cart/cartSlice";
 import orderReducer from "./features/order/orderSlice";
@@ -9,23 +13,39 @@ import ownerReducer from "./features/owner/ownerSlice";
 import { authApi } from "./features/auth/authApi";
 import { userApi } from "./features/user/userApi";
 import { cartApi } from "./features/cart/cartApi";
-import { productApi } from "./features/product/productApi";
+import { itemApi } from "./features/product/itemApi";
 import { orderApi } from "./features/order/orderApi";
 import { ownerApi } from "./features/owner/ownerApi";
 
-const rootReducer = combineReducers({
-    [authApi.reducerPath]: authApi.reducer,
-    [userApi.reducerPath]: userApi.reducer,
-    [productApi.reducerPath]: productApi.reducer,
-    [cartApi.reducerPath]: cartApi.reducer,
-    [orderApi.reducerPath]: orderApi.reducer,
-    [ownerApi.reducerPath]:ownerApi.reducer,
-    auth: authReducer,
-    user: userReducer,
-    cart: cartReducer,
-    order: orderReducer,
-    location: locationReducer,
-    owner: ownerReducer
+const appReducer = combineReducers({
+  [authApi.reducerPath]: authApi.reducer,
+  [userApi.reducerPath]: userApi.reducer,
+  [itemApi.reducerPath]: itemApi.reducer,
+  [cartApi.reducerPath]: cartApi.reducer,
+  [orderApi.reducerPath]: orderApi.reducer,
+  [ownerApi.reducerPath]: ownerApi.reducer,
+  auth: authReducer,
+  user: userReducer,
+  cart: cartReducer,
+  order: orderReducer,
+  location: locationReducer,
+  owner: ownerReducer,
 });
 
-export default rootReducer;
+// 🧹 Reset all Redux state on logout
+const rootReducer = (state, action) => {
+  if (action.type === userLoggedOut.type) {
+    storage.removeItem("persist:root"); // clear persisted storage
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
+
+// 🔒 persist config
+const persistConfig = {
+  key: "root",
+  storage,
+  whitelist: ["auth", "user", "cart", "location"], // choose which slices to persist
+};
+
+export default persistReducer(persistConfig, rootReducer);

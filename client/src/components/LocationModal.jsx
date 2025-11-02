@@ -10,7 +10,6 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
   const BASE_URL = import.meta.env.VITE_BASEURL;
   const { user } = useSelector((state) => state.user);
-  const APIKEY = import.meta.env.VITE_GEOAPIKEY;
 
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);

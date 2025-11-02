@@ -4,6 +4,7 @@ import Services from "../components/Services";
 import Menu from "../components/Menu";
 import Footer from "../components/Footer";
 import Contact from "../components/Contact";
+import CategoryCard from "../components/CategoryCard";
 
 const Home = () => {
   return (
@@ -11,6 +12,7 @@ const Home = () => {
       <Navbar />
       <main>
         <section id="home"><HeroSection /></section>
+        <CategoryCard />
         <section id="services"><Services /></section>
         <section id="menu"><Menu /></section>
         <section id="contact"><Contact /></section>

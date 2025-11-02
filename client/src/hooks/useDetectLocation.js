@@ -1,9 +1,11 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCity, setState, updateSelectedAddress } from "../redux/features/user/userSlice";
 import { toast } from "react-toastify";
+import { useEffect } from "react";
 
 const useDetectLocation = () => {
   const dispatch = useDispatch();
+  const { city } = useSelector((state) => state.user);
   const APIKEY = import.meta.env.VITE_GEOAPIKEY;
 
   const detectLocation = async () => {
@@ -21,21 +23,16 @@ const useDetectLocation = () => {
             `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${APIKEY}`
           );
           const data = await res.json();
-          console.log(data.results);
+          console.log(data.results[0]?.city);
 
-          const city =
-            data.results[0]?.city ||
-            data.results[0]?.town ||
-            data.results[0]?.village ||
-            "Unknown";
+          const city = data.results[0]?.city || "Unknown";
           const state = data.results[0]?.state || "Unknown";
           const address = data.results[0]?.address_line2 || data.results[0]?.formatted
-
+          toast.success(`Location detected ${city}`);
           dispatch(setCity(city));
           dispatch(setState(state));
           dispatch(updateSelectedAddress(address))
 
-          toast.success(`Detected: ${city}, ${state}`);
         } catch (error) {
           console.error("Location fetch failed:", error);
           toast.error("Failed to detect location");
@@ -47,6 +44,12 @@ const useDetectLocation = () => {
       }
     );
   };
+
+  useEffect(() => {
+    if (!city) {
+      detectLocation()
+    }
+  }, []);
 
   return detectLocation;
 };
