@@ -3,9 +3,7 @@ const Cart = require("../models/Cart");
 const User = require("../models/User");
 const populateUser = require("../utils/populateUser");
 
-// @desc   Place a new order
-// @route  POST /api/orders
-// @access Private
+//  POST /api/orders
 const placeOrder = async (req, res) => {
   try {
     const userId = req.user.id;

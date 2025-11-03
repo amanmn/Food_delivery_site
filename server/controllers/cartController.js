@@ -1,10 +1,11 @@
 const Cart = require("../models/Cart");
 const User = require("../models/User");
-const Product = require("../models/Product");
+const Item = require("../models/Itemmodel");
 
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
+
     const userId = req.user.id;
 
     if (!productId || quantity == null) {
@@ -15,7 +16,7 @@ const addToCart = async (req, res) => {
       return res.status(400).json({ success: false, message: "Quantity must be greater than zero" });
     }
 
-    const product = await Product.findById(productId);
+    const product = await Item.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
@@ -65,12 +66,13 @@ const addToCart = async (req, res) => {
 // Example in cart controller:
 const getUserCart = async (req, res) => {
   const userId = req.user.id;
-  const cart = await Cart.findOne({ user: userId }).populate("items.product")
+  const cart = await Cart.findOne({ user: userId })
+    .populate("items.product")
     .populate({
       path: "user",
       select: "name address phone",  // ⬅️ pick required fields only
     })
-  console.log(cart);
+  console.log("cart", cart);
 
   if (!cart) {
     return res.status(404).json({ items: [] });

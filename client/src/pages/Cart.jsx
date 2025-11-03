@@ -12,10 +12,17 @@ import {
 } from "../redux/features/cart/cartApi";
 import { usePlaceOrderMutation } from "../redux/features/order/orderApi";
 import { motion } from "framer-motion";
+import { CiPickerEmpty, CiTrash } from "react-icons/ci"
+import { FaBeerMugEmpty, FaBoxArchive, FaMinus, FaPlus } from "react-icons/fa6";
+import { BsCart, BsCart2, BsCart3, BsCart4, BsCartDash } from "react-icons/bs";
+import { FcEmptyFilter } from "react-icons/fc";
+import { IoMdHeartEmpty } from "react-icons/io";
+import { FaRegMehBlank } from "react-icons/fa";
+import { RiCheckboxBlankFill } from "react-icons/ri";
 
 const Cart = () => {
   const [placeOrder] = usePlaceOrderMutation();
-  const { data, error, isLoading } = useGetCartItemsQuery();
+  const { data, isError, isLoading } = useGetCartItemsQuery();
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
   const [updateUserData] = useUpdateUserDataMutation();
@@ -30,6 +37,7 @@ const Cart = () => {
 
   useEffect(() => {
     setCartItems(data?.items || []);
+    console.log(cartItems);
   }, [data]);
 
   useEffect(() => {
@@ -40,36 +48,37 @@ const Cart = () => {
   }, [user, selectedAddressId]);
 
   const handlePlaceOrder = async () => {
-    const selectedAddress = user?.address?.find((addr) => addr._id === selectedAddressId);
+    // const selectedAddress = user?.address?.find((addr) => addr._id === selectedAddressId);
 
-    if (!selectedAddress) {
-      toast.error("Please select or add an address to proceed.");
-      return;
-    }
+    // if (!selectedAddress) {
+    //   toast.error("Please select or add an address to proceed.");
+    //   return;
+    // }
 
-    const orderItems = cartItems
-      .filter((item) => item?.product?._id)
-      .map((item) => ({
-        product: item.product._id,
-        quantity: item.quantity,
-      }));
+    // const orderItems = cartItems
+    //   .filter((item) => item?.product?._id)
+    //   .map((item) => ({
+    //     product: item.product._id,
+    //     quantity: item.quantity,
+    //   }));
 
-    const orderPayload = {
-      userId: user?._id,
-      items: orderItems,
-      totalAmount: calculateTotal(),
-      address: selectedAddress,
-    };
+    // const orderPayload = {
+    //   userId: user?._id,
+    //   items: orderItems,
+    //   totalAmount: calculateTotal(),
+    //   address: selectedAddress,
+    // };
 
-    try {
-      const result = await placeOrder(orderPayload).unwrap();
-      if (result.success) toast.success("Order placed successfully!");
-      setCartItems([]);
-      navigate("/");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to place order.");
-    }
+    // try {
+    //   const result = await placeOrder(orderPayload).unwrap();
+    //   if (result.success) toast.success("Order placed successfully!");
+    //   setCartItems([]);
+    //   navigate("/");
+    // } catch (error) {
+    //   console.error(error);
+    //   toast.error("Failed to place order.");
+    // }
+    navigate("/checkout")
   };
 
   const handleQuantityChange = async (itemId, delta) => {
@@ -136,12 +145,12 @@ const Cart = () => {
         className="w-full max-w-5xl bg-white shadow-2xl rounded-3xl p-6 md:p-10 border border-gray-100"
       >
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-            🛒 Your Cart
+          <h2 className="text-2xl flex gap-2 md:text-3xl font-bold text-gray-800">
+            <BsCart4 className="mt-1"/> <span>Your Cart</span>
           </h2>
           <button
             onClick={() => navigate("/")}
-            className="text-sm md:text-base bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg transition-all"
+            className="text-sm md:text-base bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 cursor-pointer rounded-lg transition-all"
           >
             Go Back Home
           </button>
@@ -149,8 +158,8 @@ const Cart = () => {
 
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-16">
-            <p className="text-gray-500 text-lg mb-6">
-              Your cart is empty 😕 <br /> Let’s find something tasty!
+            <p className="text-gray-500 flex justify-end text-lg mb-6">
+              Your cart is empty <span><FaBoxArchive size={25} className="mr-5" /></span>  Let’s find something tasty!
             </p>
             <button
               onClick={() => navigate("/")}
@@ -177,33 +186,33 @@ const Cart = () => {
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
                       {item?.product?.name}
                     </h3>
-                    <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                    <p className="text-gray-800 mt-1 font-bold text-sm sm:text-base">
                       ₹{item?.product?.price}
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 items-center">
-                    <div className="flex items-center gap-2 border rounded-lg px-3 py-1.5 shadow-sm">
+                    <div className="flex items-center gap-3 rounded-lg px-3 py-1.5 shadow-sm">
                       <button
                         onClick={() => handleQuantityChange(item._id, -1)}
-                        className="text-lg text-gray-700 hover:text-black"
+                        className="text-sm text-gray-700 hover:text-black cursor-pointer"
                       >
-                        −
+                        <FaMinus />
                       </button>
-                      <span className="text-gray-800 font-medium">
+                      <span className="text-gray-800 font-bold">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => handleQuantityChange(item._id, 1)}
-                        className="text-lg text-gray-700 hover:text-black"
+                        className="text-sm text-gray-700 hover:text-black cursor-pointer"
                       >
-                        +
+                        <FaPlus />
                       </button>
                     </div>
                     <button
                       onClick={() => handleRemoveItem(item._id)}
-                      className="text-sm text-red-500 hover:text-red-700 font-medium"
+                      className="text-sm p-1 bg-red-100 text-red-500 hover:bg-red-200 font-medium cursor-pointer rounded-full"
                     >
-                      Remove
+                      <CiTrash size={25} />
                     </button>
                   </div>
                 </motion.div>
@@ -212,13 +221,13 @@ const Cart = () => {
 
             {/* Address Section */}
             <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3 ">
                 Delivery Address
               </h3>
 
               {Array.isArray(user?.address) && user.address.length > 0 ? (
                 <select
-                  className="w-full border border-gray-300 p-2 rounded-lg text-gray-700 shadow-sm"
+                  className="w-full cursor-pointer border border-gray-300 p-2 rounded-lg text-gray-700 shadow-sm"
                   value={selectedAddressId}
                   onChange={(e) => setSelectedAddressId(e.target.value)}
                 >
@@ -234,7 +243,7 @@ const Cart = () => {
 
               <button
                 onClick={() => setIsAddressModalOpen(true)}
-                className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-all"
+                className="w-full mt-3 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-all"
               >
                 {user?.address?.length > 0 ? "Add Another Address" : "Enter Address"}
               </button>
@@ -267,7 +276,7 @@ const Cart = () => {
               </span>
               <button
                 onClick={handlePlaceOrder}
-                className="bg-orange-500 text-white font-semibold py-3 px-8 rounded-xl hover:bg-orange-600 transition-all shadow-md"
+                className="bg-orange-500 cursor-pointer text-white font-semibold py-3 px-8 rounded-xl hover:bg-orange-600 transition-all shadow-md"
               >
                 Proceed to Checkout
               </button>

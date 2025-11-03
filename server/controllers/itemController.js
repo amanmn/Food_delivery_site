@@ -1,5 +1,5 @@
 const uploadOnCloudinary = require("../config/cloudinary");
-const Item = require("../models/itemmodel");
+const Item = require("../models/Itemmodel");
 const Shop = require("../models/shopmodel");
 
 const addItem = async (req, res) => {

@@ -3,7 +3,7 @@ import { IoMdClose } from "react-icons/io";
 import { GoLocation } from "react-icons/go";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { setCity, setState } from "../redux/features/user/userSlice";
+import { setCity } from "../redux/features/user/userSlice";
 import useDetectLocation from "../hooks/useDetectLocation";
 
 const LocationModal = ({ isOpen, setIsOpen }) => {

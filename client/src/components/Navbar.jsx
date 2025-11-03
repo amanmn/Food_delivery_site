@@ -16,6 +16,7 @@ import { RiMenuLine } from "react-icons/ri";
 import { setCity } from "../redux/features/user/userSlice"; // ✅ ADD THIS
 import { toast } from "react-toastify";
 import { persistor } from "../redux/store";
+import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
 
 
 const Navbar = () => {
@@ -25,13 +26,23 @@ const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showInputBox, setshowInputBox] = useState(false);
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [logoutUser] = useLogoutUserMutation();
 
   const { user } = useSelector((state) => state.auth);
   const { city } = useSelector((state) => state.user) || "Add";
+  // const { cartItems } = useSelector((state) => state.cart);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const { data: cartData } = useGetCartItemsQuery(undefined, {
+    skip: !user, // only fetch if logged in
+  });
+
+  const cartItems = cartData?.items || 0;
+  const totalQuantity = Array.isArray(cartItems)
+    ? new Set(cartItems.map((item) => item.product?._id || item.product)).size
+    : 0;
 
   const handleLogout = async () => {
     try {
@@ -106,11 +117,22 @@ const Navbar = () => {
 
         <div className="flex items-center space-x-5">
 
-          {!showInputBox ?
-            <IoIosSearch size={32} className='lg:text-[#ff4d2d] md:text-red-500 text-gray-800 cursor-pointer' onClick={() => { setshowInputBox(true) }} />
-            :
-            <RxCross2 size={25} className="lg:text-[#ff4d2d] text-gray-800 cursor-pointer" onClick={() => { setshowInputBox(false) }} />
-          }
+          {!(showInputBox && isOpen) && (
+            !showInputBox && !isOpen ? (
+              <IoIosSearch
+                size={32}
+                className="lg:text-[#ff4d2d] md:text-red-500 text-gray-800 cursor-pointer"
+                onClick={() => setshowInputBox(true)}
+              />
+            ) : !isOpen ? (
+              <RxCross2
+                size={25}
+                className="lg:text-[#ff4d2d] text-gray-800 cursor-pointer"
+                onClick={() => setshowInputBox(false)}
+              />
+            ) : null
+          )}
+
 
           {user && (
             <button
@@ -120,7 +142,16 @@ const Navbar = () => {
             >
               <div className="relative cursor-pointer font-xl lg:text-red-500 md:text-red-500 text-gray-800">
                 <FiShoppingCart size={25} />
-                <span className="absolute right-[-9px] top-[-12px] font-semibold">0</span>
+                {totalQuantity > 0 ? (
+                  <span className="absolute right-[-9px] top-[-12px] font-semibold">
+                    {totalQuantity}
+                  </span>
+                )
+                  :
+                  (<span className="absolute right-[-9px] top-[-12px] font-semibold">
+                    {totalQuantity}
+                  </span>)
+                }
               </div>
             </button>
           )}
@@ -152,11 +183,13 @@ const Navbar = () => {
           )}
 
           {isMobile && !user && (
-            <button className="text-white text-2xl pr-2" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu">
-              {isOpen ?
-                <FaCross /> :
-                <RiMenuLine />
-              }
+            <button
+              className="text-white text-2xl pr-2"
+              onClick={() => {
+                setIsOpen(!isOpen);
+              }}
+              aria-label="Toggle Menu">
+              {isOpen ? <RxCross2 size={35} /> : <RiMenuLine />}
             </button>
           )}
         </div>

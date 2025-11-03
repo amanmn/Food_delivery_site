@@ -1,15 +1,53 @@
 const mongoose = require("mongoose");
 
+const shopOrderItemSchema = new mongoose.Schema({
+  item: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Item",
+  },
+  price: Number,
+  quantity: Number,
+
+}, { timeStamps: true });
+
+const shopOrderSchema = new mongoose.Schema({
+  shop: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Shop",
+    required: true
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  subTotal: Number,
+  shopOrderItems: [shopOrderItemSchema],
+},
+  { timestamps: true });
+
 const OrderSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "online"],
+      required: true
+    },
     items: [
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
         quantity: { type: Number, required: true, default: 1 },
       },
     ],
-    totalAmount: { type: Number, required: true },
+    totalAmount: {
+      type: Number,
+      required: true
+    },
+    shopOrder: [shopOrderSchema],
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "failed"],
@@ -32,6 +70,9 @@ const OrderSchema = new mongoose.Schema(
       city: { type: String, required: true },
       state: { type: String, required: true },
       zipCode: { type: String, required: true },
+      text: String,
+      latitude: Number,
+      longitude: Number
     },
     // assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }, // Admin handling the order
     createdAt: { type: Date, default: Date.now },

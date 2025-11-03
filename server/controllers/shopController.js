@@ -1,7 +1,6 @@
 const uploadOnCloudinary = require("../config/cloudinary");
 const Shop = require("../models/shopmodel");
 
-
 const createEditShop = async (req, res) => {
     try {
         const { name, city, state, address } = req.body;
@@ -54,12 +53,12 @@ const getShopByCity = async (req, res) => {
     try {
         const { city } = req.params;
         // console.log(city);
-        
+
         const shops = await Shop.find({
             city: { $regex: new RegExp(`${city}$`, "i") }
         }).populate("items");
-        console.log(shops);
-        
+        // console.log(shops,"shops");
+
         if (!shops) return res.status(400).json({ message: "shops not found" });
 
         return res.status(200).json(shops);

@@ -5,7 +5,7 @@ const initialState = {
   user: null,
   isAuthenticated: false,
   role: null,   //  user/owner/deliveryBoy
-  loading: true,
+  loading: false,
 };
 
 const authSlice = createSlice({

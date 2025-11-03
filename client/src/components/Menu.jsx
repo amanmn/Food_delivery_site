@@ -62,7 +62,6 @@ const Menu = () => {
   };
 
   const handleDecreaseQuantity = (id) => {
-    
     const newQuantity = Math.max(1, (quantities[id] || 1) - 1);
     setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
     toast.info(`Quantity updated to ${newQuantity}`);
@@ -143,13 +142,11 @@ const Menu = () => {
                     </p>
                   </div>
 
-
-
                   <div className="flex gap-2 items-center justify-between">
                     <button
                       onClick={() => handleAddToCart(item)}
                       disabled={isAdding[item._id]}
-                      className="text-white bg-red-500 hover:bg-red-600 font-semibold px-4 py-2 rounded-lg w-[60%] text-center"
+                      className={`text-white bg-red-500 hover:bg-red-600 font-semibold px-4 py-2 rounded-lg w-[60%] text-center`}
                     >
                       {isAdding[item._id] ? "Adding..." : "Add to Cart"}
                     </button>

@@ -30,21 +30,24 @@ const OrderPage = lazy(() => import("./pages/OrderForm"));
 const OwnerDashboard = lazy(() => import('../admin/pages/Dashboard'));
 const Settings = lazy(() => import('../admin/pages/Settings'));
 const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'))
+const Checkout = lazy(() => import("./pages/Checkout"));
+
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector(state => state.auth);
   const { city } = useSelector((state) => state.user);
+  const hasAuthCookie = document.cookie.includes("token=");
+
   // const { user } = useSelector((state) => state.user);
 
   const { data: userData, isSuccess, isLoading, isError, error } =
     useLoadUserDataQuery(undefined, {
       refetchOnMountOrArgChange: true,
-      skip: !isAuthenticated, // ✅ skip when logged out
+      // skip: false, // ✅ always run initially to check cookie session
     });
 
   useEffect(() => {
-    if (isSuccess && userData) {
+    if (isSuccess) {
       dispatch(userLoggedIn({ user: userData }));
       dispatch(updateUserProfile(userData)); // sets full profile in userSlice
       console.log("userLoading: ", isSuccess, userData);
@@ -54,14 +57,14 @@ function App() {
     }
     return;
 
-  }, [isSuccess, userData, isError, error, dispatch]);
+  }, [isSuccess, userData, isError, dispatch]);
 
   // useGetMyShop();
   useDetectLocation();
   useGetShopByCity();
   useGetItemByCity();
 
-  if (isLoading) {
+  if (hasAuthCookie && isLoading && !isError) {
     return (
       <div className="flex justify-center items-center h-screen">
         <ColorRing
@@ -117,6 +120,8 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order" element={<OrderPage />} />
+            <Route path="/checkout" element={<Checkout />} />
+
           </Route>
 
           {/* Owner Routes */}
