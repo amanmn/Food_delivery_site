@@ -8,8 +8,11 @@ import useDetectLocation from "../hooks/useDetectLocation";
 
 const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
-  const BASE_URL = import.meta.env.VITE_BASEURL;
+  const geoapikey = import.meta.env.VITE_GEOAPIKEY;
+  // const BASE_URL = import.meta.env.VITE_BASEURL;
   const { user } = useSelector((state) => state.user);
+  const { address } = useSelector((state) => state.location);
+
 
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -33,31 +36,33 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
   };
 
   // Handle outside click
+
+  const fetchSuggestions = async () => {
+    if (manualLocation.trim() === "") {
+      setSuggestions([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(manualLocation)}=&apiKey=${geoapikey}`);
+      const data = await res.json();
+      console.log(data.results[0].city);
+      // setManualLocation(data);
+      setSuggestions(data.results[0].city);
+    } catch (error) {
+      console.error("Failed to fetch suggestions", error);
+      toast.error("Failed to fetch suggestions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (manualLocation.trim() === "") {
-        setSuggestions([]);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const res = await fetch(`${BASE_URL}/map/search?q=${manualLocation.trim()}`);
-        const data = await res.json();
-        console.log(data);
-        setSuggestions(data);
-      } catch (error) {
-        console.error("Failed to fetch suggestions", error);
-        toast.error("Failed to fetch suggestions");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchSuggestions, 300);
+    setManualLocation(address);
+    const debounce = setTimeout(fetchSuggestions, 1000);
     return () => clearTimeout(debounce);
-
-  }, [manualLocation]);
+  }, [address]);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -68,6 +73,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
     window.addEventListener("click", handleOutsideClick);
     return () => window.removeEventListener("click", handleOutsideClick);
   }, [setIsOpen]);
+
 
   if (!isOpen || !user) return null;
 
@@ -92,7 +98,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
           aria-label="Search location"
           autoFocus
           disabled={loading}
-          value={manualLocation || ""}
+          value={manualLocation}
           onChange={(e) => setManualLocation(e.target.value)}
           placeholder="Search or type your city"
           className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"

@@ -2,238 +2,267 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
-import GetAddressModel from "../components/cartAddressModel";
-import { updateUserProfile } from "../redux/features/user/userSlice";
-import { useUpdateUserDataMutation } from "../redux/features/user/userApi";
-import { usePlaceOrderMutation } from "../redux/features/order/orderApi";
-import { motion } from "framer-motion";
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { IoLocationSharp } from "react-icons/io5";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoLocationSharp, IoSearchOutline } from "react-icons/io5";
 import { TbCurrentLocation } from "react-icons/tb";
+import { MdDeliveryDining } from "react-icons/md";
+import { FaMobileScreen, FaCreditCard } from "react-icons/fa6";
+import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { setAddress, setLocation } from "../redux/features/location/locationSlice";
+import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
+import { usePlaceOrderMutation } from "../redux/features/order/orderApi";
 
-
-
-const Cart = () => {
-    const [placeOrder] = usePlaceOrderMutation();
-    const [updateUserData] = useUpdateUserDataMutation();
-
-    const [cartItems, setCartItems] = useState([]);
-    const [selectedAddressId, setSelectedAddressId] = useState("");
-    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-
+const Checkout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { location, address } = useSelector((state) => state.location);
     const user = useSelector((state) => state.auth.user);
+    const { data: cartData, isLoading } = useGetCartItemsQuery();
+    const [paymentMethod, setPaymentMethod] = useState("cod");
+    const [searchInput, setSearchInput] = useState("");
+    const [placeOrder] = usePlaceOrderMutation();
+    const APIKEY = import.meta.env.VITE_GEOAPIKEY;
 
-    // useEffect(() => {
-    //     setCartItems(data?.items || []);
-    //     console.log(cartItems);
-    // }, []);
+    const position = [location?.lat || 22.7196, location?.lon || 75.8577];
+
+    const calculateTotal = () =>
+        cartData?.items?.reduce(
+            (t, i) => t + i.quantity * (i?.product?.price || 0),
+            0
+        ) || 0;
+
+    const deliveryFee = calculateTotal() > 500 ? 0 : 40;
+    const AmountWithDeliveryFee = calculateTotal() + deliveryFee;
 
     useEffect(() => {
-        if (!user) return;
-        if (!selectedAddressId && Array.isArray(user.address) && user.address.length > 0) {
-            setSelectedAddressId(user.address[0]._id);
+        setSearchInput(address);
+    }, [address]);
+
+    const getAddressByLatLng = async (lat, lon) => {
+        try {
+            const res = await fetch(
+                `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&format=json&apiKey=${APIKEY}`
+            );
+            const data = await res.json();
+            const addr = data.results[0]?.address_line2 || "Unknown location";
+            dispatch(setAddress(addr));
+        } catch (err) {
+            console.error(err);
         }
-    }, [user, selectedAddressId]);
+    };
+
+    const onDragEnd = (e) => {
+        const { lat, lng } = e.target._latlng;
+        dispatch(setLocation({ lat, lon: lng }));
+        getAddressByLatLng(lat, lng);
+    };
+
+    function RecenterMap({ location }) {
+        const map = useMap();
+        if (location?.lat && location?.lon)
+            map.setView([location.lat, location.lon], 14, { animate: true });
+        return null;
+    }
+
+    const getCurrentLocation = () => {
+        navigator.geolocation.getCurrentPosition(({ coords }) => {
+            dispatch(setLocation({ lat: coords.latitude, lon: coords.longitude }));
+            getAddressByLatLng(coords.latitude, coords.longitude);
+        });
+    };
+
+    const fetchSearchedAddress = async () => {
+        try {
+            const res = await fetch(
+                `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(
+                    searchInput
+                )}&apiKey=${APIKEY}`
+            );
+            const data = await res.json();
+            const { lat, lon } = data.features[0]?.properties || {};
+            if (lat && lon) dispatch(setLocation({ lat, lon }));
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const handlePlaceOrder = async () => {
-        const selectedAddress = user?.address?.find((addr) => addr._id === selectedAddressId);
-
-        if (!selectedAddress) {
-            toast.error("Please select or add an address to proceed.");
+        if (!address) {
+            toast.error("Please select or add an address first.");
             return;
         }
 
-        const orderItems = cartItems
-            .filter((item) => item?.product?._id)
-            .map((item) => ({
-                product: item.product._id,
-                quantity: item.quantity,
-            }));
+        const orderItems = cartData?.items?.map((i) => ({
+            product: i.product._id,
+            quantity: i.quantity,
+        }));
 
         const orderPayload = {
             userId: user?._id,
             items: orderItems,
             totalAmount: calculateTotal(),
-            address: selectedAddress,
+            address,
+            paymentMethod,
         };
 
         try {
             const result = await placeOrder(orderPayload).unwrap();
-            if (result.success) toast.success("Order placed successfully!");
-            setCartItems([]);
-            navigate("/");
-        } catch (error) {
-            console.error(error);
+            if (result.success) {
+                toast.success("Order placed successfully!");
+                navigate("/");
+            }
+        } catch (err) {
             toast.error("Failed to place order.");
         }
     };
 
-
-    const handleSaveAddress = async (newAddress) => {
-        try {
-            const res = await updateUserData({ newAddress }).unwrap();
-            const updatedUser = res.user || res;
-            dispatch(updateUserProfile(updatedUser));
-
-            const lastAddress = updatedUser.address.at(-1);
-            if (lastAddress) setSelectedAddressId(lastAddress._id);
-
-            toast.success("New address added!");
-            setIsAddressModalOpen(false);
-        } catch {
-            toast.error("Failed to add address.");
-        }
-    };
-
-    const calculateTotal = () =>
-        cartItems.reduce((t, i) => t + i.quantity * (i?.product?.price || 0), 0);
-
-    const selectedAddress = user?.address?.find((a) => a._id === selectedAddressId);
-
     return (
-        <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white px-4 py-8 flex justify-center">
-            <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-5xl bg-white shadow-2xl  rounded-3xl p-6 md:p-10 border border-gray-100"
-            >
-                <div className="flex items-center">
-                    <button
-                        onClick={() => navigate("/cart")}
-                        className="  bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 cursor-pointer rounded-lg transition-all"
-                    >
-                        <IoIosArrowRoundBack size={35} />
-                    </button>
-                    <h1 className="text-lg md:text-2xl px-6 font-semibold text-gray-800">
-                        Checkout
-                    </h1>
-                </div>
+        <div className="min-h-screen bg-gray-100">
+            {/* Main Content */}
+            <div className="max-w-5xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Address Section */}
 
-                {/* <div className="grid gap-6">
-                    {cartItems.map((item) => (
-                        <motion.div
-                            key={item._id}
-                            whileHover={{ scale: 1.02 }}
-                            className="flex flex-col sm:flex-row items-center gap-5 p-4 sm:p-5 rounded-2xl border bg-white/70 shadow-md hover:shadow-xl transition-all"
-                        >
-                            <img
-                                src={item?.product?.image || "https://via.placeholder.com/150"}
-                                alt={item?.product?.name}
-                                className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-xl"
-                            />
-                            <div className="flex-1 text-center sm:text-left">
-                                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
-                                    {item?.product?.name}
-                                </h3>
-                                <p className="text-gray-800 mt-1 font-bold text-sm sm:text-base">
-                                    ₹{item?.product?.price}
-                                </p>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-3 items-center">
-                                <div className="flex items-center gap-3 rounded-lg px-3 py-1.5 shadow-sm">
-                                    <button
-                                        onClick={() => handleQuantityChange(item._id, -1)}
-                                        className="text-sm text-gray-700 hover:text-black cursor-pointer"
-                                    >
-                                        <FaMinus />
-                                    </button>
-                                    <span className="text-gray-800 font-bold">
-                                        {item.quantity}
-                                    </span>
-                                    <button
-                                        onClick={() => handleQuantityChange(item._id, 1)}
-                                        className="text-sm text-gray-700 hover:text-black cursor-pointer"
-                                    >
-                                        <FaPlus />
-                                    </button>
-                                </div>
+                    <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200">
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => navigate("/cart")}
+                                className="p-1 hover:bg-gray-200 rounded-full"
+                            >
+                                <IoIosArrowRoundBack size={30} />
+                            </button>
+                            <h1 className="text-2xl font-semibold text-gray-800">
+                                Checkout
+                            </h1>
+                        </div>
+                        <h2 className="font-semibold text-lg flex items-center gap-2 my-4">
+                            <IoLocationSharp className="text-red-500" /> Delivery Address
+                        </h2>
+
+                        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+                            <div className="flex w-full border rounded-lg overflow-hidden">
+                                <input
+                                    type="text"
+                                    placeholder="Search your delivery address..."
+                                    className="flex-1 p-2 text-base focus:outline-none"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                />
                                 <button
-                                    onClick={() => handleRemoveItem(item._id)}
-                                    className="text-sm p-1 bg-red-100 text-red-500 hover:bg-red-200 font-medium cursor-pointer rounded-full"
+                                    onClick={fetchSearchedAddress}
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 flex items-center justify-center"
                                 >
-                                    <CiTrash size={25} />
+                                    <IoSearchOutline size={18} />
                                 </button>
                             </div>
-                        </motion.div>
-                    ))}
-                </div> */}
-
-                {/* Address Section */}
-                <div className="mt-8">
-                    <h3 className="text-xl flex font-semibold text-gray-800 mb-3 ">
-                        <IoLocationSharp className="text-red-500 mt-1 mr-3" />
-                        Delivery Address
-                    </h3>
-                    <div className="flex gap-2 mb-3">
-                        <input type="text" placeholder="Enter Your Delivery Address..." className="w-full flex-1 p-2 text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
-                        <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg flex items-center justify-center cursor-pointer"><IoSearchOutline size={17} /></button>
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg cursor-pointer flex items-center justify-center"><TbCurrentLocation size={17} /></button>
-                    </div>
-                    <div>Map</div>
-
-
-                    {Array.isArray(user?.address) && user.address.length > 0 ? (
-                        <select
-                            className="w-full cursor-pointer border border-gray-300 p-2 rounded-lg text-gray-700 shadow-sm"
-                            value={selectedAddressId}
-                            onChange={(e) => setSelectedAddressId(e.target.value)}
-                        >
-                            {user.address.map((addr) => (
-                                <option key={addr._id} value={addr._id}>
-                                    {addr.street}, {addr.city}, {addr.state}
-                                </option>
-                            ))}
-                        </select>
-                    ) : (
-                        <p className="text-gray-600">No address found. Please add one.</p>
-                    )}
-
-                    <button
-                        onClick={() => setIsAddressModalOpen(true)}
-                        className="w-full mt-3 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-all"
-                    >
-                        {user?.address?.length > 0 ? "Add Another Address" : "Enter Address"}
-                    </button>
-
-                    {selectedAddress && (
-                        <div className="mt-4 bg-gray-50 border rounded-xl p-4">
-                            <h4 className="font-semibold text-gray-800 mb-1">
-                                Selected Address:
-                            </h4>
-                            <p className="text-gray-600 text-sm">
-                                {selectedAddress.street}, {selectedAddress.city},{" "}
-                                {selectedAddress.state}, {selectedAddress.country} -{" "}
-                                {selectedAddress.zipCode}
-                            </p>
+                            <button
+                                onClick={getCurrentLocation}
+                                className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 justify-center"
+                            >
+                                <TbCurrentLocation size={18} /> Current
+                            </button>
                         </div>
-                    )}
 
-                    {isAddressModalOpen && (
-                        <GetAddressModel
-                            onClose={() => setIsAddressModalOpen(false)}
-                            onSave={handleSaveAddress}
-                        />
-                    )}
+                        <div className="rounded-md overflow-hidden border">
+                            <MapContainer
+                                center={position}
+                                zoom={15}
+                                className="w-full h-64 sm:h-72"
+                            >
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                />
+                                <RecenterMap location={location} />
+                                <Marker draggable position={position} eventHandlers={{ dragend: onDragEnd }} />
+                            </MapContainer>
+                        </div>
+                    </div>
+
+                    {/* Payment Section */}
+                    <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200">
+                        <h2 className="font-semibold text-lg mb-4">Payment Method</h2>
+
+                        <div className="space-y-3">
+                            <label
+                                className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${paymentMethod === "cod"
+                                        ? "border-yellow-500 bg-yellow-50"
+                                        : "hover:border-gray-400"
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    checked={paymentMethod === "cod"}
+                                    onChange={() => setPaymentMethod("cod")}
+                                />
+                                <MdDeliveryDining className="text-gray-700 text-xl" />
+                                <span>Cash on Delivery</span>
+                            </label>
+
+                            <label
+                                className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${paymentMethod === "online"
+                                        ? "border-yellow-500 bg-yellow-50"
+                                        : "hover:border-gray-400"
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    checked={paymentMethod === "online"}
+                                    onChange={() => setPaymentMethod("online")}
+                                />
+                                <FaCreditCard className="text-gray-700 text-xl" />
+                                <span>Pay Online (UPI / Card)</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Total + Checkout */}
-                <div className="border-t mt-10 pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-xl font-bold text-gray-800">
-                        Total: ₹{calculateTotal()}
-                    </span>
+                {/* Right Column - Summary */}
+                <div className="max-w-5xl bg-white p-5 rounded-md shadow-md border border-gray-200 h-2/3 sticky top-30">
+                    <h2 className="font-semibold text-lg mb-3">Order Summary</h2>
+                    <div className="divide-y divide-gray-200 text-sm text-gray-700">
+                        {isLoading ? (
+                            <p>Loading...</p>
+                        ) : (
+                            cartData?.items?.map((item, i) => (
+                                <div key={i} className="flex justify-between py-1">
+                                    <span>
+                                        {item.product?.name} × {item.quantity}
+                                    </span>
+                                    <span>₹{item.product?.price * item.quantity}</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <hr className="my-3" />
+                    <div className="flex justify-between font-medium">
+                        <span>Subtotal</span>
+                        <span>₹{calculateTotal()}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-700 text-sm mt-1">
+                        <span>Delivery Fee</span>
+                        <span>{deliveryFee === 0 ? "Free" : `₹${deliveryFee}`}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg mt-3">
+                        <span>Total</span>
+                        <span className="text-yellow-600">₹{AmountWithDeliveryFee}</span>
+                    </div>
+
                     <button
                         onClick={handlePlaceOrder}
-                        className="bg-orange-500 cursor-pointer text-white font-semibold py-3 px-8 rounded-xl hover:bg-orange-600 transition-all shadow-md"
+                        className="mt-5 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition"
                     >
-                        Proceed to Checkout
+                        {paymentMethod === "cod" ? "Place your order" : "Pay & Place Order"}
                     </button>
                 </div>
-            </motion.div>
-        </div >
+            </div>
+        </div>
     );
 };
 
-export default Cart;
+export default Checkout;

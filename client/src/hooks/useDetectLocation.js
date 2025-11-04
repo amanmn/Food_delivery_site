@@ -18,13 +18,15 @@ const useDetectLocation = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+        // console.log(latitude, longitude);
+
         dispatch(setLocation({ lat: latitude, lon: longitude }))
         try {
           const res = await fetch(
             `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${APIKEY}`
           );
           const data = await res.json();
-          console.log("address", data.results[0]?.city);
+          console.log("address", data.results[0]);
 
           const city = data.results[0]?.city || "Unknown";
           const state = data.results[0]?.state || "Unknown";
@@ -42,6 +44,21 @@ const useDetectLocation = () => {
       (error) => {
         console.error("Permission denied or error:", error);
         toast.error("Location access denied");
+
+        async (error) => {
+          console.error("Permission denied or error:", error);
+          toast.error("Location access denied, using fallback");
+
+          // Fallback: IP-based location
+          const res = await fetch(`https://api.geoapify.com/v1/ipinfo?&apiKey=${APIKEY}`);
+          const data = await res.json();
+          console.log("Fallback IP location:", data);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
       }
     );
   };
