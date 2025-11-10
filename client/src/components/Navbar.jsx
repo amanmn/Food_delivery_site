@@ -120,8 +120,8 @@ const Navbar = () => {
           {!(showInputBox && isOpen) && (
             !showInputBox && !isOpen ? (
               <IoIosSearch
-                size={32}
-                className="lg:text-[#ff4d2d] md:text-red-500 text-gray-800 cursor-pointer"
+                size={30}
+                className="lg:text-[#ff4d2d] md:text-red-500 text-white cursor-pointer"
                 onClick={() => setshowInputBox(true)}
               />
             ) : !isOpen ? (

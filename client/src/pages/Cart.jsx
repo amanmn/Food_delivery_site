@@ -25,11 +25,11 @@ const Cart = () => {
   const { data, isError, isLoading } = useGetCartItemsQuery();
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
-  const [updateUserData] = useUpdateUserDataMutation();
+  // const [updateUserData] = useUpdateUserDataMutation();
 
   const [cartItems, setCartItems] = useState([]);
-  const [selectedAddressId, setSelectedAddressId] = useState("");
-  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  // const [selectedAddressId, setSelectedAddressId] = useState("");
+  // const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -42,42 +42,12 @@ const Cart = () => {
 
   useEffect(() => {
     if (!user) return;
-    if (!selectedAddressId && Array.isArray(user.address) && user.address.length > 0) {
-      setSelectedAddressId(user.address[0]._id);
-    }
-  }, [user, selectedAddressId]);
+    // if (!selectedAddressId && Array.isArray(user.address) && user.address.length > 0) {
+    //   setSelectedAddressId(user.address[0]._id);
+    // }
+  }, [user]);
 
   const handlePlaceOrder = async () => {
-    // const selectedAddress = user?.address?.find((addr) => addr._id === selectedAddressId);
-
-    // if (!selectedAddress) {
-    //   toast.error("Please select or add an address to proceed.");
-    //   return;
-    // }
-
-    // const orderItems = cartItems
-    //   .filter((item) => item?.product?._id)
-    //   .map((item) => ({
-    //     product: item.product._id,
-    //     quantity: item.quantity,
-    //   }));
-
-    // const orderPayload = {
-    //   userId: user?._id,
-    //   items: orderItems,
-    //   totalAmount: calculateTotal(),
-    //   address: selectedAddress,
-    // };
-
-    // try {
-    //   const result = await placeOrder(orderPayload).unwrap();
-    //   if (result.success) toast.success("Order placed successfully!");
-    //   setCartItems([]);
-    //   navigate("/");
-    // } catch (error) {
-    //   console.error(error);
-    //   toast.error("Failed to place order.");
-    // }
     navigate("/checkout")
   };
 
@@ -111,21 +81,21 @@ const Cart = () => {
     }
   };
 
-  const handleSaveAddress = async (newAddress) => {
-    try {
-      const res = await updateUserData({ newAddress }).unwrap();
-      const updatedUser = res.user || res;
-      dispatch(updateUserProfile(updatedUser));
+  // const handleSaveAddress = async (newAddress) => {
+  //   try {
+  //     const res = await updateUserData({ newAddress }).unwrap();
+  //     const updatedUser = res.user || res;
+  //     dispatch(updateUserProfile(updatedUser));
 
-      const lastAddress = updatedUser.address.at(-1);
-      if (lastAddress) setSelectedAddressId(lastAddress._id);
+  //     const lastAddress = updatedUser.address.at(-1);
+  //     if (lastAddress) setSelectedAddressId(lastAddress._id);
 
-      toast.success("New address added!");
-      setIsAddressModalOpen(false);
-    } catch {
-      toast.error("Failed to add address.");
-    }
-  };
+  //     toast.success("New address added!");
+  //     setIsAddressModalOpen(false);
+  //   } catch {
+  //     toast.error("Failed to add address.");
+  //   }
+  // };
 
   const calculateTotal = () =>
     cartItems.reduce((t, i) => t + i.quantity * (i?.product?.price || 0), 0);
@@ -135,7 +105,7 @@ const Cart = () => {
       <p className="text-center text-red-500 mt-10 animate-pulse">Loading...</p>
     );
 
-  const selectedAddress = user?.address?.find((a) => a._id === selectedAddressId);
+  // const selectedAddress = user?.address?.find((a) => a._id === selectedAddressId);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white px-4 py-8 flex justify-center">
@@ -146,7 +116,7 @@ const Cart = () => {
       >
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl flex gap-2 md:text-3xl font-bold text-gray-800">
-            <BsCart4 className="mt-1"/> <span>Your Cart</span>
+            <BsCart4 className="mt-1" /> <span>Your Cart</span>
           </h2>
           <button
             onClick={() => navigate("/")}
@@ -219,7 +189,7 @@ const Cart = () => {
               ))}
             </div>
 
-            {/* Address Section */}
+            {/* Address Section
             <div className="mt-8">
               <h3 className="text-xl font-semibold text-gray-800 mb-3 ">
                 Delivery Address
@@ -267,7 +237,7 @@ const Cart = () => {
                   onSave={handleSaveAddress}
                 />
               )}
-            </div>
+            </div> */}
 
             {/* Total + Checkout */}
             <div className="border-t mt-10 pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

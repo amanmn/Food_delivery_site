@@ -14,10 +14,15 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: myShopData, refetch, isLoading } = useLoadMyShopDataQuery();
 
+
   useEffect(() => {
-    if (myShopData) dispatch(setMyShopData(myShopData));
-    refetch();
+    if (myShopData) {
+      dispatch(setMyShopData(myShopData));
+      refetch();
+    }
   }, [myShopData, dispatch]);
+
+  // if (!myShopData) return;
 
   if (isLoading) {
     return (

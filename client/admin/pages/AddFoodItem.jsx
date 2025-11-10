@@ -65,7 +65,7 @@ const AddFoodItem = () => {
             dispatch(setMyShopData(result.data))
             setLoading(false);
             navigate("/dash");
-            console.log(result.data);
+            // console.log(result.data);
             toast.success("Item added successfully");
 
         } catch (error) {

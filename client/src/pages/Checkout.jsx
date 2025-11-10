@@ -6,19 +6,22 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoLocationSharp, IoSearchOutline } from "react-icons/io5";
 import { TbCurrentLocation } from "react-icons/tb";
 import { MdDeliveryDining } from "react-icons/md";
-import { FaMobileScreen, FaCreditCard } from "react-icons/fa6";
+import { FaCreditCard } from "react-icons/fa6";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { setAddress, setLocation } from "../redux/features/location/locationSlice";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
 import { usePlaceOrderMutation } from "../redux/features/order/orderApi";
+import { useGetOrderItemsQuery } from "../redux/features/order/orderApi";
+import { clearCart } from "../redux/features/cart/cartSlice";
 
 const Checkout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { location, address } = useSelector((state) => state.location);
+    const order = useGetOrderItemsQuery();
     const user = useSelector((state) => state.auth.user);
-    const { data: cartData, isLoading } = useGetCartItemsQuery();
+    const { data, isError, isLoading } = useGetCartItemsQuery();
     const [paymentMethod, setPaymentMethod] = useState("cod");
     const [searchInput, setSearchInput] = useState("");
     const [placeOrder] = usePlaceOrderMutation();
@@ -27,7 +30,7 @@ const Checkout = () => {
     const position = [location?.lat || 22.7196, location?.lon || 75.8577];
 
     const calculateTotal = () =>
-        cartData?.items?.reduce(
+        data?.items?.reduce(
             (t, i) => t + i.quantity * (i?.product?.price || 0),
             0
         ) || 0;
@@ -37,7 +40,10 @@ const Checkout = () => {
 
     useEffect(() => {
         setSearchInput(address);
-    }, [address]);
+        console.log(searchInput);
+        console.log(data);
+        // console.log(order);
+    }, [address, searchInput, data]);
 
     const getAddressByLatLng = async (lat, lon) => {
         try {
@@ -93,23 +99,23 @@ const Checkout = () => {
             return;
         }
 
-        const orderItems = cartData?.items?.map((i) => ({
-            product: i.product._id,
-            quantity: i.quantity,
-        }));
-
         const orderPayload = {
-            userId: user?._id,
-            items: orderItems,
-            totalAmount: calculateTotal(),
-            address,
+            cartItems: data,
             paymentMethod,
+            totalAmount: AmountWithDeliveryFee,
+            deliveryAddress: {
+                text: searchInput,
+                latitude: location.lat,
+                longitude: location.lon
+            },
         };
 
         try {
             const result = await placeOrder(orderPayload).unwrap();
+
             if (result.success) {
                 toast.success("Order placed successfully!");
+                dispatch(clearCart);
                 navigate("/");
             }
         } catch (err) {
@@ -188,8 +194,8 @@ const Checkout = () => {
                         <div className="space-y-3">
                             <label
                                 className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${paymentMethod === "cod"
-                                        ? "border-yellow-500 bg-yellow-50"
-                                        : "hover:border-gray-400"
+                                    ? "border-yellow-500 bg-yellow-50"
+                                    : "hover:border-gray-400"
                                     }`}
                             >
                                 <input
@@ -204,8 +210,8 @@ const Checkout = () => {
 
                             <label
                                 className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${paymentMethod === "online"
-                                        ? "border-yellow-500 bg-yellow-50"
-                                        : "hover:border-gray-400"
+                                    ? "border-yellow-500 bg-yellow-50"
+                                    : "hover:border-gray-400"
                                     }`}
                             >
                                 <input
@@ -228,7 +234,7 @@ const Checkout = () => {
                         {isLoading ? (
                             <p>Loading...</p>
                         ) : (
-                            cartData?.items?.map((item, i) => (
+                            data?.items?.map((item, i) => (
                                 <div key={i} className="flex justify-between py-1">
                                     <span>
                                         {item.product?.name} × {item.quantity}

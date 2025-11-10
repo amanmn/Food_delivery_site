@@ -32,7 +32,7 @@ const addToCart = async (req, res) => {
       await cart.save();
       try {
         const updatedUser = await User.findByIdAndUpdate(userId, { cart: cart._id }, { new: true });
-        console.log("Updated User:", updatedUser);
+        // console.log("Updated User:", updatedUser);
       } catch (error) {
         console.error("Error updating user with cart:", error);
       }
@@ -50,11 +50,11 @@ const addToCart = async (req, res) => {
 
       console.log("Before update:", await User.findById(req.user.id));
       await User.findByIdAndUpdate(req.user.id, { cart: cart._id });
-      console.log("After update:", await User.findById(req.user.id));
+      // console.log("After update:", await User.findById(req.user.id));
 
     }
     const populatedCart = await Cart.findById(cart._id).populate("items.product");
-    console.log(populatedCart);
+    // console.log(populatedCart);
 
     res.status(200).json({ success: true, message: "Item added to cart", cart: populatedCart });
   } catch (err) {
@@ -72,7 +72,7 @@ const getUserCart = async (req, res) => {
       path: "user",
       select: "name address phone",  // ⬅️ pick required fields only
     })
-  console.log("cart", cart);
+  // console.log("cart", cart);
 
   if (!cart) {
     return res.status(404).json({ items: [] });
@@ -97,7 +97,7 @@ const updateCartItem = async (req, res) => {
     }
 
     const item = cart.items.id(itemId);
-    console.log(item, "itemmmm");
+    // console.log(item, "itemmmm");
 
     if (!item) {
       return res.status(404).json({ message: "Item not found in cart" });

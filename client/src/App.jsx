@@ -26,12 +26,12 @@ const RegisterPage = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const CartPage = lazy(() => import("./pages/Cart"));
-const OrderPage = lazy(() => import("./pages/OrderForm"));
+const OrderPage = lazy(() => import("./pages/MyOrders"));
 const OwnerDashboard = lazy(() => import('../admin/pages/Dashboard'));
 const Settings = lazy(() => import('../admin/pages/Settings'));
 const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'))
 const Checkout = lazy(() => import("./pages/Checkout"));
-
+// const OwnerOrders = lazy(()=> import ("./pages/MyOrders"));
 
 function App() {
   const dispatch = useDispatch();
@@ -43,7 +43,6 @@ function App() {
   const { data: userData, isSuccess, isLoading, isError, error } =
     useLoadUserDataQuery(undefined, {
       refetchOnMountOrArgChange: true,
-      // skip: false, // ✅ always run initially to check cookie session
     });
 
   useEffect(() => {
@@ -116,7 +115,6 @@ function App() {
 
           {/* Protected Routes (User) */}
           <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
-            {/* <Route path="/" element={<HomePage />} /> */}
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order" element={<OrderPage />} />
@@ -133,6 +131,8 @@ function App() {
             <Route path="/item-product" element={<ItemProduct />} />
             <Route path="/edit-item/:itemId" element={<EditItem />} />
             <Route path='/settings' element={<Settings />} />
+            <Route path='/orders' element={<OrderPage />} />
+
           </Route>
 
           {/* DeliveryBoy Routes */}
