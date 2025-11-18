@@ -36,6 +36,7 @@ const userSlice = createSlice({
         setItemsInMyCity: (state, action) => {
             state.itemsInMyCity = action.payload
         },
+
     },
     extraReducers: (builder) => {
         builder

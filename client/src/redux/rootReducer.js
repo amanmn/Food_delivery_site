@@ -9,6 +9,8 @@ import cartReducer from "./features/cart/cartSlice";
 import orderReducer from "./features/order/orderSlice";
 import locationReducer from "./features/location/locationSlice";
 import ownerReducer from "./features/owner/ownerSlice";
+import deliveryLocationReducer from "./features/deliveryBoyLocation/deliveryLocationSlice"; // ✅ import this
+
 
 import { authApi } from "./features/auth/authApi";
 import { userApi } from "./features/user/userApi";
@@ -30,6 +32,7 @@ const appReducer = combineReducers({
   order: orderReducer,
   location: locationReducer,
   owner: ownerReducer,
+  deliveryLocation: deliveryLocationReducer,
 });
 
 // 🧹 Reset all Redux state on logout
@@ -45,7 +48,7 @@ const rootReducer = (state, action) => {
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "user", "cart", "location"], // choose which slices to persist
+  whitelist: ["auth", "user", "cart", "location", "deliveryLocation"], // choose which slices to persist
 };
 
 export default persistReducer(persistConfig, rootReducer);

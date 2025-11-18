@@ -51,21 +51,25 @@ export default function Topbar({ onMenuClick }) {
         </div>
 
         {/* My Orders */}
-        <div className="hidden md:flex items-center gap-2 cursor-pointer relative rounded-full text-blue-500 bg-blue-100 px-3 py-1 font-bold">
+        <button
+          onClick={() => navigate("/orders")}
+          className="hidden md:flex items-center gap-2 cursor-pointer relative rounded-full text-blue-500 bg-blue-100 px-3 py-1 font-bold">
           <BsFillBagCheckFill size={20} />
           <span>My Orders</span>
           <span className="absolute -right-2 -top-2 text-xs text-blue-100 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">
             0
           </span>
-        </div>
+        </button>
 
         {/* Mobile My Orders */}
-        <div className="md:hidden flex items-center gap-2 cursor-pointer relative rounded-full text-blue-500 bg-blue-100 px-3 py-1 font-bold">
+        <button
+          onClick={() => navigate("/orders")}
+          className="md:hidden flex items-center gap-2 cursor-pointer relative rounded-full text-blue-500 bg-blue-100 px-3 py-1 font-bold">
           <BsFillBagCheckFill size={20} />
           <span className="absolute -right-2 -top-2 text-xs text-blue-100 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">
             0
           </span>
-        </div>
+        </button>
       </div>
     </header>
   );

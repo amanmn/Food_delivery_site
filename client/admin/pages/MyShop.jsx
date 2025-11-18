@@ -1,10 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useLoadMyShopDataQuery } from "../../src/redux/features/owner/ownerApi";
 import { FaArrowLeft, FaMapMarkerAlt, FaStore, FaPhoneAlt, FaEnvelope, FaRegEdit } from "react-icons/fa";
+import { useEffect } from "react";
 
 const MyShop = () => {
     const navigate = useNavigate();
     const { data: shopData, isLoading } = useLoadMyShopDataQuery();
+    useEffect(() => {
+        console.log(shopData)
+    })
 
     if (isLoading) {
         return (
@@ -43,33 +47,33 @@ const MyShop = () => {
                 <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300">
                     <div className="relative">
                         <img
-                            src={shopData.image || "https://source.unsplash.com/800x400/?shop,store"}
-                            alt={shopData.name}
+                            src={shopData?.image || "https://source.unsplash.com/800x400/?shop,store"}
+                            alt={shopData?.name}
                             className="w-full h-84 object-contain"
                         />
                         <div className="absolute top-4 left-4 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
-                            {shopData.status || "Active"}
+                            {shopData?.status || "Active"}
                         </div>
                     </div>
 
                     <div className="p-6 sm:p-8 space-y-4">
                         <h2 className="text-2xl font-bold text-gray-900">{shopData.name}</h2>
                         <p className="text-gray-600 text-base leading-relaxed">
-                            {shopData.description || "No description provided for this shop."}
+                            {shopData?.description || "No description provided for this shop."}
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                             <div className="flex items-center gap-3 text-gray-700">
                                 <FaMapMarkerAlt className="text-blue-600" />
-                                <span>{shopData.city || "Location not specified"}</span>
+                                <span>{shopData?.address || "Location not specified"}</span>
                             </div>
                             <div className="flex items-center gap-3 text-gray-700">
                                 <FaPhoneAlt className="text-green-600" />
-                                <span>{shopData.phone || "No contact number"}</span>
+                                <span>{shopData?.owner?.phone || "No contact number"}</span>
                             </div>
                             <div className="flex items-center gap-3 text-gray-700">
                                 <FaEnvelope className="text-pink-600" />
-                                <span>{shopData.email || "No email available"}</span>
+                                <span>{shopData?.owner?.email || "No email available"}</span>
                             </div>
                             <div className="flex items-center gap-3 text-gray-700">
                                 <FaStore className="text-purple-600" />

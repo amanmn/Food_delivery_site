@@ -28,7 +28,9 @@ const useDetectLocation = () => {
           const data = await res.json();
           console.log("address", data.results[0]);
 
-          const city = data.results[0]?.city || "Unknown";
+          const city = data.results[0]?.city || data.results[0]?.county || "Unknown";
+          console.log("city",city);
+          
           const state = data.results[0]?.state || "Unknown";
           const address = data.results[0]?.address_line2 || data.results[0]?.formatted
           toast.success(`Location detected ${city}`);

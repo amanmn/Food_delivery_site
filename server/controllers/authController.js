@@ -13,61 +13,82 @@ const handleServerError = (res, err, msg = "Server error") => {
     return res.status(500).json({ success: false, message: msg });
 };
 
-// ✅ Register Controller
 const register = async (req, res) => {
     try {
         const { name, email, password, phone, role } = req.body;
-        // if (!name || !email || !password || !phone || !role) {
-        //     return res.status(400).json({ error: "All fields are required" });
-        // }
+        console.log(req.body);
+
+        if (!name || !email || !password || !phone || !role) {
+            return res.status(400).json({ success: false, message: "All fields are required." });
+        }
 
         if (phone.length < 10) {
-            return res.status(400).json({ success: false, message: "phone number must be atleast 10 digits." })
+            return res.status(400).json({ success: false, message: "Phone number must be at least 10 digits." });
         }
-        // if (password.length < 6) {
-        //     return res.status(400).json({ success: false, message: "password must be atleast 6 characters." })
-        // }
 
+        if (password.length < 6) {
+            return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
+        }
+
+        // Check existing user
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: "User already exists" });
+            return res.status(400).json({ success: false, message: "User already exists." });
         }
 
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const user = new User({
+
+        const userData = {
             name,
             email,
-            role,
             phone,
+            role,
             password: hashedPassword,
-        });
+        };
+
+        console.log("before", userData);
+
+
+        // Handle location for deliveryBoy
+        if (role === "deliveryBoy") {
+            userData.location = {
+                type: "Point",
+                coordinates: [0, 0], // default or actual coordinates
+            };
+        }
+
+        const user = new User(userData);
+        console.log("after", user);
+
         await user.save();
 
         const token = generateToken({ id: user._id });
         setTokenCookie(res, token);
 
-        return res.status(201).json(
-            {
-                success: true,
-                message: "User registered successfully",
-                token,
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                },
-            });
+        // Return response
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully.",
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+            },
+        });
     } catch (err) {
         if (err.code === 11000) {
             return res.status(409).json({ success: false, message: "Email already in use." });
         }
+
+        console.error("Registration Error:", err);
         return handleServerError(res, err, "Registration failed");
     }
 };
 
 
-// ✅ Login Controller
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;

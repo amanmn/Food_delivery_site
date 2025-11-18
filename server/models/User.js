@@ -24,17 +24,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: ""  // URL to the profile image
   },
-  address: [
-    {
-      label: { type: String, default: "Home" },
-      street: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      country: { type: String, required: true },
-      zipCode: { type: String, required: true }
-    },
-  ],
-
+  // address: [
+  //   {
+  //     label: { type: String, default: "Home" },
+  //     street: { type: String, required: true },
+  //     city: { type: String, required: true },
+  //     state: { type: String, required: true },
+  //     country: { type: String, required: true },
+  //     zipCode: { type: String, required: true }
+  //   },
+  // ],
   cart: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -62,6 +61,20 @@ const UserSchema = new mongoose.Schema({
     default: false,
   },
   otpExpires: { type: Date },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+      default: [0, 0],
+    },
+  },
+
   googleId: {
     type: String,
     index: true,
@@ -74,5 +87,6 @@ const UserSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+UserSchema.index({ location: "2dsphere" })
 
 module.exports = mongoose.model("User", UserSchema);

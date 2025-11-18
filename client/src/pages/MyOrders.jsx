@@ -13,9 +13,9 @@ const MyOrders = () => {
 
   const { data, isLoading, isError } = useGetOrderItemsQuery();
   const isOwner = user?.role === "owner";
-  
-  const orders = data?.orders || [];
 
+  const orders = data?.orders || [];
+  
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-[70vh] bg-gradient-to-br from-gray-50 to-gray-100">
@@ -49,15 +49,14 @@ const MyOrders = () => {
 
       {/* ===== Filter Tabs ===== */}
       <div className="flex flex-wrap justify-center sm:justify-start gap-3 mb-8">
-        {["All", "Pending", "Accepted", "Delivered"].map((tab) => (
+        {["All", "Pending", "Preparing", "out_for_delivery", "Delivered"].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-              filter === tab
+            className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${filter === tab
                 ? "bg-blue-600 text-white shadow-md"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+              }`}
           >
             {tab}
           </button>

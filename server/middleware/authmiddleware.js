@@ -47,8 +47,8 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
   try {
     if (!req.user) return unauthorized(res, 'Not authenticated');
 
+    console.log(req.user);
     if (!allowedRoles.includes(req.user.role)) return res.status(403).json({ success: false, message: 'Access Denied: Insufficient permissions' });
-    // console.log(req.user);
 
     return next();
   } catch (error) {
@@ -60,7 +60,7 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
 
 // specific role middleware
 const ownerOnly = requireRole("owner");
-const deliveryOnly = requireRole("deliveryboy");
+const deliveryOnly = requireRole("deliveryBoy");
 // const userOnly = requireRole("user");
 
 

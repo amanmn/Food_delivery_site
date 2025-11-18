@@ -34,7 +34,14 @@ export const orderApi = createApi({
                 body: { orderId, shopOrderId, status },
                 credentials: "include",
             }),
-            invalidatesTags: ["Order"],
+            invalidatesTags: ["Orders"],
+        }),
+        getDeliveryBoyAssignments: builder.query({
+            query: () => ({
+                url: "get-assignments",        //     /api/order/get-assignments
+                method: "GET"
+            }),
+            providesTags: ["Orders"],
         }),
     })
 })
@@ -43,4 +50,5 @@ export const {
     usePlaceOrderMutation,
     useGetOrderItemsQuery,
     useUpdateOrderStatusMutation,
+    useGetDeliveryBoyAssignmentsQuery
 } = orderApi;

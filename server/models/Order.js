@@ -16,7 +16,6 @@ const shopOrderSchema = new mongoose.Schema({
   shop: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Shop",
-    // required: true
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -24,6 +23,33 @@ const shopOrderSchema = new mongoose.Schema({
   },
   subtotal: Number,
   shopOrderItems: [shopOrderItemSchema],
+  status: {
+    type: String,
+    enum: [
+      "pending",
+      "accepted",
+      "preparing",
+      "out_for_delivery",
+      "delivered",
+      "canceled",
+    ],
+    default: "pending",
+  },
+  assignment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "DeliveryAssignment",
+    default: null
+  },
+  assignedDeliveryBoy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
+  availableBoys: [
+    {
+      type: mongoose.Schema.Types.Mixed,
+    }
+  ]
 }, { timestamps: true });
 
 const OrderSchema = new mongoose.Schema({
@@ -58,18 +84,6 @@ const OrderSchema = new mongoose.Schema({
   paymentStatus: {
     type: String,
     enum: ["pending", "paid", "failed"],
-    default: "pending",
-  },
-  orderStatus: {
-    type: String,
-    enum: [
-      "pending",
-      "accepted",
-      "preparing",
-      "out_for_delivery",
-      "delivered",
-      "canceled",
-    ],
     default: "pending",
   },
   deliveryAddress: {

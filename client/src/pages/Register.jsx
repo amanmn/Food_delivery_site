@@ -57,7 +57,7 @@ const Register = () => {
     try {
       await registerUser({ ...formData, role }).unwrap();
     } catch (error) {
-      const message = err?.data?.message || err?.message || "Signup failed";
+      const message = error?.data?.message || error?.message || "Signup failed";
       setApiError(message);
       toast.error(message);
     }

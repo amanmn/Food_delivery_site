@@ -104,10 +104,40 @@ const updateUser = async (req, res) => {
     }
 };
 
+const updateUserLocation = async (req, res) => {
+    try {
+        const { location } = req.body;
+        // console.log(location.coordinates);
+        
+        const [lon, lat] = location.coordinates;
+
+        if (isNaN(lon) || isNaN(lat)) {
+            console.log("Coordinates must numbers");
+            return res.status(400).json({ message: "Coordinates must be numbers" });
+        }
+
+        const user = await User.findByIdAndUpdate(req.userId, {
+            location: {
+                type: 'Point',
+                coordinates: [lon, lat]
+            },
+        }, { new: true })
+        if (!user) {
+            return res.status(400).json({ message: "user is not found" })
+        }
+        // console.log(user, "user");
+
+        return res.status(200).json({ message: "location updated" });
+    } catch (error) {
+        res.status(500).json({ message: "user location update error" });
+    }
+}
+
 // ✅ Exports
 module.exports = {
     cloudinaryImg,
     profile,
     updateUser,
     upload,
+    updateUserLocation
 };

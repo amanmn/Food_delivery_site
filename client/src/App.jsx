@@ -3,23 +3,28 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
+import { ColorRing } from 'react-loader-spinner';
+import './index.css';
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
-import { ColorRing } from 'react-loader-spinner'
-import './index.css';
 import { updateUserProfile } from "./redux/features/user/userSlice";
+import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
+
 import CreateEditShop from "../admin/pages/CreateEditShop";
 import MyShop from "../admin/pages/MyShop";
 import AddFoodItem from "../admin/pages/AddFoodItem";
 import ItemProduct from "../admin/pages/ItemProduct";
 import EditItem from "../admin/pages/EditItem";
+import Settings from "../admin/pages/Settings";
+
 import useGetShopByCity from "./hooks/useGetShopByCity";
 import useGetItemByCity from "./hooks/useGetItemByCity";
 import useDetectLocation from "./hooks/useDetectLocation";
+import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 
-// Lazy-loaded pages
+// Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
 const LoginPage = lazy(() => import("./pages/Login"));
 const RegisterPage = lazy(() => import("./pages/Register"));
@@ -28,40 +33,46 @@ const ProfilePage = lazy(() => import("./pages/Profile"));
 const CartPage = lazy(() => import("./pages/Cart"));
 const OrderPage = lazy(() => import("./pages/MyOrders"));
 const OwnerDashboard = lazy(() => import('../admin/pages/Dashboard'));
-const Settings = lazy(() => import('../admin/pages/Settings'));
-const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'))
+const DeliveryDashboard = lazy(() => import('../deliveryboy/Deliverydashboard'));
 const Checkout = lazy(() => import("./pages/Checkout"));
-// const OwnerOrders = lazy(()=> import ("./pages/MyOrders"));
 
 function App() {
   const dispatch = useDispatch();
-  const { city } = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
   const hasAuthCookie = document.cookie.includes("token=");
 
-  // const { user } = useSelector((state) => state.user);
+  const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
-  const { data: userData, isSuccess, isLoading, isError, error } =
-    useLoadUserDataQuery(undefined, {
-      refetchOnMountOrArgChange: true,
-    });
+  const {
+    data: userData,
+    isSuccess,
+    isLoading,
+    isError,
+    error,
+  } = useLoadUserDataQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
+  // Load logged in user
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && userData) {
       dispatch(userLoggedIn({ user: userData }));
-      dispatch(updateUserProfile(userData)); // sets full profile in userSlice
-      console.log("userLoading: ", isSuccess, userData);
+      dispatch(updateUserProfile(userData));
+      console.log("User loaded successfully:", userData);
     } else if (isError) {
       dispatch(userLoggedOut());
       console.error("Error loading user:", error);
     }
-    return;
-
   }, [isSuccess, userData, isError, dispatch]);
 
-  // useGetMyShop();
+  // Hooks for user and shop data
   useDetectLocation();
   useGetShopByCity();
   useGetItemByCity();
+
+  const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
+  useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
+
 
   if (hasAuthCookie && isLoading && !isError) {
     return (
@@ -74,7 +85,7 @@ function App() {
           colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -99,13 +110,13 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Restrict / for roles */}
+          {/* Role-based root redirect */}
           <Route
             path="/"
             element={
               userData?.role === "owner" ? (
                 <Navigate to="/dash" replace />
-              ) : userData?.role === "deliveryboy" ? (
+              ) : userData?.role === "deliveryBoy" ? (
                 <Navigate to="/delivery" replace />
               ) : (
                 <HomePage />
@@ -113,16 +124,15 @@ function App() {
             }
           />
 
-          {/* Protected Routes (User) */}
+          {/* User routes */}
           <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order" element={<OrderPage />} />
             <Route path="/checkout" element={<Checkout />} />
-
           </Route>
 
-          {/* Owner Routes */}
+          {/* Owner routes */}
           <Route element={<ProtectedRoute allowedRoles={["owner"]} />}>
             <Route path="/dash" element={<OwnerDashboard />} />
             <Route path="/create-edit-shop" element={<CreateEditShop />} />
@@ -130,17 +140,16 @@ function App() {
             <Route path="/my-shop" element={<MyShop />} />
             <Route path="/item-product" element={<ItemProduct />} />
             <Route path="/edit-item/:itemId" element={<EditItem />} />
-            <Route path='/settings' element={<Settings />} />
-            <Route path='/orders' element={<OrderPage />} />
-
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/orders" element={<OrderPage />} />
           </Route>
 
-          {/* DeliveryBoy Routes */}
+          {/* Delivery boy route */}
           <Route element={<ProtectedRoute allowedRoles={["deliveryBoy"]} />}>
-            <Route path="/delivery" element={<DeliveryDashboard />} />
+            <Route path="/delivery" element={<DeliveryDashboard deliveryBoy={userData} />} />
           </Route>
 
-          {/* Catch-all route */}
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
