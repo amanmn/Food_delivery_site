@@ -7,7 +7,7 @@ const MyShop = () => {
     const navigate = useNavigate();
     const { data: shopData, isLoading } = useLoadMyShopDataQuery();
     useEffect(() => {
-        console.log(shopData)
+        console.log(shopData);
     })
 
     if (isLoading) {

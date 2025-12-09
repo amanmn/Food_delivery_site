@@ -141,3 +141,19 @@ module.exports = {
     upload,
     updateUserLocation
 };
+
+// ✅ Get all delivery boys (for owner/admin or authenticated clients)
+const getDeliveryBoys = async (req, res) => {
+    try {
+        const boys = await User.find({ role: 'deliveryBoy' })
+            .select('fullName name phone profilePicture location')
+            .limit(500);
+
+        return res.status(200).json({ success: true, boys });
+    } catch (err) {
+        console.error('Error fetching delivery boys:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+module.exports.getDeliveryBoys = getDeliveryBoys;

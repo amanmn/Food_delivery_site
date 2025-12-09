@@ -17,6 +17,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (myShopData) {
+      console.log(myShopData);
       dispatch(setMyShopData(myShopData));
       refetch();
     }

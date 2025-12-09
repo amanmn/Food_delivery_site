@@ -61,6 +61,13 @@ export const userApi = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+
+    // 🔹 Get all delivery boys
+    getDeliveryBoys: builder.query({
+      query: () => ({ url: "/delivery-boys", method: "GET" }),
+      transformResponse: (res) => res.boys,
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -70,4 +77,5 @@ export const {
   useUpdateUserAddressMutation,
   useUploadProfileImageMutation,
   useUpdateDeliveryLocationMutation,
+  useGetDeliveryBoysQuery,
 } = userApi;

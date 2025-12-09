@@ -23,6 +23,7 @@ import useGetShopByCity from "./hooks/useGetShopByCity";
 import useGetItemByCity from "./hooks/useGetItemByCity";
 import useDetectLocation from "./hooks/useDetectLocation";
 import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
+import TrackOrderPage from "./pages/TrackOrderPage";
 
 // Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
@@ -130,6 +131,7 @@ function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order" element={<OrderPage />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/track-order/:orderId" element={<TrackOrderPage />} />
           </Route>
 
           {/* Owner routes */}

@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import {
     User,
     MapPin,
@@ -13,7 +12,11 @@ import { userLoggedOut } from "../src/redux/features/auth/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useLogoutUserMutation } from "../src/redux/features/auth/authApi";
 import { MdEmail } from "react-icons/md";
-import { useGetDeliveryBoyAssignmentsQuery } from "../src/redux/features/order/orderApi";
+import {
+    useGetDeliveryBoyAssignmentsQuery,
+    useAcceptDeliveryAssignmentMutation
+} from "../src/redux/features/order/orderApi";
+import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 const DeliveryDashboard = ({ deliveryBoy }) => {
     const dispatch = useDispatch();
@@ -22,15 +25,28 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
     const [completedOrders, setCompletedOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [logoutUser] = useLogoutUserMutation();
-
-    // const assignments = useSelector(state => state.order)
-    const { data, refetch, isLoading } = useGetDeliveryBoyAssignmentsQuery();
+    const [showOtpBox, setShowOtpBox] = useState(false);
+    const { data: formated, isLoading } = useGetDeliveryBoyAssignmentsQuery();
+    const [acceptAssignment, { isLoading: accepting }] = useAcceptDeliveryAssignmentMutation();
 
     useEffect(() => {
-        console.log(deliveryBoy);
-        console.log(data);
-        setLoading(false);
-    }, [deliveryBoy]);
+
+        if (formated) {
+            console.log("DeliveryBoy:", deliveryBoy);
+            console.log("Assignments:", formated);
+            console.log("assignedOrders", assignedOrders);
+
+            setBroadcastedOrders(
+                formated.filter(o => o.status === "broadcasted")
+            );
+            setAssignedOrders(
+                formated.filter(o => o.status === "assigned")
+            );
+            setCompletedOrders(
+                formated.filter(o => o.status === "completed")
+            );
+        }
+    }, [formated, assignedOrders, deliveryBoy]);
 
     const handleLogout = async () => {
         try {
@@ -40,12 +56,21 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
             console.error("Logout failed:", err);
         }
     }
-    if (loading) {
-        return (
-            <p className="text-center mt-20 text-gray-500 text-lg">
-                Loading dashboard...
-            </p>
-        );
+
+    const handleAcceptAssignment = async (assignmentId) => {
+        try {
+            const res = await acceptAssignment(assignmentId).unwrap();
+            console.log(res);
+
+            alert("Order accepted successfully!");
+        } catch (err) {
+            console.error("Error accepting assignment:", err);
+            alert(err?.data?.message || "Something went wrong");
+        }
+    }
+
+    const handleSendOtp = () => {
+        setShowOtpBox(true);
     }
 
     return (
@@ -80,8 +105,11 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
                 </button>
             </div>
 
+            <DeliveryBoyTracking data={assignedOrders[0]} deliveryBoy={deliveryBoy} />
+
             {/* DASHBOARD SECTIONS */}
             <div className="grid md:grid-cols-3 gap-6">
+
 
                 {/* BROADCASTED ORDERS */}
                 <div className="bg-white p-4 rounded-xl shadow">
@@ -95,19 +123,23 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
                     ) : (
                         broadcastedOrders.map((order) => (
                             <div
-                                key={order._id}
+                                key={order.assignmentId}
                                 className="p-3 border rounded-lg mb-3 bg-gray-50"
                             >
                                 <p className="font-semibold">
-                                    Order #{order._id.slice(-5)}
+                                    Order #{order.assignmentId.slice(-5)}
                                 </p>
 
                                 <p className="text-sm text-gray-600 flex gap-2 items-center">
                                     <MapPin size={14} /> {order.deliveryAddress?.text}
                                 </p>
 
-                                <button className="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white py-1.5 rounded-lg">
-                                    Accept Delivery
+                                <button
+                                    className="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white py-1.5 rounded-lg"
+                                    onClick={() => handleAcceptAssignment(order.assignmentId)}
+                                    disabled={accepting}
+                                >
+                                    {accepting ? "Accepting..." : "Accept Delivery"}
                                 </button>
                             </div>
                         ))
@@ -126,20 +158,23 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
                     ) : (
                         assignedOrders.map((order) => (
                             <div
-                                key={order._id}
+                                key={order.assignmentId}
                                 className="p-3 border rounded-lg mb-3 bg-gray-50"
                             >
                                 <p className="font-semibold">
-                                    Order #{order._id.slice(-5)}
+                                    Order #{order.assignmentId.slice(-5)}
                                 </p>
 
                                 <p className="text-sm text-gray-600 flex gap-2 items-center">
                                     <MapPin size={14} /> {order.deliveryAddress?.text}
                                 </p>
 
-                                <button className="w-full mt-2 bg-green-500 hover:bg-green-600 text-white py-1.5 rounded-lg">
-                                    Mark as Delivered
-                                </button>
+                                {!showOtpBox ? <button className="mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200" onClick={handleSendOtp}>Mark As Delivered</button> : <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Enter OTP sent to Confirm Delivery</h3>
+                                    <input type="text" placeholder="Enter OTP" className="w-full border px-3 py-2 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring:orange-400" />
+                                    <button className="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200" onClick={handleConfirmDelivery}>Confirm Delivery</button>
+                                </div>
+                                }
                             </div>
                         ))
                     )}
@@ -157,11 +192,11 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
                     ) : (
                         completedOrders.map((order) => (
                             <div
-                                key={order._id}
+                                key={order.assignmentId}
                                 className="p-3 border rounded-lg mb-3 bg-green-50"
                             >
                                 <p className="font-semibold">
-                                    Order #{order._id.slice(-5)}
+                                    Order #{order.assignmentId.slice(-5)}
                                 </p>
 
                                 <p className="text-sm text-gray-600 flex items-center gap-2">

@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import {
   useGetOrderItemsQuery,
   useUpdateOrderStatusMutation,
 } from "../../src/redux/features/order/orderApi";
+import { useGetDeliveryBoysQuery } from "../../src/redux/features/user/userApi";
 import DeliveryBoyList from "../../deliveryboy/DeliveryBoyList";
 
 const OwnerOrders = ({ orders = [], filter }) => {
   const { user } = useSelector((state) => state.user);
   const ownerId = user?._id;
+
   const [localOrders, setLocalOrders] = useState([]);
   const [updating, setUpdating] = useState(null);
 
@@ -22,16 +24,17 @@ const OwnerOrders = ({ orders = [], filter }) => {
   } = useGetOrderItemsQuery(undefined, { skip: !user?._id });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
+  const { data: allDeliveryBoys = [] } = useGetDeliveryBoysQuery();
 
-  // Store backend orders locally
+  // Load orders from API
   useEffect(() => {
-    if (ordersData?.orders) setLocalOrders(ordersData.orders);
-
-    const firstOrder = ordersData.orders[0];
-    const firstShopOrder = firstOrder?.shopOrders?.[0];
-    console.log(firstShopOrder);
+    if (ordersData?.orders) {
+      setLocalOrders(ordersData.orders);
+    }
+    console.log("Orders Data:", ordersData);
   }, [ordersData]);
 
+  // Auto refresh
   useEffect(() => {
     const interval = setInterval(() => {
       if (user?._id) refetch();
@@ -48,30 +51,27 @@ const OwnerOrders = ({ orders = [], filter }) => {
     );
   }
 
-  if (!Array.isArray(localOrders)) return null;
-
-  // Filter orders belonging to this owner
+  // Filter orders for this owner
   const ownerOrders = localOrders
     .map((order) => ({
       ...order,
       shopOrders: order.shopOrders?.filter(
         (shopOrder) =>
-          shopOrder?.owner === ownerId || shopOrder?.owner?._id === ownerId
+          shopOrder?.owner === ownerId ||
+          shopOrder?.owner?._id === ownerId
       ),
     }))
     .filter((order) => order.shopOrders && order.shopOrders.length > 0);
 
-  // Filter by status if needed
   const filteredOrders =
     filter === "All"
       ? ownerOrders
       : ownerOrders.filter((order) =>
-        order.shopOrders.some(
-          (shopOrder) =>
-            shopOrder.status &&
-            shopOrder.status.toLowerCase() === filter.toLowerCase()
-        )
-      );
+          order.shopOrders.some(
+            (so) =>
+              so.status?.toLowerCase() === filter.toLowerCase()
+          )
+        );
 
   const handleStatusChange = async (orderId, shopOrderId, newStatus) => {
     setUpdating(shopOrderId);
@@ -83,44 +83,34 @@ const OwnerOrders = ({ orders = [], filter }) => {
         status: newStatus,
       }).unwrap();
 
-      console.log("Full Order:", res.order);
-      console.log("Updated Shop Order:", res.shopOrder);
-      console.log("Assigned Delivery Boy:", res.assignedDeliveryBoy);
-      console.log("Available Delivery Boys:", res.shopOrder?.assignment?.broadcastedTo); // available deliveryBoys
-      console.log("Assignment Details:", res.shopOrder?.assignment); // res.shopOrder.assignment 
-
       if (res.success) {
-        setLocalOrders(prev =>
-          prev.map(order =>
+        setLocalOrders((prev) =>
+          prev.map((order) =>
             order._id === orderId
               ? {
-                ...order,
-                shopOrders: order.shopOrders.map(so =>
-                  so._id === shopOrderId
-                    ? {
-                      ...so,
-                      ...res.shopOrder,
-
-                      /** preserve availableBoys if new one exists */
-                      availableBoys:
-                        res.shopOrder?.availableBoys ||
-                        so.availableBoys ||
-                        [],
-
-                      assignment: res.shopOrder?.assignment,
-                      assignedDeliveryBoy: res.shopOrder?.assignedDeliveryBoy,
-                    }
-                    : so
-                ),
-              }
+                  ...order,
+                  shopOrders: order.shopOrders.map((so) =>
+                    so._id === shopOrderId
+                      ? {
+                          ...so,
+                          ...res.shopOrder,
+                          availableBoys:
+                            res.shopOrder?.availableBoys ??
+                            so.availableBoys ??
+                            [],
+                          assignedDeliveryBoy:
+                            res.shopOrder?.assignedDeliveryBoy,
+                          assignment: res.shopOrder?.assignment,
+                        }
+                      : so
+                  ),
+                }
               : order
           )
         );
       }
-
-
     } catch (err) {
-      console.error("❌ Error updating order status:", err);
+      console.error("Error updating status:", err);
     } finally {
       setUpdating(null);
     }
@@ -129,9 +119,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
   if (filteredOrders.length === 0) {
     return (
       <div className="text-center text-gray-500 mt-20">
-        <p className="text-lg sm:text-xl">
-          No {filter.toLowerCase()} shop orders found 🏪
-        </p>
+        <p>No {filter.toLowerCase()} shop orders found</p>
       </div>
     );
   }
@@ -143,122 +131,83 @@ const OwnerOrders = ({ orders = [], filter }) => {
           key={order._id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="bg-white border border-gray-100 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col"
+          className="bg-white border rounded-3xl shadow-lg overflow-hidden flex flex-col"
         >
-          {/* Order Header */}
-          <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white">
-            <div className="flex justify-between items-start">
+          {/* Header */}
+          <div className="p-5 border-b bg-green-50">
+            <div className="flex justify-between">
               <div>
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">
+                <h3 className="font-semibold">
                   Order ID:{" "}
-                  <span className="text-gray-500 font-normal">
+                  <span className="text-gray-500">
                     {order._id.slice(-8).toUpperCase()}
                   </span>
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                <p className="text-xs text-gray-500">
+                  {new Date(order.createdAt).toLocaleDateString()}
                 </p>
               </div>
 
-              {/* Main Status Badge */}
-              <span
-                className={`text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full ${order.shopOrders[0]?.status === "pending"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : order.shopOrders[0]?.status === "preparing"
-                    ? "bg-blue-100 text-blue-700"
-                    : order.shopOrders[0]?.status === "out_for_delivery"
-                      ? "bg-orange-100 text-orange-700"
-                      : order.shopOrders[0]?.status === "delivered"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-700"
-                  }`}
-              >
-                {order.shopOrders[0]?.status
-                  ? order.shopOrders[0].status
-                    .charAt(0)
-                    .toUpperCase() +
-                  order.shopOrders[0].status.slice(1).replace(/_/g, " ")
-                  : "Unknown"}
+              <span className="px-3 py-1 text-sm font-semibold rounded-full bg-gray-100">
+                {order.shopOrders[0].status.replace(/_/g, " ")}
               </span>
             </div>
 
             {/* User Info */}
-            <div className="mt-3 text-xs sm:text-sm text-gray-700 space-y-1">
-              <p>
-                👤 <span className="font-medium">Name:</span>{" "}
-                {order.user?.name || "N/A"}
-              </p>
-              <p>
-                ✉️ <span className="font-medium">Email:</span>{" "}
-                {order.user?.email || "N/A"}
-              </p>
-              <p>
-                📞 <span className="font-medium">Phone:</span>{" "}
-                {order.user?.phone || "N/A"}
-              </p>
-              <p>
-                🏠 <span className="font-medium">Address:</span>{" "}
-                {order.deliveryAddress?.text || "N/A"}
-              </p>
+            <div className="mt-3 text-xs space-y-1 text-gray-700">
+              <p>👤 {order.user?.name}</p>
+              <p>✉️ {order.user?.email}</p>
+              <p>📞 {order.user?.phone}</p>
+              <p>🏠 {order.deliveryAddress?.text}</p>
             </div>
           </div>
 
           {/* Shop Orders */}
           <div className="p-5 flex-1 space-y-6">
-            {order.shopOrders?.map((shopOrder) => (
-              <div key={shopOrder._id} className="border-b pb-3">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-semibold text-gray-800">
-                    🏪 {shopOrder.shop?.name || "Unknown Shop"}
+            {order.shopOrders.map((shopOrder) => (
+              <div key={shopOrder._id} className="border-b pb-4">
+                <div className="flex justify-between mb-2">
+                  <h4 className="font-semibold">
+                    🏪 {shopOrder.shop?.name}
                   </h4>
                   <span className="text-sm text-gray-500">
-                    Subtotal: ₹{shopOrder.subtotal}
+                    ₹{shopOrder.subtotal}
                   </span>
                 </div>
 
                 {/* Items */}
-                <div className="space-y-3">
-                  {shopOrder.shopOrderItems?.map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex justify-between items-center bg-gray-50 rounded-2xl p-2.5 hover:bg-gray-100 transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={
-                            item?.item?.image ||
-                            "https://via.placeholder.com/50?text=Food"
-                          }
-                          alt={item?.item?.name}
-                          className="w-14 h-14 rounded-xl object-cover border"
-                        />
-                        <div>
-                          <p className="font-medium text-gray-800 text-sm">
-                            {item?.item?.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            ₹{item?.price} × {item?.quantity}
-                          </p>
-                        </div>
+                {shopOrder.shopOrderItems?.map((item) => (
+                  <div
+                    key={item._id}
+                    className="flex justify-between bg-gray-50 rounded-xl p-2 mb-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={item?.item?.image}
+                        alt={item?.item?.name}
+                        className="w-12 h-12 rounded-lg border"
+                      />
+                      <div>
+                        <p className="font-medium">{item.item.name}</p>
+                        <p className="text-xs text-gray-500">
+                          ₹{item.price} × {item.quantity}
+                        </p>
                       </div>
-                      <p className="font-semibold text-gray-700 text-sm">
-                        ₹{item?.price * item?.quantity}
-                      </p>
                     </div>
-                  ))}
-                </div>
 
+                    <p className="font-semibold">
+                      ₹{item.price * item.quantity}
+                    </p>
+                  </div>
+                ))}
 
-                {/* Status Dropdown */}
-                <div className="mt-4 flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-600">
-                    Status:
-                  </label>
+                {/* Status */}
+                <div className="mt-3 flex justify-between">
+                  <label className="text-sm">Status:</label>
                   <select
-                    className="border border-gray-300 rounded-lg px-2 py-1 text-sm text-gray-700 focus:ring-2 focus:ring-green-400 focus:outline-none"
-                    value={shopOrder.status || ""}
+                    value={shopOrder.status}
+                    disabled={updating === shopOrder._id}
                     onChange={(e) =>
                       handleStatusChange(
                         order._id,
@@ -266,48 +215,61 @@ const OwnerOrders = ({ orders = [], filter }) => {
                         e.target.value
                       )
                     }
-                    disabled={updating === shopOrder._id}
+                    className="border rounded-lg px-2 py-1"
                   >
-                    <option value="">Change</option>
                     <option value="pending">Pending</option>
                     <option value="preparing">Preparing</option>
-                    <option value="out_for_delivery">Out for Delivery</option>
+                    <option value="out_for_delivery">
+                      Out for Delivery
+                    </option>
                     <option value="delivered">Delivered</option>
                   </select>
                 </div>
 
-                {/* Assigned Delivery Boy */}
-                {shopOrder.assignedDeliveryBoy && (
-                  <p className="text-xs text-gray-600 mt-1">
-                    🚚 Assigned:{" "}
-                    {shopOrder.assignedDeliveryBoy.fullName ||
-                      shopOrder.assignedDeliveryBoy.name}
-                  </p>
-                )}
-
-                {/* Available Delivery Boys */}
-                {shopOrder.status === "out_for_delivery" && shopOrder.availableBoys && (
-                  <DeliveryBoyList boys={shopOrder.availableBoys} />
+                {/* 🚚 Assigned Boy OR Available Boys */}
+                {shopOrder.assignedDeliveryBoy ? (
+                  <div className="mt-3 bg-green-50 border border-green-200 p-3 rounded-xl">
+                    <p className="text-sm font-semibold text-green-700">
+                      Assigned Delivery Boy
+                    </p>
+                    <p className="text-sm">
+                      👤 {shopOrder.assignedDeliveryBoy.name}
+                    </p>
+                    <p className="text-sm">
+                      📞 {shopOrder.assignedDeliveryBoy.phone}
+                    </p>
+                  </div>
+                ) : (
+                  shopOrder.status === "out_for_delivery" &&
+                  shopOrder.availableBoys && (
+                    <DeliveryBoyList
+                      boys={
+                        allDeliveryBoys.filter((db) =>
+                          shopOrder.availableBoys
+                            .map((b) => String(b.id || b._id || b))
+                            .includes(String(db.id))
+                        )
+                      }
+                    />
+                  )
                 )}
               </div>
             ))}
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-100 px-5 py-4 flex justify-between items-center bg-gray-50">
-            <p className="text-sm text-gray-600">
+          <div className="border-t p-5 bg-gray-50 flex justify-between">
+            <p>
               Payment:{" "}
-              <span
-                className={`font-semibold ${order.paymentStatus === "pending"
-                  ? "text-yellow-600"
-                  : "text-green-600"
-                  }`}
-              >
+              <span className="font-semibold">
                 {order.paymentStatus}
               </span>
             </p>
-            <p className="text-lg font-semibold text-green-700">
-              ₹{order.totalAmount}
+            <p className="font-bold text-green-700">
+              ₹{order.shopOrders.reduce(
+                (sum, so) => sum + so.subtotal,
+                0
+              )}
             </p>
           </div>
         </motion.div>

@@ -11,11 +11,13 @@ const MyOrders = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
 
-  const { data, isLoading, isError } = useGetOrderItemsQuery();
+  const { data, isLoading, isError } = useGetOrderItemsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const isOwner = user?.role === "owner";
 
   const orders = data?.orders || [];
-  
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-[70vh] bg-gradient-to-br from-gray-50 to-gray-100">
@@ -34,7 +36,6 @@ const MyOrders = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-10 px-4 sm:px-8 lg:px-16">
-      {/* ===== Header ===== */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
           {isOwner ? "📦 Shop Orders" : "🧾 Your Orders"}
@@ -47,15 +48,14 @@ const MyOrders = () => {
         </button>
       </div>
 
-      {/* ===== Filter Tabs ===== */}
       <div className="flex flex-wrap justify-center sm:justify-start gap-3 mb-8">
         {["All", "Pending", "Preparing", "out_for_delivery", "Delivered"].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
             className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${filter === tab
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ? "bg-blue-600 text-white shadow-md"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
           >
             {tab}
@@ -63,7 +63,6 @@ const MyOrders = () => {
         ))}
       </div>
 
-      {/* ===== Conditional Child ===== */}
       <AnimatePresence mode="wait">
         {isOwner ? (
           <OwnerOrders key="owner" orders={orders} filter={filter} />

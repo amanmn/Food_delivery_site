@@ -40,10 +40,10 @@ const Checkout = () => {
 
     useEffect(() => {
         setSearchInput(address);
-        console.log(searchInput);
-        console.log(data);
+        // console.log(searchInput);
+        // console.log(data);
         // console.log(order);
-    }, [address, searchInput, data]);
+    }, [address]);
 
     const getAddressByLatLng = async (lat, lon) => {
         try {
@@ -115,7 +115,7 @@ const Checkout = () => {
 
             if (result.success) {
                 toast.success("Order placed successfully!");
-                dispatch(clearCart);
+                dispatch(clearCart());
                 navigate("/");
             }
         } catch (err) {
@@ -126,7 +126,7 @@ const Checkout = () => {
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Main Content */}
-            <div className="max-w-5xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="w-full mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Address Section */}
@@ -175,7 +175,7 @@ const Checkout = () => {
                             <MapContainer
                                 center={position}
                                 zoom={15}
-                                className="w-full h-64 sm:h-72"
+                                className="w-full h-60 sm:h-72 md:-80"
                             >
                                 <TileLayer
                                     attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
@@ -193,7 +193,7 @@ const Checkout = () => {
 
                         <div className="space-y-3">
                             <label
-                                className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${paymentMethod === "cod"
+                                className={`flex flex-wrap items-start sm:items-center gap-3 border rounded-lg p-3 cursor-pointer ${paymentMethod === "cod"
                                     ? "border-yellow-500 bg-yellow-50"
                                     : "hover:border-gray-400"
                                     }`}
@@ -228,7 +228,7 @@ const Checkout = () => {
                 </div>
 
                 {/* Right Column - Summary */}
-                <div className="max-w-5xl bg-white p-5 rounded-md shadow-md border border-gray-200 h-2/3 sticky top-30">
+                <div className="bg-white p-5 rounded-md shadow-md border border-gray-200 lg:sticky lg:top-20">
                     <h2 className="font-semibold text-lg mb-3">Order Summary</h2>
                     <div className="divide-y divide-gray-200 text-sm text-gray-700">
                         {isLoading ? (
@@ -254,7 +254,7 @@ const Checkout = () => {
                         <span>Delivery Fee</span>
                         <span>{deliveryFee === 0 ? "Free" : `₹${deliveryFee}`}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-lg mt-3">
+                    <div className="flex justify-between font-bold text-lg mt-2">
                         <span>Total</span>
                         <span className="text-yellow-600">₹{AmountWithDeliveryFee}</span>
                     </div>
