@@ -7,10 +7,11 @@ import { ColorRing } from 'react-loader-spinner';
 import './index.css';
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
+
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
 import { updateUserProfile } from "./redux/features/user/userSlice";
-import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
 import CreateEditShop from "../admin/pages/CreateEditShop";
 import MyShop from "../admin/pages/MyShop";
@@ -39,55 +40,54 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 
 function App() {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.user);
-  const hasAuthCookie = document.cookie.includes("token=");
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
+  // const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
-  const {
-    data: userData,
-    isSuccess,
-    isLoading,
-    isError,
-    error,
-  } = useLoadUserDataQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-  });
+  // const {
+  //   data: userData,
+  //   isSuccess,
+  //   isLoading,
+  //   isError,
+  //   error,
+  // } = useLoadUserDataQuery(undefined, {
+  //   refetchOnMountOrArgChange: true,
+  // });
+
+  const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   // Load logged in user
-  useEffect(() => {
-    if (isSuccess && userData) {
-      dispatch(userLoggedIn({ user: userData }));
-      dispatch(updateUserProfile(userData));
-      console.log("User loaded successfully:", userData);
-    } else if (isError) {
-      dispatch(userLoggedOut());
-      console.error("Error loading user:", error);
-    }
-  }, [isSuccess, userData, isError, dispatch]);
+  // useEffect(() => {
+  //   if (isSuccess && userData) {
+  //     dispatch(userLoggedIn({ user: userData }));
+  //     dispatch(updateUserProfile(userData));
+  //     console.log("User loaded successfully:", userData);
+  //   } if (isError) {
+  //     dispatch(userLoggedOut());
+  //     console.error("Error loading user:", error);
+  //   }
+  // }, [ user, isError, dispatch]);
 
   // Hooks for user and shop data
   useDetectLocation();
   useGetShopByCity();
   useGetItemByCity();
 
-  const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
-
-  if (hasAuthCookie && isLoading && !isError) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <ColorRing
-          visible={true}
-          height="100"
-          width="100"
-          ariaLabel="color-ring-loading"
-          colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
-        />
-      </div>
-    );
-  }
+  // if (!authChecked) {
+  //   return (
+  //     <div className="flex justify-center items-center h-screen">
+  //       <ColorRing
+  //         visible={true}
+  //         height="100"
+  //         width="100"
+  //         ariaLabel="auth-loading"
+  //         colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
+  //       />
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -111,13 +111,13 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Role-based root redirect */}
+          {/* 🎯 Root Redirect */}
           <Route
             path="/"
             element={
-              userData?.role === "owner" ? (
+              isAuthenticated && user?.role === "owner" ? (
                 <Navigate to="/dash" replace />
-              ) : userData?.role === "deliveryBoy" ? (
+              ) : isAuthenticated && user?.role === "deliveryBoy" ? (
                 <Navigate to="/delivery" replace />
               ) : (
                 <HomePage />
@@ -148,7 +148,7 @@ function App() {
 
           {/* Delivery boy route */}
           <Route element={<ProtectedRoute allowedRoles={["deliveryBoy"]} />}>
-            <Route path="/delivery" element={<DeliveryDashboard deliveryBoy={userData} />} />
+            <Route path="/delivery" element={<DeliveryDashboard deliveryBoy={user} />} />
           </Route>
 
           {/* Fallback */}

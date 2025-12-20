@@ -63,6 +63,7 @@ export const authApi = createApi({
       }),
       transformResponse: (response) => response?.user ?? null,
       providesTags: ["Auth"],
+      keepUnusedDataFor: 60, // cache for 60 seconds
     }),
   }),
 });

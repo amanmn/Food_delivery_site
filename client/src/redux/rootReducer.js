@@ -48,7 +48,13 @@ const rootReducer = (state, action) => {
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "user", "cart", "location", "deliveryLocation"], // choose which slices to persist
+  whitelist: [
+    "cart",
+    "location",
+    "deliveryLocation",
+    "user", // optional (profile only, not auth)
+  ],
 };
+
 
 export default persistReducer(persistConfig, rootReducer);

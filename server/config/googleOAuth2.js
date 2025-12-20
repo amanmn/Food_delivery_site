@@ -26,20 +26,23 @@ passport.use(new GoogleStrategy({
     }
 }));
 
+passport.authenticate("google", { session: false })
+
+
 // serialize user into session — only store _id, not whole object
-passport.serializeUser((user, done) => {
-    if (!user || !user._id) {
-        return done(new Error('User is missing _id'));
-    }
-    done(null, user._id);
-});
+// passport.serializeUser((user, done) => {
+//     if (!user || !user._id) {
+//         return done(new Error('User is missing _id'));
+//     }
+//     done(null, user._id);
+// });
 
 // deserialize user from session
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (err) {
-        done(err, null);
-    }
-});
+// passport.deserializeUser(async (id, done) => {
+//     try {
+//         const user = await User.findById(id);
+//         done(null, user);
+//     } catch (err) {
+//         done(err, null);
+//     }
+// });

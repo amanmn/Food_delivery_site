@@ -23,7 +23,7 @@ const store = configureStore({
       orderApi.middleware,
       ownerApi.middleware
     ),
-  devTools: process.env.NODE_ENV !== "production",
+  devTools: import.meta.env.MODE !== "production",
 });
 
 export const persistor = persistStore(store);

@@ -41,14 +41,14 @@ const Login = () => {
       console.log(userRole);
 
       toast.success("Login successful");
-      if (userRole === "owner") {
-        // dispatch(fetchMyShop());
-        navigate("/dash");
-      } else if (userRole === "deliveryboy") {
-        navigate("/delivery");
-      } else {
-        navigate("/");
-      }
+      // if (userRole === "owner") {
+      //   // dispatch(fetchMyShop());
+      //   navigate("/dash");
+      // } else if (userRole === "deliveryboy") {
+      //   navigate("/delivery");
+      // } else {
+      //   navigate("/");
+      // }
     } catch (error) {
       const message = error?.data?.message || error?.message || "Login failed";
       setApiError(message);

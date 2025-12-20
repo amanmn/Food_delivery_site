@@ -3,8 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user: null,
   isAuthenticated: false,
-  role: null,   //  user/owner/deliveryBoy
-  loading: false,
+  role: null,
+  authChecked: false, // IMPORTANT
 };
 
 const authSlice = createSlice({
@@ -16,17 +16,16 @@ const authSlice = createSlice({
       state.user = user;
       state.role = user.role;
       state.isAuthenticated = true;
-      state.loading = false;
+      state.authChecked = true;
     },
 
     userLoggedOut: (state) => {
       state.user = null;
       state.role = null;
       state.isAuthenticated = false;
-      state.loading = false;
+      state.authChecked = true;
     },
   },
-
 });
 
 export const { userLoggedIn, userLoggedOut } = authSlice.actions;
