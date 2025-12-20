@@ -16,7 +16,6 @@ const sendOtpNodeMailer = async (to, otp) => {
             from: process.env.EMAIL,
             to,
             subject: "Reset Your Password",
-            // text: "Hello world?", // plain‑text body
             html: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`, // HTML body
         });
 
@@ -28,4 +27,25 @@ const sendOtpNodeMailer = async (to, otp) => {
     }
 };
 
-module.exports = sendOtpNodeMailer;
+const sendDeliveryOtpMail = async (assignment, otp) => {
+    try {
+        const info = await transporter.sendMail({
+            from: process.env.EMAIL,
+            to: assignment.user.email,
+            subject: "Your Delivery OTP",
+            html: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`, // HTML body
+        });
+
+        console.log("Message sent:", info.messageId);
+        return info;
+    } catch (error) {
+        console.error("Error sending OTP email:", error);
+        throw new Error("Failed to send OTP email");
+    }
+};
+
+
+module.exports = {
+    sendOtpNodeMailer, 
+    sendDeliveryOtpMail
+};

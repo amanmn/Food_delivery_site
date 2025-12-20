@@ -13,8 +13,8 @@ app.use(cookieParser());
 // mongoose.connect();
 app.use(
   cors({
-    origin: BASEURL, // frontend URL
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    origin: "http://localhost:5173", // frontend URL
+    // methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     credentials: true,
   }));
 
@@ -66,6 +66,6 @@ app.use("/api/item", itemRoutes);
 // Start Server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });

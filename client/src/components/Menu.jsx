@@ -23,13 +23,24 @@ const Menu = () => {
 
   const [quantities, setQuantities] = useState({});
   const [isAdding, setIsAdding] = useState({});
-
+  const [updatedItemsList, setUpdatedItemsList] = useState(itemsData);
   const [addItemToCart] = useAddItemToCartMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
+
+  const handleFilterByCategory = (category) => {
+    if (category === "all") {
+      setUpdatedItemsList(itemsData);
+    } else {
+      const filteredList = itemsInMyCity.filter(item => item.category === category);
+      setUpdatedItemsList(filteredList);
+    }
+  }
+
   useEffect(() => {
     if (city) refetch();
-  }, [city, refetch]);
+    setUpdatedItemsList(itemsData);
+  }, [city, refetch,setUpdatedItemsList]);
 
   const handleAddToCart = async (item) => {
     const quantity = quantities[item._id] || 1;

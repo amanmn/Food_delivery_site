@@ -16,6 +16,7 @@ import {
     useGetDeliveryBoyAssignmentsQuery,
     useAcceptDeliveryAssignmentMutation
 } from "../src/redux/features/order/orderApi";
+import { useSendDeliveryOtpMutation, useVerifyDeliveryOtpMutation } from "../src/redux/features/order/orderApi";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 const DeliveryDashboard = ({ deliveryBoy }) => {
@@ -26,13 +27,16 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
     const [loading, setLoading] = useState(true);
     const [logoutUser] = useLogoutUserMutation();
     const [showOtpBox, setShowOtpBox] = useState(false);
+    const [otp, setOtp] = useState("");
     const { data: formated, isLoading } = useGetDeliveryBoyAssignmentsQuery();
     const [acceptAssignment, { isLoading: accepting }] = useAcceptDeliveryAssignmentMutation();
+    const [sendDeliveryOtp] = useSendDeliveryOtpMutation();
+    const [verifyDeliveryOtp] = useVerifyDeliveryOtpMutation();
 
     useEffect(() => {
 
         if (formated) {
-            console.log("DeliveryBoy:", deliveryBoy);
+            // console.log("DeliveryBoy:", deliveryBoy);
             console.log("Assignments:", formated);
             console.log("assignedOrders", assignedOrders);
 
@@ -69,9 +73,41 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
         }
     }
 
-    const handleSendOtp = () => {
-        setShowOtpBox(true);
+    const handleSendOtp = async (assignment) => {
+        try {
+            await sendDeliveryOtp({
+                assignmentId: assignment.assignmentId,
+                orderId: assignment.orderId,
+                shopOrderId: assignment.shopOrderId,
+            }).unwrap();
+
+            setShowOtpBox(true);
+            alert("OTP Sent Successfully");
+        } catch (error) {
+            console.error("Error sending delivery OTP:", error);
+        }
     }
+
+    const handleVerifyOtp = async (assignment) => {
+        const otp = document.getElementById("deliveryOtpInput").value;
+
+        try {
+            const res = await verifyDeliveryOtp({
+                assignmentId: assignment.assignmentId,
+                orderId: assignment.orderId,
+                shopOrderId: assignment.shopOrderId,
+                otp
+            }).unwrap();
+
+            if (res.success) {
+                alert("Delivery confirmed successfully!");
+                setShowOtpBox(false);
+            }
+        } catch (err) {
+            alert(err?.data?.message || "Invalid OTP");
+        }
+    };
+
 
     return (
         <div className="min-h-screen bg-gray-100 p-4 md:p-6">
@@ -169,11 +205,19 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
                                     <MapPin size={14} /> {order.deliveryAddress?.text}
                                 </p>
 
-                                {!showOtpBox ? <button className="mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200" onClick={handleSendOtp}>Mark As Delivered</button> : <div className="mt-4 p-4 border rounded-xl bg-gray-50">
-                                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Enter OTP sent to Confirm Delivery</h3>
-                                    <input type="text" placeholder="Enter OTP" className="w-full border px-3 py-2 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring:orange-400" />
-                                    <button className="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200" onClick={handleConfirmDelivery}>Confirm Delivery</button>
-                                </div>
+                                {!showOtpBox ?
+                                    <button className="mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200"
+                                        onClick={() => handleSendOtp(order)}>
+                                        Mark As Delivered
+                                    </button> :
+                                    <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                                        <h3 className="text-sm font-semibold text-gray-800 mb-2">Enter OTP sent to Confirm Delivery</h3>
+                                        <input id="deliveryOtpInput" type="text" placeholder="Enter OTP" onChange={(e) => setOtp(e.target.value)} value={otp} className="w-full border px-3 py-2 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring:orange-400" />
+                                        <button className="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200"
+                                            onClick={() => handleVerifyOtp(order)}>
+                                            Confirm Delivery
+                                        </button>
+                                    </div>
                                 }
                             </div>
                         ))

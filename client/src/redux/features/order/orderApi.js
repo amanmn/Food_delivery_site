@@ -1,11 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const BASE_URL = "http://localhost:8000/api/order";
+const BASE_URL = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://localhost:8000";
 
 export const orderApi = createApi({
-    reducerPath: "orderApi",
+    reducerPath: "orderApi",    
     baseQuery: fetchBaseQuery({
-        baseUrl: BASE_URL,
+        baseUrl: `${BASE_URL}/api/order`,
         credentials: 'include',
     }),
 
@@ -64,8 +64,24 @@ export const orderApi = createApi({
             }),
             providesTags: ["Orders"],
         }),
+        sendDeliveryOtp: builder.mutation({
+            query: ({assignmentId, orderId, shopOrderId }) => ({
+                url: `send-delivery-otp`,               //     /api/order/send-delivery-otp     
+                method: "POST",
+                body: { assignmentId, orderId, shopOrderId },
+            }),
+            invalidatesTags: ["Orders"],
+        }),
+        verifyDeliveryOtp: builder.mutation({
+            query: ({assignmentId, orderId, shopOrderId, otp }) => ({
+                url: `verify-delivery-otp`,               //     /api/order/verify-delivery-otp
+                method: "POST",
+                body: {assignmentId, orderId, shopOrderId, otp },
+            }),
+            invalidatesTags: ["Orders"],
+        }),
     }),
-})
+});
 
 export const {
     usePlaceOrderMutation,
@@ -73,5 +89,7 @@ export const {
     useUpdateOrderStatusMutation,
     useGetDeliveryBoyAssignmentsQuery,
     useAcceptDeliveryAssignmentMutation,
-    useGetOrderByIdQuery
+    useGetOrderByIdQuery,
+    useSendDeliveryOtpMutation,
+    useVerifyDeliveryOtpMutation
 } = orderApi;

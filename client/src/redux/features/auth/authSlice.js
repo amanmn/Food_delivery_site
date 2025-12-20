@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { authApi } from "./authApi"; // Make sure the path is correct
 
 const initialState = {
   user: null,

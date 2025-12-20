@@ -1,7 +1,7 @@
 // rootReducer.js
 import { combineReducers } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // uses localStorage for web
+import storage from "redux-persist/lib/storage"; 
 
 import authReducer, { userLoggedOut } from "./features/auth/authSlice";
 import userReducer from "./features/user/userSlice";

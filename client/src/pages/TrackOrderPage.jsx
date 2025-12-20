@@ -59,12 +59,16 @@ const TrackOrderPage = () => {
                     : <p className='text-green-600 font-semibold text-lg'>Delivered</p>
                 }
 
-                {/* MAP SECTION (Same as screenshot placeholder) */}
-                {shopOrder.assignedDeliveryBoy && <DeliveryBoyTracking data={{
-                    deliveryBoyLocation: { lat: deliveryBoy?.location?.lat, lon: deliveryBoy?.location?.lng },
-                    customerLocation: { lat: data.deliveryAddress?.lat, lon: data.deliveryAddress?.lng },
-                }} />}
-
+                {(shopOrder.assignedDeliveryBoy && shopOrder.status!=="delivered") &&
+                 <DeliveryBoyTracking
+                    data={{
+                        deliveryAddress: {
+                            latitude: data.deliveryAddress?.latitude,
+                            longitude: data.deliveryAddress?.longitude
+                        }
+                    }}
+                    deliveryBoy={deliveryBoy}
+                />}
             </div>
         </div>
     );

@@ -47,7 +47,7 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
   try {
     if (!req.user) return unauthorized(res, 'Not authenticated');
 
-    console.log(req.user);
+    // console.log(req.user);
     if (!allowedRoles.includes(req.user.role)) return res.status(403).json({ success: false, message: 'Access Denied: Insufficient permissions' });
 
     return next();
