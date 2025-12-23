@@ -13,7 +13,6 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
   const { user } = useSelector((state) => state.user);
   const { address } = useSelector((state) => state.location);
 
-
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);

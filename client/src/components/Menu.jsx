@@ -23,24 +23,33 @@ const Menu = () => {
 
   const [quantities, setQuantities] = useState({});
   const [isAdding, setIsAdding] = useState({});
-  const [updatedItemsList, setUpdatedItemsList] = useState(itemsData);
+  const [updatedItemsList, setUpdatedItemsList] = useState([]);
   const [addItemToCart] = useAddItemToCartMutation();
   const [updateCartItem] = useUpdateCartItemMutation();
 
 
   const handleFilterByCategory = (category) => {
+    if (!itemsData) return;
+
     if (category === "all") {
       setUpdatedItemsList(itemsData);
     } else {
-      const filteredList = itemsInMyCity.filter(item => item.category === category);
+      const filteredList = itemsData?.filter(
+        item => item.category === category
+      );
       setUpdatedItemsList(filteredList);
     }
   }
 
   useEffect(() => {
-    if (city) refetch();
-    setUpdatedItemsList(itemsData);
-  }, [city, refetch,setUpdatedItemsList]);
+    console.log("0", itemsData);
+    if (city && !itemsData && !isLoading) refetch();
+
+    if (itemsData && Array.isArray(itemsData)) {
+      setUpdatedItemsList(itemsData);
+    }
+  }, [city, itemsData, isLoading]);
+
 
   const handleAddToCart = async (item) => {
     const quantity = quantities[item._id] || 1;
@@ -104,8 +113,10 @@ const Menu = () => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
       stars.push(
-        (i < rating) ? (< FaStar className='text-yellow-500 text-lg' />) : (<FaRegStar className='text-yellow-500 text-lg' />)
-      )
+        (i < rating)
+          ? (<FaStar key={i} className='text-yellow-500 text-lg' />)
+          : (<FaRegStar key={i} className='text-yellow-500 text-lg' />)
+      );
     }
     return stars;
   }
@@ -122,8 +133,8 @@ const Menu = () => {
 
         {/* Menu Items */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
-          {itemsData?.length > 0 ? (
-            itemsData.map((item) => (
+          {updatedItemsList?.length > 0 ? (
+            updatedItemsList.map((item) => (
               <div
                 key={item._id}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-300 overflow-hidden"
@@ -131,7 +142,11 @@ const Menu = () => {
                 <div
                   className="relative h-60 bg-cover bg-center"
                   style={{
-                    backgroundImage: `url(${item.image || "/placeholder-food.jpg"})`,
+                    backgroundImage: `url(${item.image?.startsWith("http")
+                      ? item.image
+                      : `${item.image ? `/` + item.image : "/placeholder-food.jpg"}`
+                      })`,
+
                   }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>

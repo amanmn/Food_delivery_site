@@ -142,7 +142,10 @@ const logout = (req, res) => {
 
 const getMe = async (req, res) => {
     try {
+        console.log("req.user:", req.user);
         const user = await User.findById(req.user.id).select("-password");
+        console.log("user:", user);
+        
         if (!user) {
             return res.status(401).json({ success: false, message: "Unauthorized" });
         }

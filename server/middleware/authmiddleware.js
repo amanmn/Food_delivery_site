@@ -52,7 +52,7 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
 
     return next();
   } catch (error) {
-    console.error('requireRole error:', err);
+    console.error('requireRole error:', error);
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }

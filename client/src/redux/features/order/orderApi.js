@@ -5,7 +5,7 @@ const BASE_URL = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://lo
 export const orderApi = createApi({
     reducerPath: "orderApi",    
     baseQuery: fetchBaseQuery({
-        baseUrl: `${BASE_URL}/api/order`,
+        baseUrl: `/api/order`,
         credentials: 'include',
     }),
 

@@ -7,22 +7,19 @@ import { ColorRing } from "react-loader-spinner";
 const AuthProvider = ({ children }) => {
     const dispatch = useDispatch();
 
-    const {
-        data,
-        isLoading,
-        isError,
-        isSuccess,
-    } = useLoadUserDataQuery();
+    const { data, isLoading, isError } = useLoadUserDataQuery(undefined, {
+        refetchOnMountOrArgChange: false,
+    });
 
     useEffect(() => {
-        if (isSuccess && data) {
+        if (data) {
             dispatch(userLoggedIn(data));
         }
 
         else if (!isLoading && isError) {
             dispatch(userLoggedOut());
         }
-    }, [isSuccess, isError, data, dispatch]);
+    }, [isLoading, isError, data, dispatch]);
 
     // 🔥 ONLY block UI while loading
     // if (isLoading) {

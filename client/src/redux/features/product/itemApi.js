@@ -5,7 +5,7 @@ const ITEM_API = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://lo
 export const itemApi = createApi({
   reducerPath: "itemApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${ITEM_API}/api/item`,
+    baseUrl: `/api/item`,
     prepareHeaders: (headers) => {
       const token = localStorage.getItem("token");
       if (token) {

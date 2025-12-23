@@ -5,7 +5,7 @@ const BASE_URL = import.meta.env.VITE_BASEURL || "http://localhost:8000";
 export const cartApi = createApi({
   reducerPath: "cartApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${BASE_URL}/api/cart`,
+    baseUrl: `/api/cart`,
     credentials: "include", // <-- Important: sends HTTP-only cookies
   }),
   endpoints: (builder) => ({
