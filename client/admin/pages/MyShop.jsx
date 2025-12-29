@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { useLoadMyShopDataQuery } from "../../src/redux/features/owner/ownerApi";
+import { useGetMyShopQuery } from "../../src/redux/features/shop/shopApi";
 import { FaArrowLeft, FaMapMarkerAlt, FaStore, FaPhoneAlt, FaEnvelope, FaRegEdit } from "react-icons/fa";
 import { useEffect } from "react";
 
 const MyShop = () => {
     const navigate = useNavigate();
-    const { data: shopData, isLoading } = useLoadMyShopDataQuery();
+    const { data: shopData, isLoading, isError } = useGetMyShopQuery();
+
     useEffect(() => {
-        console.log(shopData);
+        console.log("My shop data:", shopData);
     })
 
     if (isLoading) {
