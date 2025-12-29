@@ -176,7 +176,7 @@ const EditItem = () => {
 
                     <button
                         className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'
-                    >Add Item
+                    >Update Item
                     </button>
                 </form>
             </div>

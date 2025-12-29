@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Edit3, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
-import { API_URL } from "../../src/config";
+import API from "../../src/api";
 import { setMyShopData } from "../../src/redux/features/owner/ownerSlice";
 import axios from "axios";
 
@@ -16,7 +16,7 @@ const ItemProduct = () => {
         if (!window.confirm("Are you sure you want to delete this item?")) return;
 
         try {
-            const result = await axios.get(`${API_URL}/api/item/delete-item/${itemId}`,
+            const result = await axios.delete(`${API_URL}/api/item/delete-item/${itemId}`,
                 { withCredentials: true })
             dispatch(setMyShopData(result.data));
         } catch (error) {
@@ -26,7 +26,7 @@ const ItemProduct = () => {
 
     return (
         <div className="min-h-screen bg-white py-10 px-4 sm:px-8">
-            
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">

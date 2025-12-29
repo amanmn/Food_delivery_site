@@ -71,7 +71,7 @@ const AddFoodItem = () => {
         } catch (error) {
             setLoading(false);
             console.log(error);
-            toast.alert("Failed to add item");
+            toast.error("Failed to add item");
         }
     };
 
@@ -124,7 +124,7 @@ const AddFoodItem = () => {
                         <input
                             type="Number"
                             value={price}
-                            onChange={(e) => setPrice(e.target.value)}
+                            onChange={(e) => setPrice(Number(e.target.value))}
                             placeholder='Enter Item Price'
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />

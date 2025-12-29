@@ -55,8 +55,8 @@ const CreateEditShop = () => {
         try {
             const formData = new FormData();
             formData.append("name", name);
-            formData.append("city", city);
-            formData.append("state", state);
+            formData.append("city", cityName);
+            formData.append("state", stateName);
             formData.append("address", address);
             if (backendImage) formData.append("image", backendImage);
             const result = await axios.post(`${API_URL}/api/shop/create-edit`, formData,
