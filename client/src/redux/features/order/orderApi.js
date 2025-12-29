@@ -1,9 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const BASE_URL = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://localhost:8000";
-
 export const orderApi = createApi({
-    reducerPath: "orderApi",    
+    reducerPath: "orderApi",
     baseQuery: fetchBaseQuery({
         baseUrl: `/api/order`,
         credentials: 'include',
@@ -14,18 +12,24 @@ export const orderApi = createApi({
     endpoints: (builder) => ({
         placeOrder: builder.mutation({
             query: (orderData) => ({
-                url: "place-order",               //     /api/order/place-order
+                url: "place-order",
                 method: "POST",
                 body: orderData,
             }),
-            invalidatesTags: ["Cart", "Orders", "User"], // ensure state refetch
+            invalidatesTags: ["Cart", "Orders", "User"],
         }),
         getOrderItems: builder.query({
-            query: () => ({ url: "orders", method: "GET" }),
+            query: () => ({
+                url: "orders",
+                method: "GET"
+            }),
             providesTags: (result) =>
                 result
                     ? [
-                        ...result.orders.map((ord) => ({ type: "Orders", id: ord._id })),
+                        ...result.orders.map((ord) => ({
+                            type: "Orders",
+                            id: ord._id
+                        })),
                         { type: "Orders", id: "LIST" },
                     ]
                     : [{ type: "Orders", id: "LIST" }],
@@ -35,7 +39,6 @@ export const orderApi = createApi({
                 url: `update-status`,
                 method: "PUT",
                 body: { orderId, shopOrderId, status },
-                credentials: "include",
             }),
             invalidatesTags: (result, error, { orderId }) => [
                 { type: "Orders", id: orderId },
@@ -43,40 +46,34 @@ export const orderApi = createApi({
             ]
         }),
         getDeliveryBoyAssignments: builder.query({
-            query: () => ({
-                url: "get-assignments",        //     /api/order/get-assignments
-                method: "GET"
-            }),
+            query: () => "get-assignments",
             providesTags: ["Orders"],
         }),
         acceptDeliveryAssignment: builder.mutation({
             query: (assignmentId) => ({
-                url: `accept-assignment/${assignmentId}`,               //     /api/order/place-order
+                url: `accept-assignment/${assignmentId}`,
                 method: "POST",
                 body: assignmentId,
             }),
-            invalidatesTags: ["Orders"], // ensure state refetch
+            invalidatesTags: ["Orders"],
         }),
         getOrderById: builder.query({
-            query: (orderId) => ({
-                url: `get-order-by-id/${orderId}`,               //     /api/order/get-order-by-id/:orderId
-                method: "GET",
-            }),
+            query: (orderId) => `get-order-by-id/${orderId}`,
             providesTags: ["Orders"],
         }),
         sendDeliveryOtp: builder.mutation({
-            query: ({assignmentId, orderId, shopOrderId }) => ({
-                url: `send-delivery-otp`,               //     /api/order/send-delivery-otp     
+            query: ({ assignmentId, orderId, shopOrderId }) => ({
+                url: `send-delivery-otp`,
                 method: "POST",
                 body: { assignmentId, orderId, shopOrderId },
             }),
             invalidatesTags: ["Orders"],
         }),
         verifyDeliveryOtp: builder.mutation({
-            query: ({assignmentId, orderId, shopOrderId, otp }) => ({
-                url: `verify-delivery-otp`,               //     /api/order/verify-delivery-otp
+            query: ({ assignmentId, orderId, shopOrderId, otp }) => ({
+                url: `verify-delivery-otp`,
                 method: "POST",
-                body: {assignmentId, orderId, shopOrderId, otp },
+                body: { assignmentId, orderId, shopOrderId, otp },
             }),
             invalidatesTags: ["Orders"],
         }),

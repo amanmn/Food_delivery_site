@@ -1,14 +1,13 @@
 // rootReducer.js
 import { combineReducers } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; 
+import storage from "redux-persist/lib/storage";
 
 import authReducer, { userLoggedOut } from "./features/auth/authSlice";
 import userReducer from "./features/user/userSlice";
 import cartReducer from "./features/cart/cartSlice";
 import orderReducer from "./features/order/orderSlice";
 import locationReducer from "./features/location/locationSlice";
-import ownerReducer from "./features/owner/ownerSlice";
 import deliveryLocationReducer from "./features/deliveryBoyLocation/deliveryLocationSlice"; // ✅ import this
 
 
@@ -17,7 +16,7 @@ import { userApi } from "./features/user/userApi";
 import { cartApi } from "./features/cart/cartApi";
 import { itemApi } from "./features/product/itemApi";
 import { orderApi } from "./features/order/orderApi";
-import { ownerApi } from "./features/owner/ownerApi";
+import { shopApi } from "./features/shop/shopApi";
 
 const appReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -25,24 +24,29 @@ const appReducer = combineReducers({
   [itemApi.reducerPath]: itemApi.reducer,
   [cartApi.reducerPath]: cartApi.reducer,
   [orderApi.reducerPath]: orderApi.reducer,
-  [ownerApi.reducerPath]: ownerApi.reducer,
+  [shopApi.reducerPath]: shopApi.reducer,
+
   auth: authReducer,
   user: userReducer,
   cart: cartReducer,
   order: orderReducer,
   location: locationReducer,
-  owner: ownerReducer,
   deliveryLocation: deliveryLocationReducer,
 });
 
 // 🧹 Reset all Redux state on logout
 const rootReducer = (state, action) => {
   if (action.type === userLoggedOut.type) {
-    storage.removeItem("persist:root"); // clear persisted storage
-    state = undefined;
+    // 🧹 clear persisted storage
+    storage.removeItem("persist:root");
+
+    // reset everything
+    return appReducer(undefined, action);
   }
+
   return appReducer(state, action);
 };
+
 
 // 🔒 persist config
 const persistConfig = {
@@ -52,7 +56,7 @@ const persistConfig = {
     "cart",
     "location",
     "deliveryLocation",
-    "user", // optional (profile only, not auth)
+    "user", // profile only, not auth
   ],
 };
 

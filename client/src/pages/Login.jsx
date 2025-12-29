@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { API_URL } from "../config";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FcGoogle } from "react-icons/fc";
 import { useLoginUserMutation } from "../redux/features/auth/authApi";
+import { userLoggedIn } from "../redux/features/auth/authSlice";
 import { useDispatch } from "react-redux";
 
 const Login = () => {
@@ -35,19 +35,21 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setApiError("");
-    try {
-      const response = await loginUser(formData).unwrap();      
-      const userRole = response?.user?.role;
-      console.log(userRole);
 
+    try {
+      const response = await loginUser(formData).unwrap();
+      dispatch(userLoggedIn(response.user));
+
+      const role = response?.user?.role;
+      console.log(role);
       toast.success("Login successful");
-      if (userRole === "owner") {
-        // dispatch(fetchMyShop());
-        navigate("/dash");
-      } else if (userRole === "deliveryboy") {
-        navigate("/delivery");
+
+      if (role === "owner") {
+        navigate("/dash", { replace: true });
+      } else if (role === "deliveryBoy") {
+        navigate("/delivery", { replace: true });
       } else {
-        navigate("/");
+        navigate("/", { replace: true });
       }
     } catch (error) {
       const message = error?.data?.message || error?.message || "Login failed";

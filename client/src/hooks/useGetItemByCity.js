@@ -1,29 +1,19 @@
 import React, { useEffect } from 'react'
-import axios from "axios"
-// import { API_URL } from '../config'
-import { useDispatch, useSelector } from "react-redux"
+import { useDispatch } from "react-redux"
+import { useGetItemByCityQuery } from '../redux/features/product/itemApi'
 import { setItemsInMyCity } from '../redux/features/user/userSlice'
 
 const useGetItemByCity = () => {
     const dispatch = useDispatch();
-    const { city } = useSelector(state => state.user);
+    const { data, isSuccess } = useGetItemByCityQuery(city, {
+        skip: !city, // Skip query if city is not set
+    });
 
     useEffect(() => {
-        if (!city) return;
-
-        const fetchItem = async () => {
-            try {
-                const result = await axios.get(`/api/item/get-item-by-city/${city}`,
-                    { withCredentials: true });
-                dispatch(setItemsInMyCity(result.data));
-                console.log(result.data)
-            } catch (error) {
-                console.log(error);
-            }
+        if (isSuccess && data) {
+            dispatch(setItemsInMyCity(data));
         }
-        if (city) fetchItem();
-    }, [city, dispatch])
-
+    }, [isSuccess, data, dispatch]);
 }
 
 export default useGetItemByCity

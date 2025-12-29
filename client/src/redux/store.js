@@ -1,5 +1,6 @@
 // store.js
 import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import { persistStore } from "redux-persist";
 import persistedReducer from "./rootReducer";
 
@@ -8,7 +9,7 @@ import { userApi } from "../redux/features/user/userApi";
 import { cartApi } from "../redux/features/cart/cartApi";
 import { itemApi } from "../redux/features/product/itemApi";
 import { orderApi } from "../redux/features/order/orderApi";
-import { ownerApi } from "../redux/features/owner/ownerApi";
+import { shopApi } from "../redux/features/shop/shopApi";
 
 const store = configureStore({
   reducer: persistedReducer,
@@ -21,10 +22,12 @@ const store = configureStore({
       cartApi.middleware,
       itemApi.middleware,
       orderApi.middleware,
-      ownerApi.middleware
+      shopApi.middleware
     ),
   devTools: import.meta.env.MODE !== "production",
 });
+setupListeners(store.dispatch);
+
 
 export const persistor = persistStore(store);
 export default store;

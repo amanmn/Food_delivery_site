@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,9 +9,9 @@ import './index.css';
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
-import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
-import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
-import { updateUserProfile } from "./redux/features/user/userSlice";
+// import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
+// import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
+// import { updateUserProfile } from "./redux/features/user/userSlice";
 
 import CreateEditShop from "../admin/pages/CreateEditShop";
 import MyShop from "../admin/pages/MyShop";
@@ -20,8 +20,6 @@ import ItemProduct from "../admin/pages/ItemProduct";
 import EditItem from "../admin/pages/EditItem";
 import Settings from "../admin/pages/Settings";
 
-import useGetShopByCity from "./hooks/useGetShopByCity";
-import useGetItemByCity from "./hooks/useGetItemByCity";
 import useDetectLocation from "./hooks/useDetectLocation";
 import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 import TrackOrderPage from "./pages/TrackOrderPage";
@@ -47,7 +45,6 @@ function App() {
   // const {
   //   data: userData,
   //   isSuccess,
-  //   isLoading,
   //   isError,
   //   error,
   // } = useLoadUserDataQuery(undefined, {
@@ -62,17 +59,15 @@ function App() {
   //     dispatch(userLoggedIn({ user: userData }));
   //     dispatch(updateUserProfile(userData));
   //     console.log("User loaded successfully:", userData);
-  //   } if (isError) {
+  //   }
+  //   if (isError) {
   //     dispatch(userLoggedOut());
   //     console.error("Error loading user:", error);
   //   }
-  // }, [ user, isError, dispatch]);
+  // }, [isSuccess, userData, isError, dispatch]);
 
   // Hooks for user and shop data
   useDetectLocation();
-  useGetShopByCity();
-  useGetItemByCity();
-
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
   // if (!authChecked) {

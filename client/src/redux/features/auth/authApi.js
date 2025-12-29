@@ -1,12 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-// const BASE_URL = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://localhost:8000";
-const AUTH_API = `/api/auth`;
-
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: AUTH_API,
+    baseUrl: "/api/auth",
     credentials: "include",
   }),
   tagTypes: ["Auth"],
@@ -56,14 +53,10 @@ export const authApi = createApi({
       invalidatesTags: ["Auth"],
     }),
     // ✅ fetch logged in user from backend
-    loadUserData: builder.query({
-      query: () => ({
-        url: "me", // backend route: GET /api/auth/me
-        method: "GET"
-      }),
+    getMe: builder.query({
+      query: () => "me",
       transformResponse: (response) => response?.user ?? null,
       providesTags: ["Auth"],
-      keepUnusedDataFor: 60, // cache for 60 seconds
     }),
   }),
 });
@@ -75,7 +68,7 @@ export const {
   useVerifyOtpMutation,
   useResetPasswordMutation,
   useLogoutUserMutation,
-  useLoadUserDataQuery, // ✅ fetch user on refresh
+  useGetMeQuery, // ✅ fetch user on refresh
   // useUpdateUserDataMutation,
   // useUploadProfileImageMutation,
 } = authApi;

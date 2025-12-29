@@ -2,14 +2,15 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../redux/slices/cartSlice";
 import { useEffect, useState } from "react";
 import { useGetProductDataQuery } from "../redux/features/product/itemApi";
-
+import { useSelector } from "react-redux";
 
 const ProductCard = () => {
   const dispatch = useDispatch();
-  const {data: products } = useGetProductDataQuery();
+  const { city } = useSelector((state) => state.user);
+  const { data: products = [] } = useGetItemByCityQuery(city, { skip: !city });
 
   useEffect(() => {
-        console.log(products);
+    console.log(products);
   }, [products]);
 
   const handleAddToCart = (product) => {

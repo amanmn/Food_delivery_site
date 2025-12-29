@@ -1,27 +1,21 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-// const USER_API = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://localhost:8000";
-const BASE_URL = `/api/user`;
-
 export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: `/api/user`,
     credentials: "include",
   }),
   tagTypes: ["User"],
   endpoints: (builder) => ({
     // user profile
     loadUser: builder.query({
-      query: () => ({
-        url: "/profile", // ✅ always start with /
-        method: "GET",
-      }),
+      query: () => "/profile",
       transformResponse: (response) => response.user,
       providesTags: ["User"],
     }),
 
-    // 🔹 Update user basic info
+    // Update user info
     updateUserData: builder.mutation({
       query: (formData) => ({
         url: "/update",
@@ -33,14 +27,14 @@ export const userApi = createApi({
 
     updateUserAddress: builder.mutation({
       query: (addressData) => ({
-        url: "/update-address", // ✅ better to have a separate endpoint for clarity
+        url: "/update-address",
         method: "PUT",
         body: addressData,
       }),
       invalidatesTags: ["User"],
     }),
 
-    // 🔹 Upload profile image
+    // Upload profile image
     uploadProfileImage: builder.mutation({
       query: (formData) => ({
         url: "/upload",
@@ -50,22 +44,19 @@ export const userApi = createApi({
       invalidatesTags: ["User"],
     }),
 
-    // 🔹 Update delivery boy’s live location (admin or delivery role)
+    // Update delivery boy’s live location (admin or delivery role)
     updateDeliveryLocation: builder.mutation({
       query: (locationData) => ({
         url: "/update-location", // ✅ handled in backend for delivery boy
         method: "POST",
         body: locationData,
-        headers: {
-          "Content-Type": "application/json",
-        },
       }),
       invalidatesTags: ["User"],
     }),
 
-    // 🔹 Get all delivery boys
+    // Get all delivery boys
     getDeliveryBoys: builder.query({
-      query: () => ({ url: "/delivery-boys", method: "GET" }),
+      query: () => "/delivery-boys",
       transformResponse: (res) => res.boys,
       providesTags: ["User"],
     }),

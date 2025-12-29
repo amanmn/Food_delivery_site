@@ -1,13 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const BASE_URL = import.meta.env.VITE_BASEURL || "http://localhost:8000";
-
 export const cartApi = createApi({
   reducerPath: "cartApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `/api/cart`,
-    credentials: "include", // <-- Important: sends HTTP-only cookies
+    credentials: "include", 
   }),
+  tagTypes: ["Cart"],
   endpoints: (builder) => ({
     addItemToCart: builder.mutation({
       query: ({ productId, quantity }) => ({

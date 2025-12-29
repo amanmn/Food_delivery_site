@@ -1,36 +1,30 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { useLoadUserDataQuery } from "../src/redux/features/auth/authApi";
-import { userLoggedIn, userLoggedOut } from "../src/redux/features/auth/authSlice";
-import { ColorRing } from "react-loader-spinner";
+import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
+import {
+  userLoggedIn,
+  userLoggedOut,
+} from "./redux/features/auth/authSlice";
 
 const AuthProvider = ({ children }) => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-    const { data, isLoading, isError } = useLoadUserDataQuery(undefined, {
-        refetchOnMountOrArgChange: false,
-    });
+  const { data, isFetching, isError } = useLoadUserDataQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
-    useEffect(() => {
-        if (data) {
-            dispatch(userLoggedIn(data));
-        }
+  useEffect(() => {
+    if (data) {
+      dispatch(userLoggedIn(data));
+    } else if (!isFetching && isError) {
+      dispatch(userLoggedOut());
+    }
+  }, [data, isFetching, isError, dispatch]);
 
-        else if (!isLoading && isError) {
-            dispatch(userLoggedOut());
-        }
-    }, [isLoading, isError, data, dispatch]);
+  // ✅ Do NOT block UI aggressively (prevents flicker)
+  if (isFetching) return null;
 
-    // 🔥 ONLY block UI while loading
-    // if (isLoading) {
-    //     return (
-    //         <div className="flex justify-center items-center h-screen">
-    //             <ColorRing height="80" width="80" />
-    //         </div>
-    //     );
-    // }
-
-    return children;
+  return children;
 };
 
 export default AuthProvider;

@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { addToCart } from "../redux/features/cart/cartSlice";
-import {
-  useAddItemToCartMutation,
-  useUpdateCartItemMutation,
-} from "../redux/features/cart/cartApi";
+import { useAddItemToCartMutation } from "../redux/features/cart/cartApi";
 import { useGetItemByCityQuery } from "../redux/features/product/itemApi";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaStar } from "react-icons/fa"
 import { FaRegStar } from "react-icons/fa"
-
 
 const Menu = () => {
   const dispatch = useDispatch();
@@ -25,30 +21,43 @@ const Menu = () => {
   const [isAdding, setIsAdding] = useState({});
   const [updatedItemsList, setUpdatedItemsList] = useState([]);
   const [addItemToCart] = useAddItemToCartMutation();
-  const [updateCartItem] = useUpdateCartItemMutation();
 
-
+  const [activeCategory, setActiveCategory] = useState("all");
+  const categories = [
+    "All",
+    "Snacks",
+    "Main Course",
+    "Desserts",
+    "Pizza",
+    "Burgers",
+    "Sandwiches",
+    "South Indian",
+    "North Indian",
+    "Chinese",
+    "Fast Food",
+    "Others",
+  ];
   const handleFilterByCategory = (category) => {
-    if (!itemsData) return;
+    setActiveCategory(category);
+
+    if (!Array.isArray(itemsData)) return;
 
     if (category === "all") {
       setUpdatedItemsList(itemsData);
     } else {
-      const filteredList = itemsData?.filter(
-        item => item.category === category
+      setUpdatedItemsList(
+        itemsData.filter((item) => item.category === category)
       );
-      setUpdatedItemsList(filteredList);
     }
-  }
+  };
+
 
   useEffect(() => {
     console.log("0", itemsData);
-    if (city && !itemsData && !isLoading) refetch();
-
     if (itemsData && Array.isArray(itemsData)) {
       setUpdatedItemsList(itemsData);
     }
-  }, [city, itemsData, isLoading]);
+  }, [itemsData]);
 
 
   const handleAddToCart = async (item) => {
@@ -87,7 +96,7 @@ const Menu = () => {
     toast.info(`Quantity updated to ${newQuantity}`);
   };
 
-  // 🕒 Loading / Error States
+  // Loading / Error States
   if (!city)
     return (
       <p className="text-center text-lg font-medium text-gray-600 my-10">
@@ -130,6 +139,27 @@ const Menu = () => {
         <h2 className="text-5xl lg:text-5xl font-bold text-gray-900 mt-4">
           Menu That Always <br /> Makes You Fall In Love
         </h2>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-3 mt-6">
+          {categories.map((category) => (
+            <button
+              key={category}
+              className={`px-4 py-2 rounded-full border transition 
+                ${activeCategory === (category === "All" ? "all" : category)
+                  ? "bg-red-500 text-white"
+                  : "border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                }`}
+              onClick={() =>
+                handleFilterByCategory(
+                  category === "All" ? "all" : category
+                )
+              }
+            >
+              {category}
+            </button>
+          ))}
+        </div>
 
         {/* Menu Items */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">

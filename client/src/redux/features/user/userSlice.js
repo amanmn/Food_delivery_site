@@ -6,7 +6,7 @@ const initialState = {
     city: null,
     state: null,
     selectedAddress: null,
-    loading: true,
+    // loading: true,
     shopsInMyCity: null,
     itemsInMyCity: null
 };
@@ -30,13 +30,6 @@ const userSlice = createSlice({
         setState: (state, action) => {
             state.state = action.payload
         },
-        setShopsInMyCity: (state, action) => {
-            state.shopsInMyCity = action.payload
-        },
-        setItemsInMyCity: (state, action) => {
-            state.itemsInMyCity = action.payload
-        },
-
     },
     extraReducers: (builder) => {
         builder

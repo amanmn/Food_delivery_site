@@ -17,7 +17,7 @@ import {
 const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
 
   const { data, isLoading, refetch } = useLoadUserQuery();
   const [updateUserData] = useUpdateUserDataMutation();
@@ -46,10 +46,12 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      await logoutUser();
-      dispatch(userLoggedOut());
+      await logoutUser().unwrap();
     } catch (err) {
       console.error("Logout failed:", err);
+    } finally {
+      dispatch(userLoggedOut());
+      navigate("/", { replace: true });
     }
   };
 

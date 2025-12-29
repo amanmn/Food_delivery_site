@@ -9,10 +9,8 @@ import useDetectLocation from "../hooks/useDetectLocation";
 const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
   const geoapikey = import.meta.env.VITE_GEOAPIKEY;
-  // const BASE_URL = import.meta.env.VITE_BASEURL;
   const { user } = useSelector((state) => state.user);
   const { address } = useSelector((state) => state.location);
-
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);

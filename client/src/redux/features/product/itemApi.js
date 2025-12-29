@@ -1,26 +1,17 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const ITEM_API = import.meta.env.VITE_BASEURL?.replace(/\/+$/, "") || "http://localhost:8000";
-
 export const itemApi = createApi({
   reducerPath: "itemApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `/api/item`,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
+    baseUrl: "/api/item",
+    credentials: "include",
   }),
+  tagTypes: ["Item"],
   endpoints: (builder) => ({
-    // ✅ Get items by user's city
+    // Get items by user's city
     getItemByCity: builder.query({
-      query: (city) => ({
-        url: `get-item-by-city/${city}`,
-        method: "GET",
-      }),
+      query: (city) => `get-item-by-city/${city}`,
+      providesTags: ["Item"],
     }),
   }),
 });

@@ -7,14 +7,13 @@ import categories from "../category";
 import { useSelector } from "react-redux";
 import { MdLocationCity } from "react-icons/md";
 import { useEffect } from "react";
-import FoodCard from "./FoodCard";
+import { useGetShopByCityQuery } from "../redux/features/shop/shopApi";
 
 const CategoryCard = () => {
-  const { city, shopsInMyCity } = useSelector(state => state.user);
-
-  useEffect(() => {
-    console.log(shopsInMyCity);
-  })
+  const { city } = useSelector(state => state.user);
+  const { data: shopsInMyCity = [] } = useGetShopByCityQuery(city, {
+    skip: !city,
+  });
 
   return (
     <div>
@@ -66,6 +65,8 @@ const CategoryCard = () => {
           ))}
         </Swiper>
       </section>
+
+
       <section className="py-2 px-4 sm:px-6 lg:px-8 bg-gray-50 ">
         <div className="text-center">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
