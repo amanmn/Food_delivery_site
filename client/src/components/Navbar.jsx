@@ -32,7 +32,7 @@ const Navbar = () => {
   const [logoutUser] = useLogoutUserMutation();
 
   const { user } = useSelector((state) => state.auth);
-  const { city } = useSelector((state) => state.user) || "Add";
+  const city = useSelector((state) => state.user?.city) || "Add";
   // const { cartItems } = useSelector((state) => state.cart);
 
   const { data: cartData } = useGetCartItemsQuery(undefined, {
@@ -89,11 +89,10 @@ const Navbar = () => {
               className="lg:text-red-500 md:text-red-500 pr-2 rounded-md flex text-gray-800 lg:hover:text-red-600 transition text-lg items-center"
               aria-label="Location"
             >
-              {city &&
-                <span className="w-[75%] truncate m-1 ">
-                  {city}
-                </span>
-              }
+              <span className="w-[75%] truncate m-1 ">
+                {typeof city === "string" ? city : "Add"}
+              </span>
+
               <FaLocationDot size={25} className="cursor-pointer lg:text-red-500 md:text-red-500 text-gray-800" />
             </button>
             <div className='w-[80%] flex items-center gap-[10px]'>

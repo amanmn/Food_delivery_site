@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../config";
 import { toast } from 'react-toastify';
 import { useRegisterUserMutation } from "../redux/features/auth/authApi";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -65,7 +64,7 @@ const Register = () => {
 
   const handleGoogleLogin = () => {
     if (registerIsLoading) return;
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = `/api/auth/google`;
   }
 
   return (
