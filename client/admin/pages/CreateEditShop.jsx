@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from 'react'
-import axios from "axios"
+import { useEffect, useState } from 'react'
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify"
+
 import useDetectLocation from "../../src/hooks/useDetectLocation";
 import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
 import { updateUserProfile } from '../../src/redux/features/user/userSlice';
-import { API_URL } from '../../src/config';
-import { useLoadMyShopDataQuery } from '../../src/redux/features/owner/ownerApi';
+import { useGetMyShopQuery, useCreateOrEditShopMutation } from '../../src/redux/features/shop/shopApi';
 
 const CreateEditShop = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const detectLocation = useDetectLocation();
-    const { data:myShopData } = useLoadMyShopDataQuery();
-    const { city, state, selectedAddress } = useSelector(state => state.user);
+
+    const { data: myShopData } = useGetMyShopQuery();
+    const [createOrEditShop, { isLoading }] = useCreateOrEditShopMutation();
 
     const [name, setName] = useState(myShopData?.name || "");
     const [address, setAddress] = useState(myShopData?.address || "");
@@ -23,50 +24,64 @@ const CreateEditShop = () => {
     const [stateName, setStateName] = useState(myShopData?.state || "");
     const [frontendImage, setFrontendImage] = useState(myShopData?.image || null)
     const [backendImage, setBackendImage] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        detectLocation();
+    }, [])
+
+    useEffect(() => {
+        if (!myShopData) return;
+        setName(myShopData.name || "");
+        setAddress(myShopData.address || "");
+        setCityName(myShopData.city || "");
+        setStateName(myShopData.state || "");
+        setFrontendImage(myShopData?.image || null);
+
+        dispatch(setMyShopData(myShopData));
+    }, [myShopData, dispatch]);
+
+    // Prefill from detected location
+    useEffect(() => {
+        if (city) setCityName(city);
+        if (state) setStateName(state);
+        if (address) setAddress(address);
+    }, [city, state, address]);
+
     const handleImage = (e) => {
         const file = e.target.files[0];
+        if (!file) return;
         setBackendImage(file);
         setFrontendImage(URL.createObjectURL(file));
     }
 
-    useEffect(() => {
-
-        const getLocation = async () => {
-            try {
-                await detectLocation();
-            } catch (err) {
-                console.error("Location access denied:", err);
-            }
-        };
-        getLocation();
-    }, [])
-
-    useEffect(() => {
-        if (city || state || selectedAddress) {
-            setCityName(city || "");
-            setStateName(state || "");
-            setAddress(selectedAddress || "");
-        }
-
-    }, [city, state, selectedAddress]);
-
     const handleSave = async (e) => {
         e.preventDefault();
+        if (!name || !address || !cityName || !stateName) {
+            toast.warning("All fields are required");
+            return;
+        }
+
         try {
+            setLoading(true);
+
             const formData = new FormData();
             formData.append("name", name);
             formData.append("city", cityName);
             formData.append("state", stateName);
             formData.append("address", address);
             if (backendImage) formData.append("image", backendImage);
-            const result = await axios.post(`${API_URL}/api/shop/create-edit`, formData,
-                { withCredentials: true })
-            dispatch(setMyShopData(result.data))
-            navigate("/dash");
-            console.log(result.data);
 
+            const res = await createOrEditShop(formData).unwrap();
+            console.log(res.data);
+            dispatch(setMyShopData(res.data));
+            toast.success("Shop saved successfully");
+            navigate("/dash");
         } catch (error) {
             console.log(error);
+            toast.error("Failed to save shop");
+        } finally {
+            setLoading(false);
         }
         const shopData = { name, address, city: cityName, state: stateName };
         dispatch(updateUserProfile(shopData));
@@ -87,7 +102,7 @@ const CreateEditShop = () => {
                         <FaUtensils className='w-16 h-16 text-blue-500' size={25} />
                     </div>
                     <div className='text-3xl font-extrabold text-gray-900'>
-                        {myShopData ? "Edit Shop" : "Add Shop"}
+                        {myShopData ? "Edit Shop" : "Create Shop"}
                     </div>
 
                 </div>
@@ -119,7 +134,7 @@ const CreateEditShop = () => {
                         />
                         {frontendImage &&
                             <div className="mt-4">
-                                <img src={frontendImage} alt="" className='w-full h-48 object-cover rounded-lg border' />
+                                <img src={frontendImage} alt="shop" className='w-full h-48 object-cover rounded-lg border' />
                             </div>
                         }
 
@@ -157,8 +172,10 @@ const CreateEditShop = () => {
                         />
                     </div>
                     <button
+                        disabled={isLoading}
                         className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'
-                    >Save
+                    >
+                        {isLoading ? <Loader2Icon size={20} /> : "Save Shop"}
                     </button>
                 </form>
             </div>

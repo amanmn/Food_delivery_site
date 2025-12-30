@@ -1,10 +1,9 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Edit3, Trash2 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import API from "../../src/api";
 import { setMyShopData } from "../../src/redux/features/owner/ownerSlice";
-import axios from "axios";
 
 const ItemProduct = () => {
     const navigate = useNavigate();
@@ -13,14 +12,15 @@ const ItemProduct = () => {
     const shopItems = shopData?.items || [];
 
     const handleDeleteItem = async (itemId) => {
-        if (!window.confirm("Are you sure you want to delete this item?")) return;
+        const confirmDelete = window.confirm("Are you sure you want to delete this item?");
+        if (!confirmDelete) return;
 
         try {
-            const result = await axios.delete(`${API_URL}/api/item/delete-item/${itemId}`,
-                { withCredentials: true })
-            dispatch(setMyShopData(result.data));
+            const res = await API.delete(`/item/delete-item/${itemId}`);
+            dispatch(setMyShopData(res.data));
         } catch (error) {
-            console.log(error);
+            console.error("Failed to delete item:", error);
+            alert("Failed to delete item. Try again.");
         }
     }
 

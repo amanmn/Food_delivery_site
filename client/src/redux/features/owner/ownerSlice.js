@@ -4,14 +4,16 @@ const ownerSlice = createSlice({
     name: "owner",
     initialState: {
         myShopData: null,
-        myShopItem: null
     },
     reducers: {
         setMyShopData: (state, action) => {
             state.myShopData = action.payload;
         },
+        clearMyShopData: (state) => {
+            state.myShopData = null;
+        },
     },
 });
 
-export const { setMyShopData } = ownerSlice.actions;
+export const { setMyShopData, clearMyShopData } = ownerSlice.actions;
 export default ownerSlice.reducer;

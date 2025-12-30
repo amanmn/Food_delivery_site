@@ -67,11 +67,11 @@ const OwnerOrders = ({ orders = [], filter }) => {
     filter === "All"
       ? ownerOrders
       : ownerOrders.filter((order) =>
-          order.shopOrders.some(
-            (so) =>
-              so.status?.toLowerCase() === filter.toLowerCase()
-          )
-        );
+        order.shopOrders.some(
+          (so) =>
+            so.status?.toLowerCase() === filter.toLowerCase()
+        )
+      );
 
   const handleStatusChange = async (orderId, shopOrderId, newStatus) => {
     setUpdating(shopOrderId);
@@ -88,23 +88,23 @@ const OwnerOrders = ({ orders = [], filter }) => {
           prev.map((order) =>
             order._id === orderId
               ? {
-                  ...order,
-                  shopOrders: order.shopOrders.map((so) =>
-                    so._id === shopOrderId
-                      ? {
-                          ...so,
-                          ...res.shopOrder,
-                          availableBoys:
-                            res.shopOrder?.availableBoys ??
-                            so.availableBoys ??
-                            [],
-                          assignedDeliveryBoy:
-                            res.shopOrder?.assignedDeliveryBoy,
-                          assignment: res.shopOrder?.assignment,
-                        }
-                      : so
-                  ),
-                }
+                ...order,
+                shopOrders: order.shopOrders.map((so) =>
+                  so._id === shopOrderId
+                    ? {
+                      ...so,
+                      ...res.shopOrder,
+                      availableBoys:
+                        res.shopOrder?.availableBoys ??
+                        so.availableBoys ??
+                        [],
+                      assignedDeliveryBoy:
+                        res.shopOrder?.assignedDeliveryBoy,
+                      assignment: res.shopOrder?.assignment,
+                    }
+                    : so
+                ),
+              }
               : order
           )
         );
@@ -267,7 +267,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
             </p>
             <p className="font-bold text-green-700">
               ₹{order.shopOrders.reduce(
-                (sum, so) => sum + so.subtotal,
+                (sum, so) => sum + (so.subtotal || 0),
                 0
               )}
             </p>

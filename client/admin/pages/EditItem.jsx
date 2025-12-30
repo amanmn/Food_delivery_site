@@ -1,53 +1,81 @@
 import { useEffect, useState } from 'react'
-import axios from "axios"
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
-import { API_URL } from '../../src/config';
-// import { useLoadMyShopDataQuery } from '../../src/redux/features/owner/ownerApi';
 import { toast } from 'react-toastify';
-
+import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
+import API from '../../src/api';
 
 const EditItem = () => {
+    const { itemId } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { itemId } = useParams();
+    
     // const shopData = useSelector(state=>state.owner.myShopData)
 
     const [currentItem, setCurrentItem] = useState(null);
     const [name, setName] = useState("");
-    const [price, setPrice] = useState(0);
-    const [frontendImage, setFrontendImage] = useState(null)
-    const [backendImage, setBackendImage] = useState(null);
-    const [category, setCategory] = useState("");
+    const [price, setPrice] = useState("");
     const [foodType, setFoodType] = useState("");
+    const [category, setCategory] = useState("");
+    const [backendImage, setBackendImage] = useState(null);
+    const [frontendImage, setFrontendImage] = useState(null)
+
+    const categories = [
+        "Snacks", "Main Course", "Desserts",
+        "Pizza", "Burgers", "Sandwiches",
+        "South Indian", "North Indian", "Chinese",
+        "Fast Food", "Others",
+    ];
+
     const handleImage = (e) => {
         const file = e.target.files[0];
-        setBackendImage(file);
-    }
-    const categories = [
-        "Snacks",
-        "Main Course",
-        "Desserts",
-        "Pizza",
-        "Burgers",
-        "Sandwiches",
-        "South Indian",
-        "North Indian",
-        "Chinese",
-        "Fast Food",
-        "Others",
-    ];
+        if (!file) return;
+            setBackendImage(file);
+            setFrontendImage(URL.createObjectURL(file));
+    };
+
+    useEffect(() => {
+        const handleGetItemById = async () => {
+            try {
+                const res = await API.get(`/item/get-item/${itemId}`);
+                setCurrentItem(res.data);
+            } catch (error) {
+                console.log(error);
+                toast.error("Failed to load item");
+            }
+        };
+        handleGetItemById();
+    }, [itemId]);
+
+    useEffect(() => {
+        if (!currentItem) return;
+
+        setName(currentItem?.name || "");
+        setPrice(currentItem?.price || "");
+        setCategory(currentItem?.category || "");
+        setFoodType(currentItem?.foodType || "");
+        setFrontendImage(currentItem?.image || null);
+        console.log(currentItem?.image);
+    }, [currentItem])
+
+    useEffect(() => {
+        return () => {
+            if (frontendImage?.startsWith("blob:")) {
+                URL.revokeObjectURL(frontendImage);
+            }
+        };
+    }, [frontendImage]);
 
     const handleSave = async (e) => {
         e.preventDefault();
 
-        if (!name || !category || !price || !foodType || !frontendImage) {
-            alert("Please fill in all fields before saving");
+        if (!name || !category || !price || !foodType) {
+            toast.warning("Please fill in all required fields");
             return;
         }
+
         try {
             const formData = new FormData();
             formData.append("name", name);
@@ -56,42 +84,17 @@ const EditItem = () => {
             formData.append("price", price);
             if (backendImage) formData.append("image", backendImage);
 
-            const result = await axios.put(`${API_URL}/api/item/edit-item/${itemId}`,
-                formData,
-                { withCredentials: true })
-                
-            dispatch(setMyShopData(result.data))
-            navigate("/dash");
-            console.log(result.data);
-            toast.success("Item updated successfully");
+            const res = await API.put(`/item/edit-item/${itemId}`, formData);
 
+            dispatch(setMyShopData(res.data))
+            console.log(res.data);
+            toast.success("Item updated successfully");
+            navigate("/dash");
         } catch (error) {
             console.log(error);
             toast.error("Failed to update item");
         }
     };
-
-    useEffect(() => {
-        const handleGetItemById = async () => {
-            try {
-                const result = await axios.get(`${API_URL}/api/item/get-item/${itemId}`,
-                    { withCredentials: true });
-                setCurrentItem(result.data);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-        handleGetItemById();
-    }, [itemId]);
-
-    useEffect(() => {
-        setName(currentItem?.name || "");
-        setPrice(currentItem?.price || 0);
-        setCategory(currentItem?.category || "");
-        setFoodType(currentItem?.foodType || "");
-        setFrontendImage(currentItem?.image || "");
-        console.log(currentItem?.image);
-    }, [currentItem])
 
     return (
         <div className='flex justify-center flex-col items-center p-6  bg-gradient-to-br from-blue-50 relative to-white min-h-screen'>
@@ -118,7 +121,7 @@ const EditItem = () => {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder='Enter Item Name'
+                            placeholder='Item Name'
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                     </div>
@@ -132,17 +135,20 @@ const EditItem = () => {
                         />
                         {frontendImage &&
                             <div className="mt-4">
-                                <img src={frontendImage} alt="food-item" className='w-full h-48 object-cover rounded-lg border' />
+                                <img
+                                    src={frontendImage}
+                                    alt="food-item"
+                                    className='w-full h-48 object-cover rounded-lg border' />
                             </div>
                         }
                     </div>
                     <div>
                         <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Price</label>
                         <input
-                            type="Number"
+                            type="number"
                             value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            placeholder='Enter Item Price'
+                            onChange={(e) => setPrice(Number(e.target.value))}
+                            placeholder='Price'
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
                     </div>
@@ -154,8 +160,8 @@ const EditItem = () => {
                             onChange={(e) => setFoodType(e.target.value)}
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         >
-                            <option value="veg">veg</option>
-                            <option value="non veg">nonveg</option>
+                            <option value="veg">Veg</option>
+                            <option value="non veg">Non-Veg</option>
                         </select>
                     </div>
 
@@ -164,19 +170,17 @@ const EditItem = () => {
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         >
                             <option value="">select category</option>
-                            {categories.map((cat, index) => (
-                                <option key={index}>{cat}</option>
+                            {categories.map((cat) => (
+                                <option key={cat}>{cat}</option>
                             ))}
                         </select>
                     </div>
 
-                    <button
-                        className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'
-                    >Update Item
+                    <button className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'>
+                        Update Item
                     </button>
                 </form>
             </div>

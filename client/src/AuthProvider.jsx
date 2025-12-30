@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
+import { useGetMeQuery } from "./redux/features/auth/authApi";
 import {
   userLoggedIn,
   userLoggedOut,
@@ -9,7 +9,7 @@ import {
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
 
-  const { data, isFetching, isError } = useLoadUserDataQuery(undefined, {
+  const { data, isFetching, isError } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 

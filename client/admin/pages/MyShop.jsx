@@ -1,20 +1,34 @@
 import { useNavigate } from "react-router-dom";
-import { useGetMyShopQuery } from "../../src/redux/features/shop/shopApi";
 import { FaArrowLeft, FaMapMarkerAlt, FaStore, FaPhoneAlt, FaEnvelope, FaRegEdit } from "react-icons/fa";
 import { useEffect } from "react";
+import { useGetMyShopQuery } from "../../src/redux/features/shop/shopApi";
 
 const MyShop = () => {
     const navigate = useNavigate();
     const { data: shopData, isLoading, isError } = useGetMyShopQuery();
 
     useEffect(() => {
-        console.log("My shop data:", shopData);
-    })
+        if (shopData) {
+            console.log("My shop data:", shopData);
+        }
+        if (isError) {
+            console.error("Failed to fetch shop:");
+        }
+    }, [shopData, isError]);
+
 
     if (isLoading) {
         return (
             <div className="flex justify-center items-center min-h-screen text-gray-600 text-lg font-medium">
                 Loading shop details...
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center min-h-screen text-red-500 text-lg font-medium">
+                Failed to load shop details. Please try again later.
             </div>
         );
     }

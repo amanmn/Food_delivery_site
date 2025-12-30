@@ -1,77 +1,64 @@
 import { useState } from 'react'
-import axios from "axios"
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
-import { API_URL } from '../../src/config';
-import { useLoadMyShopDataQuery } from '../../src/redux/features/owner/ownerApi';
+// import { Loader2Icon } from 'lucide-react';
+import API from '../../src/api';
 import { toast } from 'react-toastify';
-import { Loader2Icon } from 'lucide-react';
+import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
+
+const categories = [
+    "Snacks", "Main Course", "Desserts",
+    "Pizza", "Burgers", "Sandwiches",
+    "South Indian", "North Indian", "Chinese",
+    "Fast Food", "Others",
+];
 
 const AddFoodItem = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { data: myShopData, refetch } = useLoadMyShopDataQuery();
 
-    const [loading, setLoading] = useState(false);
     const [name, setName] = useState("");
-    const [price, setPrice] = useState(0);
-    const [frontendImage, setFrontendImage] = useState(null)
-    const [backendImage, setBackendImage] = useState(null);
-    const [category, setCategory] = useState("");
+    const [price, setPrice] = useState("");
     const [foodType, setFoodType] = useState("veg");
+    const [category, setCategory] = useState("");
+    const [backendImage, setBackendImage] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const handleImage = (e) => {
         const file = e.target.files[0];
         setBackendImage(file);
-        setFrontendImage(URL.createObjectURL(file));
+        setPreview(URL.createObjectURL(file));
     }
-    const categories = [
-        "Snacks",
-        "Main Course",
-        "Desserts",
-        "Pizza",
-        "Burgers",
-        "Sandwiches",
-        "South Indian",
-        "North Indian",
-        "Chinese",
-        "Fast Food",
-        "Others",
-    ];
 
     const handleSave = async (e) => {
         e.preventDefault();
         if (!name || !category || !price || !foodType || !backendImage) {
-            alert("Please fill in all fields before saving");
+            alert("Please fill in all required fields");
             return;
         }
-        setLoading(true);
 
         try {
+            setLoading(true);
+
             const formData = new FormData();
             formData.append("name", name);
+            formData.append("price", price);
             formData.append("category", category);
             formData.append("foodType", foodType);
-            formData.append("price", price);
-
             if (backendImage) formData.append("image", backendImage);
-            const result = await axios.post(`${API_URL}/api/item/add-item`,
-                formData,
-                { withCredentials: true })
-            await refetch();
-            dispatch(setMyShopData(result.data))
-            setLoading(false);
-            navigate("/dash");
-            // console.log(result.data);
-            toast.success("Item added successfully");
 
+            const res = await API.post(`/api/item/add-item`, formData);
+            dispatch(setMyShopData(res.data));
+            toast.success("Item added successfully");
+            navigate("/dash");
         } catch (error) {
-            setLoading(false);
             console.log(error);
             toast.error("Failed to add item");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -113,16 +100,16 @@ const AddFoodItem = () => {
                             onChange={handleImage}
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         />
-                        {frontendImage &&
+                        {preview &&
                             <div className="mt-4">
-                                <img src={frontendImage} alt="" className='w-full h-48 object-cover rounded-lg border' />
+                                <img src={preview} alt="" className='w-full h-48 object-cover rounded-lg border' />
                             </div>
                         }
                     </div>
                     <div>
                         <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Price</label>
                         <input
-                            type="Number"
+                            type="number"
                             value={price}
                             onChange={(e) => setPrice(Number(e.target.value))}
                             placeholder='Enter Item Price'
@@ -137,8 +124,8 @@ const AddFoodItem = () => {
                             onChange={(e) => setFoodType(e.target.value)}
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         >
-                            <option value="veg">veg</option>
-                            <option value="non veg">nonveg</option>
+                            <option value="veg">Veg</option>
+                            <option value="non veg">Non-Veg</option>
                         </select>
                     </div>
 
@@ -147,12 +134,11 @@ const AddFoodItem = () => {
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-
                             className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                         >
                             <option value="">select category</option>
-                            {categories.map((cat, index) => (
-                                <option key={index}>{cat}</option>
+                            {categories.map((cat) => (
+                                <option key={cat}>{cat}</option>
                             ))}
                         </select>
                     </div>
@@ -162,7 +148,6 @@ const AddFoodItem = () => {
                         disabled={loading}
                     >
                         {loading ? <Loader2Icon size={20} /> : "Add Item"}
-
                     </button>
                 </form>
             </div>

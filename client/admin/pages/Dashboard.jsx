@@ -4,26 +4,24 @@ import Navbar from "../components/Topbar";
 import AdminDashboard from "./AdminDashboard";
 import { FaUtensils } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { setMyShopData } from "../../src/redux/features/owner/ownerSlice";
-import { useDispatch } from "react-redux";
-import { useLoadMyShopDataQuery } from "../../src/redux/features/owner/ownerApi";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetMyShopQuery } from "../../src/redux/features/shop/shopApi";
+import { setMyShopData } from "../../src/redux/features/owner/ownerSlice";  
+import API from "../../src/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { data: myShopData, refetch, isLoading } = useLoadMyShopDataQuery();
+  const [loading, setLoading] = useState(true);
 
+  const { data: myShopData, isLoading } = useGetMyShopQuery();
 
   useEffect(() => {
     if (myShopData) {
-      console.log(myShopData);
       dispatch(setMyShopData(myShopData));
-      refetch();
     }
-  }, [myShopData, dispatch]);
-
-  // if (!myShopData) return;
+  }, [myShopData]);
 
   if (isLoading) {
     return (
