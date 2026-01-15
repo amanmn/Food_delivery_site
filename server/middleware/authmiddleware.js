@@ -6,7 +6,16 @@ const unauthorized = (res, msg = 'Not authenticated') => res.status(401).json({ 
 
 const verifyToken = async (req, res, next) => {
   try {
-    let token = req.cookies?.token || req.headers.authorization?.split(" ")[1];;
+    let token = null;
+
+    if (req.cookies?.token) {
+      token = req.cookies.token;
+    } else if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    }
 
     if (!token) {
       return unauthorized(res, "No token provided")
@@ -19,6 +28,10 @@ const verifyToken = async (req, res, next) => {
       req.userId = decoded.id;
     } catch (error) {
       return unauthorized(res, "Invalid or expired token");
+    }
+
+    if (!decoded?.id) {
+      return unauthorized(res, "Invalid token payload");
     }
 
     const user = await User.findById(decoded.id)
@@ -35,11 +48,15 @@ const verifyToken = async (req, res, next) => {
     }
 
     req.user = user // || null; // now req.user.role will be available
+    req.userId = user._id;
     next();
 
   } catch (error) {
-    console.error("verifyToken error:", error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("🔥 verifyToken fatal error:", error);
+    return res.status(401).json({
+      success: false,
+      message: "Authentication failed",
+    });
   }
 };
 
