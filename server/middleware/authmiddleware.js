@@ -18,7 +18,8 @@ const verifyToken = async (req, res, next) => {
     }
 
     if (!token) {
-      return unauthorized(res, "No token provided")
+      req.user = null; // no token, proceed as guest
+      return next();
     }
 
     // verify token
