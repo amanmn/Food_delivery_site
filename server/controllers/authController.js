@@ -131,7 +131,11 @@ const login = async (req, res) => {
 const logout = (req, res) => {
     try {
         // clears cookies and expires immediately
-        res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        });
         return res.status(200).json({ success: true, message: "Logged out successfully" });
     }
     catch (error) {
@@ -142,14 +146,8 @@ const logout = (req, res) => {
 
 const getMe = async (req, res) => {
     try {
-        console.log("req.user:", req.user);
-        const user = await User.findById(req.user.id).select("-password");
+        const user = req.user;
         console.log("user:", user);
-        
-        if (!user) {
-            return res.status(401).json({ success: false, message: "Unauthorized" });
-        }
-        // console.log("req.user:", req.user);
         return res.status(200).json({ success: true, user });
     } catch (error) {
         return handleServerError(res, error, "Fetch user failed");

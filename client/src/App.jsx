@@ -45,44 +45,44 @@ function App() {
   // const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   const {
-    data: me,
+    data,
     isSuccess,
     isError,
-    isLoading,
-    error,
+    // isLoading,
+    // error,
   } = useGetMeQuery();
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   // Load logged in user
   useEffect(() => {
-    if (isSuccess && me) {
-      dispatch(userLoggedIn(me));
-      console.log("User loaded successfully:", me);
+    if (isSuccess && data) {
+      dispatch(userLoggedIn({ user: data }));
+      console.log("User loaded successfully:", data);
     }
     if (isError) {
       dispatch(userLoggedOut());
-      console.error("Error loading user:", error);
+      console.error("Error loading user:", isError);
     }
-  }, [isSuccess, isError, error, me, dispatch]);
+  }, [isSuccess, isError]);
 
   // Hooks for user and shop data
   useDetectLocation();
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
-  // if (!authChecked) {
-  //   return (
-  //     <div className="flex justify-center items-center h-screen">
-  //       <ColorRing
-  //         visible={true}
-  //         height="100"
-  //         width="100"
-  //         ariaLabel="auth-loading"
-  //         colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
-  //       />
-  //     </div>
-  //   );
-  // }
+  if (!authChecked) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <ColorRing
+          visible={true}
+          height="100"
+          width="100"
+          ariaLabel="auth-loading"
+          colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
+        />
+      </div>
+    );
+  }
 
   return (
     <>
