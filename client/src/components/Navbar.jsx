@@ -13,7 +13,7 @@ import { FiShoppingCart } from "react-icons/fi";
 import { IoIosSearch } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { RiMenuLine } from "react-icons/ri";
-import { setCity } from "../redux/features/user/userSlice"; // ✅ ADD THIS
+import { setCity } from "../redux/features/user/userSlice"; // ADD THIS
 import { toast } from "react-toastify";
 import { persistor } from "../redux/store";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";

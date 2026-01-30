@@ -9,7 +9,7 @@ import useDetectLocation from "../hooks/useDetectLocation";
 const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
   const geoapikey = import.meta.env.VITE_GEOAPIKEY;
-  const { user } = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.auth);
   const { address } = useSelector((state) => state.location);
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -42,11 +42,11 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
 
     setLoading(true);
     try {
-      const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(manualLocation)}=&apiKey=${geoapikey}`);
+      const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(manualLocation)}&apiKey=${geoapikey}`);
       const data = await res.json();
       console.log(data.results[0].city);
       // setManualLocation(data);
-      setSuggestions(data.results[0].city);
+      setSuggestions(data.results || []);
     } catch (error) {
       console.error("Failed to fetch suggestions", error);
       toast.error("Failed to fetch suggestions");
@@ -72,7 +72,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
   }, [setIsOpen]);
 
 
-  if (!isOpen || !user) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[999999] bg-black/70 flex p-4 items-start justify-center pt-24 overflow-y-auto">
@@ -130,7 +130,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
               >
                 {place.display_name?.split(",").slice(0, 2).join(", ")}
                 <span className="text-xs text-gray-400 ml-1">
-                  {place.address?.state ? `(${place.address.state})` : ""}
+                  {place.city || place.formatted}
                 </span>
               </li>
             ))}

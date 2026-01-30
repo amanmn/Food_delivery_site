@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
+import { useGetMeQuery } from "./redux/features/auth/authApi";
+import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { ColorRing } from 'react-loader-spinner';
 import './index.css';
 
@@ -42,29 +44,27 @@ function App() {
 
   // const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
-  // const {
-  //   data: userData,
-  //   isSuccess,
-  //   isError,
-  //   error,
-  // } = useLoadUserDataQuery(undefined, {
-  //   refetchOnMountOrArgChange: true,
-  // });
+  const {
+    data: me,
+    isSuccess,
+    isError,
+    isLoading,
+    error,
+  } = useGetMeQuery();
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   // Load logged in user
-  // useEffect(() => {
-  //   if (isSuccess && userData) {
-  //     dispatch(userLoggedIn({ user: userData }));
-  //     dispatch(updateUserProfile(userData));
-  //     console.log("User loaded successfully:", userData);
-  //   }
-  //   if (isError) {
-  //     dispatch(userLoggedOut());
-  //     console.error("Error loading user:", error);
-  //   }
-  // }, [isSuccess, userData, isError, dispatch]);
+  useEffect(() => {
+    if (isSuccess && me) {
+      dispatch(userLoggedIn(me));
+      console.log("User loaded successfully:", me);
+    }
+    if (isError) {
+      dispatch(userLoggedOut());
+      console.error("Error loading user:", error);
+    }
+  }, [isSuccess, isError, error, me, dispatch]);
 
   // Hooks for user and shop data
   useDetectLocation();
