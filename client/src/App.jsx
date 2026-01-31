@@ -3,8 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-import { useGetMeQuery } from "./redux/features/auth/authApi";
-import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { ColorRing } from 'react-loader-spinner';
 import './index.css';
 
@@ -44,45 +42,15 @@ function App() {
 
   // const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
-  const {
-    data,
-    isSuccess,
-    isError,
-    // isLoading,
-    // error,
-  } = useGetMeQuery();
-
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
-  // Load logged in user
-  useEffect(() => {
-    if (isSuccess && data) {
-      dispatch(userLoggedIn({ user: data }));
-      console.log("User loaded successfully:", data);
-    }
-    if (isError) {
-      dispatch(userLoggedOut());
-      console.error("Error loading user:", isError);
-    }
-  }, [isSuccess, isError]);
+  // AuthProvider handles the initial /me fetch and updates auth state in store.
 
   // Hooks for user and shop data
   useDetectLocation();
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <ColorRing
-          visible={true}
-          height="100"
-          width="100"
-          ariaLabel="auth-loading"
-          colors={['red', '#f47e60', '#f8b26a', 'red', '#849b87']}
-        />
-      </div>
-    );
-  }
+
 
   return (
     <>

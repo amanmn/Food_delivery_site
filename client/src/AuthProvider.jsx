@@ -22,9 +22,9 @@ const AuthProvider = ({ children }) => {
   }, [data, isFetching, isError, dispatch]);
 
   // ✅ Do NOT block UI aggressively (prevents flicker)
-  if (isFetching) return null;
-
-  return children;
+  // Always render children so public routes remain accessible while auth check runs.
+  // Auth state will be updated via dispatched actions when the query resolves.
+  return children; 
 };
 
 export default AuthProvider;
