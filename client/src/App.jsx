@@ -70,7 +70,7 @@ function App() {
   useDetectLocation();
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
-  if (!authChecked) {
+  if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
         <ColorRing

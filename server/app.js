@@ -14,7 +14,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://fooddeliveryhub.duckdns.org",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }));
 

@@ -4,10 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import fs from "fs";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
   server: {
     https: {
       key: fs.readFileSync("./localhost+1-key.pem"),
@@ -19,7 +16,7 @@ export default defineConfig({
     // 🔥 PROXY MUST BE HERE
     proxy: {
       "/api": {
-        target: "http://15.206.209.155",
+        target: "http://13.200.251.6:8000",
         changeOrigin: true,
         secure: false,
       },
