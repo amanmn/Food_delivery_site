@@ -10,7 +10,10 @@ const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
 
   const { data, isFetching, isError } = useGetMeQuery(undefined, {
-    refetchOnMountOrArgChange: true,
+    // Prevent unnecessary refetches that trigger /api/auth/me on every route change or focus
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
   });
 
   useEffect(() => {

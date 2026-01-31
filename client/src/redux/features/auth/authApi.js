@@ -3,7 +3,11 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "/api/auth",
+    // Use VITE_BASEURL in production if provided (example: https://api.example.com/api)
+    // ensures requests go to the correct backend origin when frontend and backend are separate.
+    baseUrl: import.meta.env.VITE_BASEURL
+      ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
+      : "/api/auth",
     credentials: "include",
   }),
   tagTypes: ["Auth"],
@@ -57,6 +61,8 @@ export const authApi = createApi({
       query: () => "me",
       transformResponse: (response) => response?.user ?? null,
       providesTags: ["Auth"],
+      // keep the user cached for 5 minutes to avoid refetch on quick remounts/navigation
+      keepUnusedDataFor: 300,
     }),
   }),
 });
