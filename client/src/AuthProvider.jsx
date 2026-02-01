@@ -17,17 +17,18 @@ const AuthProvider = ({ children }) => {
   });
 
   useEffect(() => {
+    if (isFetching) return;
     if (data) {
       dispatch(userLoggedIn(data));
-    } else{
+    } else {
       dispatch(userLoggedOut());
     }
-  }, [data, dispatch]);
+  }, [data, isFetching, isError, dispatch]);
 
   // ✅ Do NOT block UI aggressively (prevents flicker)
   // Always render children so public routes remain accessible while auth check runs.
   // Auth state will be updated via dispatched actions when the query resolves.
-  return children; 
+  return children;
 };
 
 export default AuthProvider;
