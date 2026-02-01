@@ -1,16 +1,12 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useGetMeQuery } from "./redux/features/auth/authApi";
-import {
-  userLoggedIn,
-  userLoggedOut,
-} from "./redux/features/auth/authSlice";
+import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
 
-  const { data, isFetching, isError } = useGetMeQuery(undefined, {
-    // Prevent unnecessary refetches that trigger /api/auth/me on every route change or focus
+  const { data, isFetching, isError, error } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: false,
     refetchOnFocus: false,
     refetchOnReconnect: false,
@@ -18,16 +14,18 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (isFetching) return;
-    if (data) {
-      dispatch(userLoggedIn(data));
-    } else {
+
+    if (data?.user) {
+      dispatch(userLoggedIn(data.user));
+    } else if (error?.status === 401) {
+      // Not logged in → treat as guest
+      dispatch(userLoggedOut());
+    } else if (isError) {
+      console.error("Auth check failed:", error);
       dispatch(userLoggedOut());
     }
-  }, [data, isFetching, isError, dispatch]);
+  }, [data, isFetching, isError, error, dispatch]);
 
-  // ✅ Do NOT block UI aggressively (prevents flicker)
-  // Always render children so public routes remain accessible while auth check runs.
-  // Auth state will be updated via dispatched actions when the query resolves.
   return children;
 };
 
