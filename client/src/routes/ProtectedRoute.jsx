@@ -7,7 +7,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   );
 
   if (!authChecked) return null;
-  console.log(authChecked);
+  // console.log(authChecked);
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
