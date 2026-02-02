@@ -53,7 +53,7 @@ const Menu = () => {
 
 
   useEffect(() => {
-    console.log("menuItem : ", itemsData);
+    console.log("menuItems -", itemsData);
     if (itemsData && Array.isArray(itemsData)) {
       setUpdatedItemsList(itemsData);
     }
