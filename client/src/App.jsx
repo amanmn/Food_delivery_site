@@ -23,6 +23,7 @@ import Settings from "../admin/pages/Settings";
 import useDetectLocation from "./hooks/useDetectLocation";
 import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 import TrackOrderPage from "./pages/TrackOrderPage";
+import ShopItems from "./pages/ShopItems";
 
 // Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
@@ -71,6 +72,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/shop/:shopId" element={<ShopItems />} />
 
           {/* 🎯 Root Redirect */}
           <Route

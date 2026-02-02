@@ -13,7 +13,14 @@ export const itemApi = createApi({
       query: (city) => `get-item-by-city/${city}`,
       providesTags: ["Item"],
     }),
+    getItemsByShop: builder.query({
+      query: (shopId) => `get-item-by-shop/${shopId}`,
+      providesTags: ["Item"],
+    })
   }),
 });
 
-export const { useGetItemByCityQuery } = itemApi;
+export const {
+  useGetItemByCityQuery,
+  useGetItemsByShopQuery
+} = itemApi;

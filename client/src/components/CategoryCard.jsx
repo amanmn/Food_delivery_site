@@ -4,12 +4,14 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import categories from "../category";
-import { useSelector } from "react-redux";
+import { useSelector, } from "react-redux";
 import { MdLocationCity } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useGetShopByCityQuery } from "../redux/features/shop/shopApi";
 
 const CategoryCard = () => {
+  const navigate = useNavigate();
   const { city } = useSelector(state => state.user);
   const { data: shopsInMyCity = [] } = useGetShopByCityQuery(city, {
     skip: !city,
@@ -92,7 +94,7 @@ const CategoryCard = () => {
             {shopsInMyCity?.map((item) => (
               <SwiperSlide key={item._id}>
                 <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 p-4 cursor-pointer transform mb-8">
-                  <div className="relative overflow-hidden rounded-xl mb-3">
+                  <div onClick={()=>navigate(`/shop/${item._id}`)} className="relative overflow-hidden rounded-xl mb-3">
                     <img
                       src={item.image}
                       alt={item.category}

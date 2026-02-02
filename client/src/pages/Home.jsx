@@ -13,8 +13,8 @@ const Home = () => {
       <main>
         <section id="home"><HeroSection /></section>
         <CategoryCard />
-        <section id="services"><Services /></section>
         <section id="menu"><Menu /></section>
+        <section id="services"><Services /></section>
         <section id="contact"><Contact /></section>
       </main>
       <Footer />
