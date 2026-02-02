@@ -16,7 +16,7 @@ export default defineConfig({
     // 🔥 PROXY MUST BE HERE
     proxy: {
       "/api": {
-        target: "http://13.200.251.6:8000",
+        target: "https://fooddeliveryhub.duckdns.org",
         changeOrigin: true,
         secure: false,
       },
