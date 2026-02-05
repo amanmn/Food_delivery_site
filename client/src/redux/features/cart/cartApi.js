@@ -3,9 +3,19 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const cartApi = createApi({
   reducerPath: "cartApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `/api/cart`,
-    credentials: "include", 
+    baseUrl: import.meta.env.VITE_BASEURL
+      ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/cart`
+      : "/api/cart",
+    credentials: "include",
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState().auth?.user?.token;
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
   }),
+
   tagTypes: ["Cart"],
   endpoints: (builder) => ({
     addItemToCart: builder.mutation({

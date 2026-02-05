@@ -6,25 +6,17 @@ import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
 
-  const { data, isFetching, isError, error } = useGetMeQuery(undefined, {
-    refetchOnMountOrArgChange: false,
-    refetchOnFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { data: user, isSuccess, isError, isLoading } = useGetMeQuery();
+  // console.log("AuthProvider:", { isLoading, isSuccess, user });
 
   useEffect(() => {
-    if (isFetching) return;
-
-    if (data?.user) {
-      dispatch(userLoggedIn(data.user));
-    } else if (error?.status === 401) {
-      // Not logged in → treat as guest
-      dispatch(userLoggedOut());
-    } else if (isError) {
-      console.error("Auth check failed:", error);
+    if (isSuccess && user) {
+      dispatch(userLoggedIn(user));
+    }
+    if (isError) {
       dispatch(userLoggedOut());
     }
-  }, [data, isFetching, isError, error, dispatch]);
+  }, [isSuccess, isError, user]);
 
   return children;
 };

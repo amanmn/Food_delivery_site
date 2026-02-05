@@ -3,7 +3,9 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const orderApi = createApi({
     reducerPath: "orderApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: `/api/order`,
+        baseUrl: import.meta.env.VITE_BASEURL
+            ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/order`
+            : "/api/order",
         credentials: 'include',
     }),
 

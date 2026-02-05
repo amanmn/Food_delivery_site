@@ -3,7 +3,7 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-// import { Loader2Icon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import API from '../../src/api';
 import { toast } from 'react-toastify';
 import { setMyShopData } from '../../src/redux/features/owner/ownerSlice';
@@ -50,7 +50,7 @@ const AddFoodItem = () => {
             formData.append("foodType", foodType);
             if (backendImage) formData.append("image", backendImage);
 
-            const res = await API.post(`/api/item/add-item`, formData);
+            const res = await API.post(`/item/add-item`, formData, { withCredentials: true });
             dispatch(setMyShopData(res.data));
             toast.success("Item added successfully");
             navigate("/dash");
@@ -147,7 +147,7 @@ const AddFoodItem = () => {
                         className='w-full bg-blue-500 text-gray-950 px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200 cursor-pointer'
                         disabled={loading}
                     >
-                        {loading ? <Loader2Icon size={20} /> : "Add Item"}
+                        {loading ? <Loader2 size={20} /> : "Add Item"}
                     </button>
                 </form>
             </div>

@@ -18,6 +18,7 @@ import MyShop from "../admin/pages/MyShop";
 import AddFoodItem from "../admin/pages/AddFoodItem";
 import ItemProduct from "../admin/pages/ItemProduct";
 import EditItem from "../admin/pages/EditItem";
+import OwnerOrders from "../admin/pages/OwnerOrders";
 import Settings from "../admin/pages/Settings";
 
 import useDetectLocation from "./hooks/useDetectLocation";
@@ -41,6 +42,12 @@ function App() {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
+  useEffect(() => {
+    console.log("App component - Auth state:", {
+      user,
+      isAuthenticated
+    });
+  }, [user, isAuthenticated]);
   // const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
@@ -106,7 +113,7 @@ function App() {
             <Route path="/item-product" element={<ItemProduct />} />
             <Route path="/edit-item/:itemId" element={<EditItem />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/orders" element={<OrderPage />} />
+            <Route path="/orders" element={<OwnerOrders />} />
           </Route>
 
           {/* Delivery boy route */}

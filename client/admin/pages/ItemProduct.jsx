@@ -4,11 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import API from "../../src/api";
 import { setMyShopData } from "../../src/redux/features/owner/ownerSlice";
+import { useGetMyShopQuery } from "../../src/redux/features/shop/shopApi";
 
 const ItemProduct = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const shopData = useSelector((state) => state.owner.myShopData);
+   const {data:shopData, isLoading, error} = useGetMyShopQuery();
+    console.log("ShopData:",shopData);
+    
     const shopItems = shopData?.items || [];
 
     const handleDeleteItem = async (itemId) => {

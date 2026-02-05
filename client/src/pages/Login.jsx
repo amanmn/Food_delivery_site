@@ -37,11 +37,11 @@ const Login = () => {
     setApiError("");
 
     try {
-      const response = await loginUser(formData).unwrap();
+      const response = await loginUser(formData).unwrap();      
       dispatch(userLoggedIn(response.user));
 
       const role = response?.user?.role;
-      console.log(role);
+      console.log("Role:",role);
       toast.success("Login successful");
 
       if (role === "owner") {

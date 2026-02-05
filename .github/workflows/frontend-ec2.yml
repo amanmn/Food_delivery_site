@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy Frontend to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -18,11 +21,8 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
-            cd /home/ubuntu/Food_delivery_site
+            cd /home/ubuntu/Food_delivery_site/client
             git pull origin main
-
-            cd client
             npm install
             npm run build
-
             sudo systemctl reload nginx

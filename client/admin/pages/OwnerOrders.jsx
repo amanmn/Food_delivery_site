@@ -9,7 +9,7 @@ import { useGetDeliveryBoysQuery } from "../../src/redux/features/user/userApi";
 import DeliveryBoyList from "../../deliveryboy/DeliveryBoyList";
 
 const OwnerOrders = ({ orders = [], filter }) => {
-  const { user } = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.auth);
   const ownerId = user?._id;
 
   const [localOrders, setLocalOrders] = useState([]);
@@ -21,7 +21,10 @@ const OwnerOrders = ({ orders = [], filter }) => {
     data: ordersData,
     isLoading,
     refetch,
-  } = useGetOrderItemsQuery(undefined, { skip: !user?._id });
+  } = useGetOrderItemsQuery(undefined, {
+    skip: !ownerId,
+  });
+  console.log("Orders Data from API:", ordersData);
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const { data: allDeliveryBoys = [] } = useGetDeliveryBoysQuery();
@@ -63,13 +66,16 @@ const OwnerOrders = ({ orders = [], filter }) => {
     }))
     .filter((order) => order.shopOrders && order.shopOrders.length > 0);
 
+  const safeFilter = filter?.toLowerCase() ?? "all";
+
   const filteredOrders =
-    filter === "All"
+    safeFilter === "all"
       ? ownerOrders
       : ownerOrders.filter((order) =>
         order.shopOrders.some(
           (so) =>
-            so.status?.toLowerCase() === filter.toLowerCase()
+            so.status &&
+            so.status.toLowerCase() === safeFilter
         )
       );
 
@@ -119,7 +125,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
   if (filteredOrders.length === 0) {
     return (
       <div className="text-center text-gray-500 mt-20">
-        <p>No {filter.toLowerCase()} shop orders found</p>
+        <p>No {(filter ?? "all").toLowerCase()} shop orders found</p>
       </div>
     );
   }
