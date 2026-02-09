@@ -8,14 +8,32 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { FaStar } from "react-icons/fa"
 import { FaRegStar } from "react-icons/fa"
 
-const Menu = () => {
+const Menu = ({ items: shopItems, mode, loading }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
   // 🏙️ Get user's current city from Redux
   const { city } = useSelector((state) => state.user);
-  const { data: itemsData, isLoading, error, refetch } = useGetItemByCityQuery(city, { skip: !city });
+  const isShopPage = mode === "shop";
+
+  if (mode === "shop" && loading) {
+    return (
+      <p className="text-center my-10 text-lg font-medium">
+        Loading shop items...
+      </p>
+    );
+  }
+
+  const {
+    data: cityItems,
+    isLoading,
+    error,
+  } = useGetItemByCityQuery(city, {
+    skip: isShopPage || !city,
+  });
+
+  const itemsData = isShopPage ? shopItems : cityItems;
 
   const [quantities, setQuantities] = useState({});
   const [isAdding, setIsAdding] = useState({});
@@ -50,7 +68,6 @@ const Menu = () => {
       );
     }
   };
-
 
   useEffect(() => {
     console.log("menuItems -", itemsData);
@@ -97,26 +114,13 @@ const Menu = () => {
   };
 
   // Loading / Error States
-  if (!city)
+  if (!city && !isShopPage) {
     return (
       <p className="text-center text-lg font-medium text-gray-600 my-10">
         Please select your city to view available items.
       </p>
     );
-
-  if (isLoading)
-    return (
-      <p className="text-center text-lg font-medium text-gray-700 my-10">
-        Loading menu...
-      </p>
-    );
-
-  if (error)
-    return (
-      <p className="text-center text-lg text-red-500 my-10">
-        Failed to load menu items.
-      </p>
-    );
+  }
 
   const renderStars = (rating) => {
     const stars = [];
@@ -163,7 +167,7 @@ const Menu = () => {
 
         {/* Menu Items */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
-          {updatedItemsList?.length > 0 ? (
+          {!loading && updatedItemsList?.length > 0 ? (
             updatedItemsList.map((item) => (
               <div
                 key={item._id}

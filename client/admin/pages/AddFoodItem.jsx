@@ -64,11 +64,11 @@ const AddFoodItem = () => {
 
     return (
         <div className='flex justify-center flex-col items-center p-6  bg-gradient-to-br from-blue-50 relative to-white min-h-screen'>
-            <div className='absolute top-[20px] left-[20px] z-[10px] mb-[10px] cursor-pointer'
+            <button className='absolute top-[20px] left-[20px] z-[10px] mb-[10px] cursor-pointer'
                 onClick={() => navigate("/dash")}
             >
                 <IoIosArrowRoundBack className='text-blue-500' size={50} />
-            </div>
+            </button>
 
             <div className='max-w-lg w-full bg-white shadow-xl rounded-2xl p-8 border border-blue-100'>
                 <div className='flex flex-col items-center mb-6'>

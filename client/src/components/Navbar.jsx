@@ -17,7 +17,7 @@ import { setCity } from "../redux/features/user/userSlice"; // ADD THIS
 import { toast } from "react-toastify";
 import { persistor } from "../redux/store";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
-
+import { useSearchItemsQuery } from "../redux/features/product/itemApi";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -25,6 +25,17 @@ const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showInputBox, setshowInputBox] = useState(false);
+  const [text, setText] = useState("");
+  const [debounced, setDebounced] = useState("");
+
+  // debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebounced(text);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [text]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -73,6 +84,24 @@ const Navbar = () => {
   //   return city.length > 6 ? city.slice(0, 6) + "..." : city;
   // };
 
+  const { data: items = [], isLoading: searchLoading, isFetching } =
+    useSearchItemsQuery(
+      { query: debounced, city },
+      { skip: !debounced || !city }
+    );
+
+  const handleSearchItems = async () => {
+    if (!debounced || !city) return;
+    try {
+      const { data } = await searchItems({ query: debounced, city }).unwrap();
+      console.log(data);
+
+      navigate("/search", { state: { items: data, query: debounced } });
+    } catch (err) {
+      console.error("Search failed:", err);
+    }
+  };
+
   return (
     <nav className={`w-full top-0 left-0 z-50 py-4 transition-all duration-300 ${isMobile ? "bg-red-500" : "bg-pink-50"}`}>
       <div className="max-w-screen-xl mx-auto px-4 flex justify-between items-center">
@@ -99,8 +128,12 @@ const Navbar = () => {
               <IoIosSearch size={30} className='text-[#ff4d2d]' />
               <input
                 type="text"
+                onChange={(e) => setText(e.target.value)}
+                value={text}
                 placeholder='search delicious food...'
-                className='px-[10px] text-gray-700 text-lg outline-0 w-full' />
+                className='px-[10px] text-gray-700 text-lg outline-0 w-full'
+              />
+              {(searchLoading || isFetching) && <p className="text-gray-500 text-sm">Searching...</p>}
             </div>
           </div>
         }

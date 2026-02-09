@@ -10,19 +10,26 @@ export const itemApi = createApi({
   }),
   tagTypes: ["Item"],
   endpoints: (builder) => ({
-    // Get items by user's city
     getItemByCity: builder.query({
-      query: (city) => `get-item-by-city/${city}`,
+      query: (city) => `/get-item-by-city/${city}`,
       providesTags: ["Item"],
     }),
     getItemsByShop: builder.query({
-      query: (shopId) => `get-item-by-shop/${shopId}`,
+      query: (shopId) => `/get-item-by-shop/${shopId}`,
       providesTags: ["Item"],
-    })
+    }),
+    searchItems: builder.query({
+      query: ({ query, city }) => ({
+        url: "/items/search",
+        params: { query, city },
+      }),
+      keepUnusedDataFor: 0,
+    }),
   }),
 });
 
 export const {
   useGetItemByCityQuery,
-  useGetItemsByShopQuery
+  useGetItemsByShopQuery,
+  useSearchItemsQuery,
 } = itemApi;
