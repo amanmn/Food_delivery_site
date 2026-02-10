@@ -2,8 +2,6 @@ import React from 'react'
 import { FaStar } from "react-icons/fa"
 import { FaRegStar } from "react-icons/fa"
 
-
-
 const FoodCard = () => {
 
     const renderStars = (rating) => {

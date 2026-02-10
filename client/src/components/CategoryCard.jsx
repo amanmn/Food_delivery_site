@@ -18,8 +18,8 @@ const CategoryCard = () => {
   });
 
   return (
-    <div>
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 ">
+    <div className="bg-gray-50 lg:px-32" >
+      <section className="py-12 px-4 sm:px-6 bg-gray-50 ">
         {/* Heading Section */}
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
@@ -35,7 +35,7 @@ const CategoryCard = () => {
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={25}
           slidesPerView={4}
-          navigation
+          
           pagination={{ clickable: true }}
           autoplay={{ delay: 2500 }}
           loop
@@ -94,7 +94,7 @@ const CategoryCard = () => {
             {shopsInMyCity?.map((item) => (
               <SwiperSlide key={item._id}>
                 <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 p-4 cursor-pointer transform mb-8">
-                  <div onClick={()=>navigate(`/shop/${item._id}`)} className="relative overflow-hidden rounded-xl mb-3">
+                  <div onClick={() => navigate(`/shop/${item._id}`)} className="relative overflow-hidden rounded-xl mb-3">
                     <img
                       src={item.image}
                       alt={item.category}

@@ -11,7 +11,6 @@ const EditItem = () => {
     const { itemId } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    
     // const shopData = useSelector(state=>state.owner.myShopData)
 
     const [currentItem, setCurrentItem] = useState(null);

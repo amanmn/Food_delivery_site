@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Link as ScrollLink } from "react-scroll";
 import { useSelector, useDispatch } from "react-redux";
@@ -8,187 +8,204 @@ import Button from "./Button";
 import { useLogoutUserMutation } from "../redux/features/auth/authApi";
 import { userLoggedOut } from "../redux/features/auth/authSlice";
 import LocationModal from "../components/LocationModal";
-import { FaCross, FaLocationDot } from "react-icons/fa6";
+import { FaLocationDot } from "react-icons/fa6";
 import { FiShoppingCart } from "react-icons/fi";
 import { IoIosSearch } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { RiMenuLine } from "react-icons/ri";
-import { setCity } from "../redux/features/user/userSlice"; // ADD THIS
+import { setCity } from "../redux/features/user/userSlice";
 import { toast } from "react-toastify";
 import { persistor } from "../redux/store";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
 import { useSearchItemsQuery } from "../redux/features/product/itemApi";
+import { setSearchQuery } from "../redux/features/user/userSlice";
+import SearchItems from "./SearchedItems";
 
 const Navbar = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showInputBox, setshowInputBox] = useState(false);
+  const [showInputBox, setShowInputBox] = useState(false);
+
   const [text, setText] = useState("");
   const [debounced, setDebounced] = useState("");
 
-  // debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebounced(text);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [text]);
-
-  const dispatch = useDispatch();
+  const inputRef = useRef(null);
   const navigate = useNavigate();
-
-  const [logoutUser] = useLogoutUserMutation();
+  const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
   const city = useSelector((state) => state.user?.city) || "Add";
-  // const { cartItems } = useSelector((state) => state.cart);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebounced(text.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [text]);
+
+  useEffect(() => {
+    if (showInputBox) {
+      inputRef.current?.focus();
+    }
+  }, [showInputBox]);
+
+  //search items query
+  const { data: items = [], isLoading, isFetching } =
+    useSearchItemsQuery(
+      { query: debounced, city },
+      {
+        skip: !debounced || debounced.length < 2 || !city,
+      }
+    );
+
+  // cart items query
   const { data: cartData } = useGetCartItemsQuery(undefined, {
-    skip: !user, // only fetch if logged in
+    skip: !user,
   });
 
-  const cartItems = cartData?.items || 0;
-  const totalQuantity = Array.isArray(cartItems)
-    ? new Set(cartItems.map((item) => item.product?._id || item.product)).size
-    : 0;
+  const cartItems = cartData?.items || [];
+  const totalQuantity = new Set(
+    cartItems.map((item) => item.product?._id || item.product)
+  ).size;
+
+  // logout mutation
+  const [logoutUser] = useLogoutUserMutation();
 
   const handleLogout = async () => {
     try {
-      await logoutUser().unwrap();  // ✅ CALLS BACKEND
-      dispatch(userLoggedOut());  // ✅ RESET LOCAL STATE
-      await persistor.purge(); // ✅ clears persisted data
+      await logoutUser().unwrap();
+      dispatch(userLoggedOut());
+      await persistor.purge();
       toast.warning("Logout successful");
     } catch (err) {
-      console.error("Logout failed:", err);
+      console.error(err);
     }
   };
 
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
+  const toggleDropdown = () => { setShowDropdown(!showDropdown); };
 
   useEffect(() => {
-    const handleResize = () => {
+    const resize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth >= 768) setIsOpen(false);
     };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
   }, []);
-
-  // const truncateLocation = (text) => {
-  //   const city = text.split(",")[0]?.trim() || text;
-  //   return city.length > 6 ? city.slice(0, 6) + "..." : city;
-  // };
-
-  const { data: items = [], isLoading: searchLoading, isFetching } =
-    useSearchItemsQuery(
-      { query: debounced, city },
-      { skip: !debounced || !city }
-    );
-
-  const handleSearchItems = async () => {
-    if (!debounced || !city) return;
-    try {
-      const { data } = await searchItems({ query: debounced, city }).unwrap();
-      console.log(data);
-
-      navigate("/search", { state: { items: data, query: debounced } });
-    } catch (err) {
-      console.error("Search failed:", err);
-    }
-  };
 
   return (
     <nav className={`w-full top-0 left-0 z-50 py-4 transition-all duration-300 ${isMobile ? "bg-red-500" : "bg-pink-50"}`}>
-      <div className="max-w-screen-xl mx-auto px-4 flex justify-between items-center">
+      <div className="max-w-screen mx-auto px-4 lg:px-32 flex justify-between items-center">
+
+        {/* Logo */}
         <Link to="/" className="flex items-center space-x-3">
           <img src={Logo} alt="Fudo Logo" className="w-12 h-12 object-contain" />
-          {!isMobile && <span className="text-gray-700 text-2xl font-bold tracking-wide">Fudo</span>}
+          {!isMobile && (
+            <span className="text-gray-700 text-2xl font-bold tracking-wide">
+              Fudo
+            </span>
+          )}
         </Link>
 
-        {showInputBox &&
-          <div className='w-[80%] h-[70px] bg-white shadow-xl rounded-lg items-center gap-[20px] flex fixed top-[80px] px-6 left-[10%]'>
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="lg:text-red-500 md:text-red-500 pr-2 rounded-md flex text-gray-800 lg:hover:text-red-600 transition text-lg items-center"
-              aria-label="Location"
-            >
-              <span className="w-[75%] truncate m-1 ">
-                {typeof city === "string" ? city : "Add"}
-              </span>
-
-              <FaLocationDot size={25} className="cursor-pointer lg:text-red-500 md:text-red-500 text-gray-800" />
-            </button>
-            <div className='w-[80%] flex items-center gap-[10px]'>
-              <IoIosSearch size={30} className='text-[#ff4d2d]' />
-              <input
-                type="text"
-                onChange={(e) => setText(e.target.value)}
-                value={text}
-                placeholder='search delicious food...'
-                className='px-[10px] text-gray-700 text-lg outline-0 w-full'
-              />
-              {(searchLoading || isFetching) && <p className="text-gray-500 text-sm">Searching...</p>}
-            </div>
-          </div>
-        }
-
+        {/* Desktop Links */}
         {!isMobile && (
-          <div className="flex space-x-12 text-lg text-gray-700 font-semibold tracking-wide">
-            <ScrollLink to="home" smooth duration={500} className="cursor-pointer hover:text-red-500 transition">Home</ScrollLink>
-            <ScrollLink to="services" smooth duration={500} className="cursor-pointer hover:text-red-500 transition">Services</ScrollLink>
-            <ScrollLink to="menu" smooth duration={500} className="cursor-pointer hover:text-red-500 transition">Menu</ScrollLink>
-            <ScrollLink to="contact" smooth duration={500} className="cursor-pointer hover:text-red-500 transition">Contact</ScrollLink>
+          <div className="flex space-x-12 text-lg text-gray-700 font-semibold">
+            <ScrollLink to="home" smooth duration={500} className="cursor-pointer hover:text-red-500">Home</ScrollLink>
+            <ScrollLink to="category" smooth duration={500} className="cursor-pointer hover:text-red-500">Category</ScrollLink>
+            <ScrollLink to="menu" smooth duration={500} className="cursor-pointer hover:text-red-500">Menu</ScrollLink>
+            <ScrollLink to="services" smooth duration={500} className="cursor-pointer hover:text-red-500">Services</ScrollLink>
+            <ScrollLink to="contact" smooth duration={500} className="cursor-pointer hover:text-red-500">Contact</ScrollLink>
           </div>
         )}
 
-        <div className="flex items-center space-x-5">
-
-          {!(showInputBox && isOpen) && (
-            !showInputBox && !isOpen ? (
-              <IoIosSearch
-                size={30}
-                className="lg:text-[#ff4d2d] md:text-red-500 text-white cursor-pointer"
-                onClick={() => setshowInputBox(true)}
+        {/* Search Box */}
+        {showInputBox && (
+          <div className="fixed top-[80px] left-[10%] w-[80%] bg-white rounded-lg shadow-xl px-6 py-4 z-50">
+            <div className="flex items-center gap-3">
+              <FaLocationDot
+                size={24}
+                className="text-red-500 cursor-pointer"
+                onClick={() => setIsModalOpen(true)}
               />
-            ) : !isOpen ? (
+
+              <IoIosSearch size={30} className='text-[#ff4d2d]' />
+
+              <input
+                ref={inputRef}
+                type="text"
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value)
+                  dispatch(setSearchQuery(e.target.value))
+                }}
+                placeholder="search delicious food..."
+                className="w-full text-lg outline-none text-gray-700"
+              />
+
+              <RxCross2
+                size={24}
+                className="cursor-pointer"
+                onClick={() => {
+                  setShowInputBox(true);
+                  setText("");
+                  setDebounced("");
+                }}
+              />
+            </div>
+
+            {(isLoading || isFetching) && (
+              <p className="text-sm text-gray-500 mt-2">Searching...</p>
+            )}
+
+            <SearchItems />
+
+            {debounced && !isLoading && items.length === 0 && (
+              <p className="text-sm text-gray-500 mt-3">No items found 😕</p>
+            )}
+          </div>
+        )}
+
+        {/* Right Icons */}
+        <div className="flex items-center space-x-5">
+          {!(showInputBox && isOpen) && (!showInputBox && !isOpen ? (
+            <IoIosSearch
+              size={30}
+              className="lg:text-[#ff4d2d] md:text-red-500 text-white cursor-pointer"
+              onClick={() => setShowInputBox(true)}
+            />) : !isOpen ? (
               <RxCross2
                 size={25}
                 className="lg:text-[#ff4d2d] text-gray-800 cursor-pointer"
-                onClick={() => setshowInputBox(false)}
-              />
-            ) : null
+                onClick={() =>
+                  setShowInputBox(false)
+                }
+              />) : null
           )}
-
-
           {user && (
             <button
               type="button"
-              onClick={() => { navigate("/cart"); setShowDropdown(false); }}
+              onClick={() => {
+                navigate("/cart");
+                setShowDropdown(false);
+              }}
               className="block text-left px-5 sm:text-gray-800 cursor-pointer"
             >
               <div className="relative cursor-pointer font-xl lg:text-red-500 md:text-red-500 text-gray-800">
-                <FiShoppingCart size={25} />
-                {totalQuantity > 0 ? (
-                  <span className="absolute right-[-9px] top-[-12px] font-semibold">
-                    {totalQuantity}
-                  </span>
-                )
-                  :
-                  (<span className="absolute right-[-9px] top-[-12px] font-semibold">
-                    {totalQuantity}
-                  </span>)
-                }
+                <FiShoppingCart size={25} /> {
+                  totalQuantity > 0 ? (
+                    <span className="absolute right-[-9px] top-[-12px] font-semibold">
+                      {totalQuantity}
+                    </span>
+                  ) : (
+                    <span className="absolute right-[-9px] top-[-12px] font-semibold">
+                      {totalQuantity}
+                    </span>
+                  )}
               </div>
             </button>
-          )}
-
-          {user ? (
+          )} {user ? (
             <div className="relative">
               <img
                 loading="lazy"
@@ -199,61 +216,93 @@ const Navbar = () => {
               />
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-50">
-                  <button onClick={() => { navigate("/profile"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">My Profile</button>
-                  <button onClick={() => { navigate("/order"); setShowDropdown(false); }} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">Orders</button>
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer hover:bg-gray-100 font-semibold tracking-wide">Logout</button>
+                  <button
+                    onClick={() => {
+                      navigate("/profile");
+                      setShowDropdown(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">
+                    My Profile
+                  </button>
+                  <button onClick={() => {
+                    navigate("/order");
+                    setShowDropdown(false);
+                  }}
+                    className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer font-semibold tracking-wide hover:bg-gray-100">
+                    Orders
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-gray-700 cursor-pointer hover:bg-gray-100 font-semibold tracking-wide"
+                  >
+                    Logout
+                  </button>
                 </div>
               )}
             </div>
           ) : !isMobile && (
-            <Link to="/login">
-              <Button
-                text="Login"
-                className="text-lg px-6 py-3 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition"
-              />
+            <Link
+              to="/login">
+              <Button text="Login" className="text-lg px-6 py-3 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition" />
             </Link>
           )}
-
           {isMobile && !user && (
-            <button
-              className="text-white text-2xl pr-2"
-              onClick={() => {
-                setIsOpen(!isOpen);
-              }}
-              aria-label="Toggle Menu">
+            <button className="text-white text-2xl pr-2"
+              onClick={() => { setIsOpen(!isOpen); }}
+              aria-label="Toggle Menu"
+            >
               {isOpen ? <RxCross2 size={35} /> : <RiMenuLine />}
             </button>
           )}
         </div>
       </div>
 
-      {/* ✅ Pass dispatch logic as prop */}
-      <LocationModal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        onSetLocation={(location) => dispatch(setCity(location))}
-      />
+      {/* Mobile Menu */}
 
       {
         isMobile && isOpen && (
           <div className="bg-red-500 text-white py-4 flex flex-col items-center w-full fixed top-20 left-0 z-40">
-            <ScrollLink to="home" smooth duration={500} onClick={() => setIsOpen(false)} className="block px-8 py-3 text-lg font-medium tracking-wide hover:bg-red-600 w-full text-center">Home</ScrollLink>
-            <ScrollLink to="services" smooth duration={500} onClick={() => setIsOpen(false)} className="block px-8 py-3 text-lg font-medium tracking-wide hover:bg-red-600 w-full text-center">Services</ScrollLink>
-            <ScrollLink to="menu" smooth duration={500} onClick={() => setIsOpen(false)} className="block px-8 py-3 text-lg font-medium tracking-wide hover:bg-red-600 w-full text-center">Menu</ScrollLink>
-            <ScrollLink to="contact" smooth duration={500} onClick={() => setIsOpen(false)} className="block px-8 py-3 text-lg font-medium tracking-wide hover:bg-red-600 w-full text-center">Contact</ScrollLink>
-
+            {["home", "menu", "category", "services", "contact"].map((item) => (
+              <ScrollLink
+                key={item}
+                to={item}
+                smooth
+                duration={500}
+                onClick={() => setIsOpen(false)}
+                className="block px-8 py-3 text-lg text-center hover:bg-red-600"
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </ScrollLink>
+            ))}
             {user ? (
-              <button onClick={() => { handleLogout(); setIsOpen(false); }} className="mt-3 px-8 py-3 text-lg font-medium tracking-wide bg-white text-red-500 rounded-lg w-full text-center hover:bg-gray-200">
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="mt-3 px-8 py-3 text-lg font-medium tracking-wide bg-white text-red-500 rounded-lg w-full text-center hover:bg-gray-200"
+              >
                 Logout
               </button>
             ) : (
-              <Link to="/login" onClick={() => setIsOpen(false)} className="mt-3 px-8 py-3 text-lg font-medium tracking-wide bg-white text-red-500 rounded-lg w-full text-center hover:bg-gray-200">
-                Login
+              <Link
+                to="/login"
+                onClick={() =>
+                  setIsOpen(false)
+                }
+                className=" text-lg py-3 font-medium tracking-wide text-red-50 bg-red-500 rounded-lg w-full text-center hover:bg-red-600"
+              > Login
               </Link>
             )}
           </div>
         )
       }
+
+      <LocationModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        onSetLocation={(location) => dispatch(setCity(location))}
+      />
     </nav >
   );
 };

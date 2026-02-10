@@ -20,7 +20,7 @@ export const itemApi = createApi({
     }),
     searchItems: builder.query({
       query: ({ query, city }) => ({
-        url: "/items/search",
+        url: "/search-items",
         params: { query, city },
       }),
       keepUnusedDataFor: 0,
