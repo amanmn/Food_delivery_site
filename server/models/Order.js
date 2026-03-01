@@ -52,7 +52,7 @@ const shopOrderSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  deliveredAt:{
+  deliveredAt: {
     type: Date,
     default: null
   },
@@ -92,6 +92,18 @@ const OrderSchema = new mongoose.Schema({
     required: true
   },
   shopOrders: [shopOrderSchema],
+  payment: {
+    type: Boolean,
+    default: false
+  },
+  razorpayOrderId: {
+    type: String,
+    default: ""
+  },
+  razorpayPaymentId: {
+    type: String,
+    default: ""
+  },
   paymentStatus: {
     type: String,
     enum: ["pending", "paid", "failed"],

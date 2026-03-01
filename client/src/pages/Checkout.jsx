@@ -11,7 +11,7 @@ import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { setAddress, setLocation } from "../redux/features/location/locationSlice";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
-import { usePlaceOrderMutation } from "../redux/features/order/orderApi";
+import { usePlaceOrderMutation, useCreateRazorpayOrderMutation } from "../redux/features/order/orderApi";
 import { useGetOrderItemsQuery } from "../redux/features/order/orderApi";
 import { clearCart } from "../redux/features/cart/cartSlice";
 
@@ -26,6 +26,7 @@ const Checkout = () => {
     const [searchInput, setSearchInput] = useState("");
     const [placeOrder] = usePlaceOrderMutation();
     const APIKEY = import.meta.env.VITE_GEOAPIKEY;
+    const [createRazorpayOrder] = useCreateRazorpayOrderMutation();
 
     const position = [location?.lat || 22.7196, location?.lon || 75.8577];
 
@@ -111,17 +112,50 @@ const Checkout = () => {
         };
 
         try {
-            const result = await placeOrder(orderPayload).unwrap();
+            if (paymentMethod === "cod") {
+                const result = await placeOrder(orderPayload).unwrap();
 
-            if (result.success) {
-                toast.success("Order placed successfully!");
-                dispatch(clearCart());
-                navigate("/");
+                if (result.success) {
+                    toast.success("Order placed successfully!");
+                    dispatch(clearCart());
+                    navigate("/");
+                }
+                return;
+            } else {
+                openRazorpayWindow(orderPayload);
             }
+
         } catch (err) {
             toast.error("Failed to place order.");
         }
     };
+
+    const openRazorpayWindow = async (orderPayload) => {
+        const payment = await createRazorpayOrder({ amount: AmountWithDeliveryFee }).unwrap();
+
+        const options = {
+            key: import.meta.env.VITE_Test_API_Key,
+            amount: payment.amount,
+            currency: "INR",
+            order_id: payment.razorpayOrderId,
+            handler: async function (response) {
+                try {
+                    const verifyResponse = await placeOrder({
+                        ...orderPayload,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpayOrderId: response.razorpay_order_id,
+                    }).unwrap();
+                    if (verifyResponse.success) {
+                        toast.success("Order placed successfully!");
+                        dispatch(clearCart());
+                        navigate("/");
+                    }
+                } catch (err) {
+                    toast.error("Failed to verify payment.");
+                }
+            }
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">

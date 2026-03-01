@@ -20,6 +20,14 @@ export const orderApi = createApi({
             }),
             invalidatesTags: ["Cart", "Orders", "User"],
         }),
+        createRazorpayOrder: builder.mutation({
+            query: (orderData) => ({
+                url: "create-razorpay-order",
+                method: "POST",
+                body: orderData,
+            }),
+            invalidatesTags: ["Cart", "Orders", "User"],
+        }),
         getOrderItems: builder.query({
             query: () => ({
                 url: "orders",
@@ -84,6 +92,7 @@ export const orderApi = createApi({
 
 export const {
     usePlaceOrderMutation,
+    useCreateRazorpayOrderMutation,
     useGetOrderItemsQuery,
     useUpdateOrderStatusMutation,
     useGetDeliveryBoyAssignmentsQuery,
