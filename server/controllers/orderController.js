@@ -80,6 +80,7 @@ const placeOrder = async (req, res) => {
         }
       }));
 
+    // razorpay order -- online method
     if (paymentMethod === "online") {
       const razorOrder = await razorpay.orders.create({
         amount: Math.round(totalAmount * 100), // amount in paise

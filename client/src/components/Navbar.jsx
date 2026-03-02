@@ -261,7 +261,7 @@ const Navbar = () => {
 
       {
         isMobile && isOpen && (
-          <div className="bg-red-500 text-white py-4 flex flex-col items-center w-full fixed top-20 left-0 z-40">
+          <div className="bg-red-500 text-white py-4 flex flex-col items-center w-full left-0 z-40">
             {["home", "menu", "category", "services", "contact"].map((item) => (
               <ScrollLink
                 key={item}
@@ -269,7 +269,7 @@ const Navbar = () => {
                 smooth
                 duration={500}
                 onClick={() => setIsOpen(false)}
-                className="block px-8 py-3 text-lg text-center hover:bg-red-600"
+                className="block px-8 py-3 text-lg text-center rounded-lg w-full hover:bg-red-600"
               >
                 {item.charAt(0).toUpperCase() + item.slice(1)}
               </ScrollLink>
@@ -290,7 +290,7 @@ const Navbar = () => {
                 onClick={() =>
                   setIsOpen(false)
                 }
-                className=" text-lg py-3 font-medium tracking-wide text-red-50 bg-red-500 rounded-lg w-full text-center hover:bg-red-600"
+                className="py-3 font-medium tracking-wide bg-red-50 text-red-500 rounded-lg w-full text-center hover:bg-red-600 hover:text-gray-200"
               > Login
               </Link>
             )}

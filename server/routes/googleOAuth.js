@@ -22,7 +22,6 @@ router.get('/auth/google/callback',
 
         const token = generateToken({ id: user._id });
 
-        // Set cookie (httpOnly)
         setTokenCookie(res, token);
 
         // Redirect to frontend route that knows how to handle logged-in user

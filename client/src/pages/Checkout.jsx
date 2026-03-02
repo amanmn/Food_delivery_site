@@ -11,7 +11,7 @@ import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { setAddress, setLocation } from "../redux/features/location/locationSlice";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
-import { usePlaceOrderMutation, useCreateRazorpayOrderMutation } from "../redux/features/order/orderApi";
+import { usePlaceOrderMutation, useCreateRazorpayOrderMutation, useVerifyPaymentMutation } from "../redux/features/order/orderApi";
 import { useGetOrderItemsQuery } from "../redux/features/order/orderApi";
 import { clearCart } from "../redux/features/cart/cartSlice";
 
@@ -27,6 +27,7 @@ const Checkout = () => {
     const [placeOrder] = usePlaceOrderMutation();
     const APIKEY = import.meta.env.VITE_GEOAPIKEY;
     const [createRazorpayOrder] = useCreateRazorpayOrderMutation();
+    const [useVerifyPayment] = useVerifyPaymentMutation();
 
     const position = [location?.lat || 22.7196, location?.lon || 75.8577];
 
@@ -112,41 +113,46 @@ const Checkout = () => {
         };
 
         try {
+            // cod flow
             if (paymentMethod === "cod") {
-                const result = await placeOrder(orderPayload).unwrap();
+                const res = await placeOrder(orderPayload).unwrap();
 
-                if (result.success) {
+                if (res.success) {
                     toast.success("Order placed successfully!");
                     dispatch(clearCart());
                     navigate("/");
                 }
                 return;
             } else {
-                openRazorpayWindow(orderPayload);
+                //  online payment flow
+                const orderId = res.data.orderId;
+                const razorOrder = res.data.razorOrder;
+                openRazorpayWindow(orderId, razorOrder);
             }
-
         } catch (err) {
             toast.error("Failed to place order.");
         }
     };
 
-    const openRazorpayWindow = async (orderPayload) => {
+    const openRazorpayWindow = async (orderId, razorOrder) => {
         const payment = await createRazorpayOrder({ amount: AmountWithDeliveryFee }).unwrap();
 
         const options = {
             key: import.meta.env.VITE_Test_API_Key,
-            amount: payment.amount,
+            amount: razorOrder.amount,
             currency: "INR",
-            order_id: payment.razorpayOrderId,
+            name: "Fooddelivery",
+            order_id: razorOrder.id,
             handler: async function (response) {
                 try {
                     const verifyResponse = await placeOrder({
                         ...orderPayload,
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        razorpayOrderId: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        orderId
                     }).unwrap();
                     if (verifyResponse.success) {
                         toast.success("Order placed successfully!");
+
                         dispatch(clearCart());
                         navigate("/");
                     }

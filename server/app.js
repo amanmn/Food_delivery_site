@@ -55,7 +55,7 @@ const shopRoutes = require("./routes/shopRoute.js");
 const itemRoutes = require("./routes/itemRoutes.js")
 
 app.use("/api/auth", authRoutes);
-app.use("/", googleOAuth);
+app.use("/api", googleOAuth);
 app.use("/api/user", userRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
