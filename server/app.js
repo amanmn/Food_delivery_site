@@ -33,7 +33,7 @@ app.use(
 //   }
 // }));
 
-require('./config/googleOAuth2.js')
+require('./config/googleOAuth2.js');
 app.use(passport.initialize());
 // app.use(passport.session());
 
