@@ -36,15 +36,13 @@ const Cart = () => {
   const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
-    setCartItems(data?.items || []);
-    console.log(cartItems);
+    const items = data?.items || [];
+    setCartItems(items);
+    console.log("Cart items",items);
   }, [data]);
 
   useEffect(() => {
     if (!user) return;
-    // if (!selectedAddressId && Array.isArray(user.address) && user.address.length > 0) {
-    //   setSelectedAddressId(user.address[0]._id);
-    // }
   }, [user]);
 
   const handlePlaceOrder = async () => {

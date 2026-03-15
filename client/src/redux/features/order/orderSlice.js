@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-// import { placeOrder } from "../../../../../server/controllers/orderController";
 
 const orderSlice = createSlice({
     name: "order",

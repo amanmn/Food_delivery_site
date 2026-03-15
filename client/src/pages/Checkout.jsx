@@ -11,7 +11,7 @@ import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { setAddress, setLocation } from "../redux/features/location/locationSlice";
 import { useGetCartItemsQuery } from "../redux/features/cart/cartApi";
-import { usePlaceOrderMutation, useCreateRazorpayOrderMutation, useVerifyPaymentMutation } from "../redux/features/order/orderApi";
+import { usePlaceOrderMutation, useVerifyPaymentMutation } from "../redux/features/order/orderApi";
 import { useGetOrderItemsQuery } from "../redux/features/order/orderApi";
 import { clearCart } from "../redux/features/cart/cartSlice";
 
@@ -19,15 +19,13 @@ const Checkout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { location, address } = useSelector((state) => state.location);
-    const order = useGetOrderItemsQuery();
     const user = useSelector((state) => state.auth.user);
     const { data, isError, isLoading } = useGetCartItemsQuery();
     const [paymentMethod, setPaymentMethod] = useState("cod");
     const [searchInput, setSearchInput] = useState("");
     const [placeOrder] = usePlaceOrderMutation();
     const APIKEY = import.meta.env.VITE_GEOAPIKEY;
-    const [createRazorpayOrder] = useCreateRazorpayOrderMutation();
-    const [useVerifyPayment] = useVerifyPaymentMutation();
+    const [verifyPayment] = useVerifyPaymentMutation();
 
     const position = [location?.lat || 22.7196, location?.lon || 75.8577];
 
@@ -39,12 +37,10 @@ const Checkout = () => {
 
     const deliveryFee = calculateTotal() > 500 ? 0 : 40;
     const AmountWithDeliveryFee = calculateTotal() + deliveryFee;
+    console.log(paymentMethod);
 
     useEffect(() => {
         setSearchInput(address);
-        // console.log(searchInput);
-        // console.log(data);
-        // console.log(order);
     }, [address]);
 
     const getAddressByLatLng = async (lat, lon) => {
@@ -102,7 +98,10 @@ const Checkout = () => {
         }
 
         const orderPayload = {
-            cartItems: data,
+            cartItems: {
+                items: data?.items,
+                user: user._id
+            },
             paymentMethod,
             totalAmount: AmountWithDeliveryFee,
             deliveryAddress: {
@@ -113,46 +112,50 @@ const Checkout = () => {
         };
 
         try {
-            // cod flow
+            console.log("Razorpay Key:", import.meta.env.VITE_TEST_API_KEY);
+            console.log("ORDER PAYLOAD:", orderPayload);
+            const res = await placeOrder(orderPayload).unwrap();
+            console.log("order", res);
+
+            // COD FLOW 
             if (paymentMethod === "cod") {
-                const res = await placeOrder(orderPayload).unwrap();
 
                 if (res.success) {
                     toast.success("Order placed successfully!");
                     dispatch(clearCart());
                     navigate("/");
                 }
-                return;
-            } else {
-                //  online payment flow
-                const orderId = res.data.orderId;
-                const razorOrder = res.data.razorOrder;
-                openRazorpayWindow(orderId, razorOrder);
             }
+            //  online payment flow
+            else {
+                const { newOrder } = res;
+                openRazorpayWindow(newOrder);
+            }
+
         } catch (err) {
-            toast.error("Failed to place order.");
+            console.log("ERROR:", err);
+            toast.error(err?.data?.message || "Failed to place order.");
         }
     };
 
-    const openRazorpayWindow = async (orderId, razorOrder) => {
-        const payment = await createRazorpayOrder({ amount: AmountWithDeliveryFee }).unwrap();
+    const openRazorpayWindow = async (order) => {
 
         const options = {
-            key: import.meta.env.VITE_Test_API_Key,
-            amount: razorOrder.amount,
+            key: import.meta.env.VITE_TEST_API_KEY,
+            amount: order.totalAmount * 100,
             currency: "INR",
-            name: "Fooddelivery",
-            order_id: razorOrder.id,
+            order_id: order.razorpay_payment_id,
+            name: "Food Delivery",
+
             handler: async function (response) {
                 try {
-                    const verifyResponse = await placeOrder({
-                        ...orderPayload,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        orderId
+                    const verifyResponse = await verifyPayment({
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        orderId: order._id
                     }).unwrap();
+
                     if (verifyResponse.success) {
                         toast.success("Order placed successfully!");
-
                         dispatch(clearCart());
                         navigate("/");
                     }
@@ -161,15 +164,15 @@ const Checkout = () => {
                 }
             }
         }
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
     }
 
     return (
         <div className="min-h-screen bg-gray-100">
-            {/* Main Content */}
             <div className="w-full mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Address Section */}
 
                     <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
@@ -215,7 +218,7 @@ const Checkout = () => {
                             <MapContainer
                                 center={position}
                                 zoom={15}
-                                className="w-full h-60 sm:h-72 md:-80"
+                                className="w-full h-60 sm:h-72 md:h-80"
                             >
                                 <TileLayer
                                     attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
@@ -241,6 +244,7 @@ const Checkout = () => {
                                 <input
                                     type="radio"
                                     name="payment"
+                                    value="cod"
                                     checked={paymentMethod === "cod"}
                                     onChange={() => setPaymentMethod("cod")}
                                 />
@@ -257,6 +261,7 @@ const Checkout = () => {
                                 <input
                                     type="radio"
                                     name="payment"
+                                    value="online"
                                     checked={paymentMethod === "online"}
                                     onChange={() => setPaymentMethod("online")}
                                 />

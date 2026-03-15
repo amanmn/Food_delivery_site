@@ -30,16 +30,12 @@ const addToCart = async (req, res) => {
       });
 
       await cart.save();
-      try {
-        const updatedUser = await User.findByIdAndUpdate(userId, { cart: cart._id }, { new: true });
-        // console.log("Updated User:", updatedUser);
-      } catch (error) {
-        console.error("Error updating user with cart:", error);
-      }
-
+      await User.findByIdAndUpdate(userId, { cart: cart._id }, { new: true });
 
     } else {
-      const existingItem = cart.items.find(item => item.product.toString() === productId);
+      const existingItem = cart.items.find(
+        item => item.product.toString() === productId.toString()
+      );
 
       if (existingItem) {
         existingItem.quantity += Number(quantity);
@@ -47,14 +43,8 @@ const addToCart = async (req, res) => {
         cart.items.push({ product: productId, quantity: Number(quantity) });
       }
       await cart.save();
-
-      console.log("Before update:", await User.findById(req.user.id));
-      await User.findByIdAndUpdate(req.user.id, { cart: cart._id });
-      // console.log("After update:", await User.findById(req.user.id));
-
     }
     const populatedCart = await Cart.findById(cart._id).populate("items.product");
-    // console.log(populatedCart);
 
     res.status(200).json({ success: true, message: "Item added to cart", cart: populatedCart });
   } catch (err) {
@@ -65,20 +55,28 @@ const addToCart = async (req, res) => {
 
 // Example in cart controller:
 const getUserCart = async (req, res) => {
-  const userId = req.user.id;
-  const cart = await Cart.findOne({ user: userId })
-    .populate("items.product")
-    .populate({
-      path: "user",
-      select: "name address phone",  // ⬅️ pick required fields only
-    })
-  // console.log("cart", cart);
+  try {
+    const userId = req.user.id;
 
-  if (!cart) {
-    return res.status(404).json({ items: [] });
+    const cart = await Cart.findOne({ user: userId })
+      .populate("items.product")
+      .populate({
+        path: "user",
+        select: "name address phone",  // ⬅️ pick required fields only
+      })
+
+    if (!cart) {
+      return res.status(200).json({
+        success: true,
+        items: []
+      });
+    }
+
+    res.status(200).json(cart);
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
-
-  res.status(200).json(cart);
 };
 
 const updateCartItem = async (req, res) => {
@@ -97,7 +95,6 @@ const updateCartItem = async (req, res) => {
     }
 
     const item = cart.items.id(itemId);
-    // console.log(item, "itemmmm");
 
     if (!item) {
       return res.status(404).json({ message: "Item not found in cart" });

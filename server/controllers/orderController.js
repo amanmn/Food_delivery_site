@@ -99,6 +99,7 @@ const placeOrder = async (req, res) => {
       });
 
       return res.status(200).json({
+        success: true,
         razorOrder,
         orderId: newOrder._id,
       });
@@ -144,7 +145,7 @@ const placeOrder = async (req, res) => {
 const verifyPayment = async (req, res) => {
   try {
     const { razorpayPaymentId, orderId } = req.body;
-
+    console.log("verifyPayment called with:", req.body);
     const payment = await razorpay.payments.fetch(razorpayPaymentId);
     if (!payment || payment.status !== "captured") {
       return res.status(400).json({
@@ -197,7 +198,7 @@ const getMyOrders = async (req, res) => {
             }
           ]
         })
-        .populate("user")
+        .populate("user");
 
       if (!orders) {
         return res
