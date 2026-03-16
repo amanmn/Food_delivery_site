@@ -156,7 +156,6 @@ const verifyPayment = async (req, res) => {
       razorpayPaymentId,
       razorpayOrderId,
       razorpaySignature,
-      orderId
     } = req.body;
 
     const body = razorpayOrderId + "|" + razorpayPaymentId;

@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   useGetOrderItemsQuery,
   useUpdateOrderStatusMutation,
 } from "../../src/redux/features/order/orderApi";
 import { useGetDeliveryBoysQuery } from "../../src/redux/features/user/userApi";
 import DeliveryBoyList from "../../deliveryboy/DeliveryBoyList";
+import { FaBackspace } from "react-icons/fa";
+import { FaBackwardFast, FaBackwardStep } from "react-icons/fa6";
 
 const OwnerOrders = ({ orders = [], filter }) => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const ownerId = user?._id;
 
@@ -131,157 +135,219 @@ const OwnerOrders = ({ orders = [], filter }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      {filteredOrders.map((order) => (
-        <motion.div
-          key={order._id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white border rounded-3xl shadow-lg overflow-hidden flex flex-col"
-        >
-          {/* Header */}
-          <div className="p-5 border-b bg-green-50">
-            <div className="flex justify-between">
-              <div>
-                <h3 className="font-semibold">
-                  Order ID:{" "}
-                  <span className="text-gray-500">
-                    {order._id.slice(-8).toUpperCase()}
-                  </span>
-                </h3>
-                <p className="text-xs text-gray-500">
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </p>
-              </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="flex items-center justify-between mb-6">
 
-              <span className="px-3 py-1 text-sm font-semibold rounded-full bg-gray-100">
-                {order.shopOrders[0].status.replace(/_/g, " ")}
-              </span>
-            </div>
+        <div className="flex items-center gap-4">
 
-            {/* User Info */}
-            <div className="mt-3 text-xs space-y-1 text-gray-700">
-              <p>👤 {order.user?.name}</p>
-              <p>✉️ {order.user?.email}</p>
-              <p>📞 {order.user?.phone}</p>
-              <p>🏠 {order.deliveryAddress?.text}</p>
-            </div>
-          </div>
+          {/* BACK BUTTON */}
+          <button
+            onClick={() => navigate("/dash")}
+            className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-blue-500 border rounded-lg shadow-sm hover:bg-gray-100 transition"
+          >
+            <FaBackwardStep />
+          </button>
 
-          {/* Shop Orders */}
-          <div className="p-5 flex-1 space-y-6">
-            {order.shopOrders.map((shopOrder) => (
-              <div key={shopOrder._id} className="border-b pb-4">
-                <div className="flex justify-between mb-2">
-                  <h4 className="font-semibold">
-                    🏪 {shopOrder.shop?.name}
-                  </h4>
-                  <span className="text-sm text-gray-500">
-                    ₹{shopOrder.subtotal}
-                  </span>
-                </div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Orders Management
+          </h1>
 
-                {/* Items */}
-                {shopOrder.shopOrderItems?.map((item) => (
-                  <div
-                    key={item._id}
-                    className="flex justify-between bg-gray-50 rounded-xl p-2 mb-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item?.item?.image}
-                        alt={item?.item?.name}
-                        className="w-12 h-12 rounded-lg border"
-                      />
-                      <div>
-                        <p className="font-medium">{item.item.name}</p>
-                        <p className="text-xs text-gray-500">
-                          ₹{item.price} × {item.quantity}
-                        </p>
-                      </div>
+        </div>
+
+        <span className="text-sm text-gray-500">
+          Total Orders: {filteredOrders.length}
+        </span>
+
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white rounded-xl shadow border overflow-x-auto">
+
+        <table className="w-full text-sm">
+
+          {/* HEADER */}
+          <thead className="bg-gray-100 text-gray-700">
+            <tr className="text-left">
+
+              <th className="p-4">Order</th>
+              <th className="p-4">Customer</th>
+              <th className="p-4">Items</th>
+              <th className="p-4">Amount</th>
+              <th className="p-4">Payment</th>
+              <th className="p-4">Status</th>
+              <th className="p-4">Delivery</th>
+
+            </tr>
+          </thead>
+
+
+          {/* BODY */}
+          <tbody>
+
+            {filteredOrders.map((order) => {
+
+              const shopOrder = order.shopOrders[0]
+
+              return (
+                <tr
+                  key={order._id}
+                  className="border-t hover:bg-gray-50 transition"
+                >
+
+                  {/* ORDER */}
+                  <td className="p-4">
+                    <p className="font-semibold">
+                      #{order._id.slice(-6)}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      {new Date(order.createdAt).toLocaleString()}
+                    </p>
+                  </td>
+
+
+                  {/* CUSTOMER */}
+                  <td className="p-4">
+
+                    <p className="font-medium">
+                      {order.user?.name}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      {order.user?.phone}
+                    </p>
+
+                  </td>
+
+
+                  {/* ITEMS */}
+                  <td className="p-4">
+
+                    <div className="space-y-1">
+
+                      {shopOrder.shopOrderItems
+                        ?.slice(0, 2)
+                        .map((item) => (
+
+                          <div
+                            key={item._id}
+                            className="flex items-center gap-2"
+                          >
+
+                            <img
+                              src={item.item.image}
+                              className="w-8 h-8 rounded object-cover"
+                            />
+
+                            <span className="text-xs">
+                              {item.item.name} × {item.quantity}
+                            </span>
+
+                          </div>
+                        ))}
+
+                      {shopOrder.shopOrderItems.length > 2 && (
+                        <span className="text-xs text-gray-400">
+                          +{shopOrder.shopOrderItems.length - 2} more
+                        </span>
+                      )}
+
                     </div>
 
-                    <p className="font-semibold">
-                      ₹{item.price * item.quantity}
-                    </p>
-                  </div>
-                ))}
+                  </td>
 
-                {/* Status */}
-                <div className="mt-3 flex justify-between">
-                  <label className="text-sm">Status:</label>
-                  <select
-                    value={shopOrder.status}
-                    disabled={updating === shopOrder._id}
-                    onChange={(e) =>
-                      handleStatusChange(
-                        order._id,
-                        shopOrder._id,
-                        e.target.value
-                      )
-                    }
-                    className="border rounded-lg px-2 py-1"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="out_for_delivery">
-                      Out for Delivery
-                    </option>
-                    <option value="delivered">Delivered</option>
-                  </select>
-                </div>
 
-                {/* 🚚 Assigned Boy OR Available Boys */}
-                {shopOrder.assignedDeliveryBoy ? (
-                  <div className="mt-3 bg-green-50 border border-green-200 p-3 rounded-xl">
-                    <p className="text-sm font-semibold text-green-700">
-                      Assigned Delivery Boy
-                    </p>
-                    <p className="text-sm">
-                      👤 {shopOrder.assignedDeliveryBoy.name}
-                    </p>
-                    <p className="text-sm">
-                      📞 {shopOrder.assignedDeliveryBoy.phone}
-                    </p>
-                  </div>
-                ) : (
-                  shopOrder.status === "out_for_delivery" &&
-                  shopOrder.availableBoys && (
-                    <DeliveryBoyList
-                      boys={
-                        allDeliveryBoys.filter((db) =>
-                          shopOrder.availableBoys
-                            .map((b) => String(b.id || b._id || b))
-                            .includes(String(db.id))
+                  {/* AMOUNT */}
+                  <td className="p-4 font-semibold text-green-600">
+                    ₹{shopOrder.subtotal}
+                  </td>
+
+
+                  {/* PAYMENT */}
+                  <td className="p-4">
+
+                    <div className="flex flex-col">
+
+                      <span className="text-xs text-gray-500">
+                        {order.paymentMethod}
+                      </span>
+
+                      <span
+                        className={`text-xs font-semibold ${order.paymentStatus === "paid"
+                          ? "text-green-600"
+                          : "text-red-500"
+                          }`}
+                      >
+                        {order.paymentStatus}
+                      </span>
+
+                    </div>
+
+                  </td>
+
+
+                  {/* STATUS */}
+                  <td className="p-4">
+
+                    <select
+                      value={shopOrder.status}
+                      disabled={updating === shopOrder._id}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          order._id,
+                          shopOrder._id,
+                          e.target.value
                         )
                       }
-                    />
-                  )
-                )}
-              </div>
-            ))}
-          </div>
+                      className="border rounded-md px-2 py-1 text-xs"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="preparing">Preparing</option>
+                      <option value="out_for_delivery">
+                        Out for Delivery
+                      </option>
+                      <option value="delivered">Delivered</option>
+                    </select>
 
-          {/* Footer */}
-          <div className="border-t p-5 bg-gray-50 flex justify-between">
-            <p>
-              Payment:{" "}
-              <span className="font-semibold">
-                {order.paymentStatus}
-              </span>
-            </p>
-            <p className="font-bold text-green-700">
-              ₹{order.shopOrders.reduce(
-                (sum, so) => sum + (so.subtotal || 0),
-                0
-              )}
-            </p>
-          </div>
-        </motion.div>
-      ))}
+                  </td>
+
+
+                  {/* DELIVERY BOY */}
+                  <td className="p-4">
+
+                    {shopOrder.assignedDeliveryBoy ? (
+
+                      <div className="text-xs">
+
+                        <p className="font-medium">
+                          {shopOrder.assignedDeliveryBoy.name}
+                        </p>
+
+                        <p className="text-gray-500">
+                          {shopOrder.assignedDeliveryBoy.phone}
+                        </p>
+
+                      </div>
+
+                    ) : (
+                      <span className="text-gray-400 text-xs">
+                        Not Assigned
+                      </span>
+                    )}
+
+                  </td>
+
+                </tr>
+              )
+            })}
+
+          </tbody>
+
+        </table>
+
+      </div>
     </div>
-  );
+  )
 };
 
 export default OwnerOrders;

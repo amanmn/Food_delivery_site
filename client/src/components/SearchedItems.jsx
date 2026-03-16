@@ -47,12 +47,6 @@ const SearchedItems = () => {
                                     <h3 className="font-bold text-lg text-gray-800 truncate">
                                         {item.name}
                                     </h3>
-                                    {/* <div className='flex flex-center gap-1 mt-1'>
-                                        {renderStars(0)}
-                                        <span className='text-xs text-gray-500'>
-                                            {0}
-                                        </span>
-                                    </div> */}
                                     <p className="text-red-500 text-2xl font-bold mt-3">
                                         ₹{item.price}
                                     </p>
