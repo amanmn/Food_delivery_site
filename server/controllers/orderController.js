@@ -6,6 +6,7 @@ const Shop = require("../models/shopmodel");
 const DeliveryAssignment = require("../models/deliveryAssignment");
 const { model } = require("mongoose");
 const { sendDeliveryOtpMail } = require("../utils/nodemailer");
+const crypto = require("crypto");
 
 const Razorpay = require("razorpay");
 const dotenv = require("dotenv");
@@ -13,7 +14,7 @@ dotenv.config();
 
 const razorpay = new Razorpay({
   key_id: process.env.Test_API_Key,
-  key_secret: process.env.Test_Key_Secret,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 
@@ -98,10 +99,17 @@ const placeOrder = async (req, res) => {
         payment: false,
       });
 
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $push: { orders: newOrder._id } },
+        { new: true }
+      );
+
       return res.status(200).json({
         success: true,
         razorOrder,
-        orderId: newOrder.razorpayOrderId,
+        orderId: newOrder._id,
+        razorpayOrderId: razorOrder.id
       });
     }
 
@@ -144,30 +152,53 @@ const placeOrder = async (req, res) => {
 
 const verifyPayment = async (req, res) => {
   try {
-    const { razorpayPaymentId, orderId } = req.body;
+    const {
+      razorpayPaymentId,
+      razorpayOrderId,
+      razorpaySignature,
+      orderId
+    } = req.body;
+
+    const body = razorpayOrderId + "|" + razorpayPaymentId;
     console.log("verifyPayment called with:", req.body);
-    const payment = await razorpay.payments.fetch(razorpayPaymentId);
-    if (!payment || payment.status !== "captured") {
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature !== razorpaySignature) {
       return res.status(400).json({
         success: false,
-        message: "Payment verification failed"
+        message: "Invalid signature"
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ razorpayOrderId });
     if (!order) {
-      return res.status(400).json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
     }
+
     order.payment = true;
     order.paymentStatus = "paid";
     order.razorpayPaymentId = razorpayPaymentId;
+    order.razorpaySignature = razorpaySignature;
+    order.paymentVerifiedAt = new Date();
 
     await order.save();
 
     await order.populate("shopOrders.shopOrderItems.item", "name image price");
     await order.populate("shopOrders.shop", "name");
-    res.status(200).json(order);
+
+    res.status(200).json({
+      success: true,
+      order
+    });
   } catch (err) {
+    console.error("Error verifying payment:", err);
     res.status(500).json({ success: false, message: "verify payment error" });
   }
 }
@@ -175,11 +206,11 @@ const verifyPayment = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const user = await User.findById(req.userId)
-    
-    const page=parseInt(req.query.page) || 1;
-    const limit=parseInt(req.query.limit) || 10;
-    const skip=(page-1)*limit;
-    
+
+    // const page = parseInt(req.query.page) || 1;
+    // const limit = parseInt(req.query.limit) || 10;
+    // const skip = (page - 1) * limit;
+
     if (user.role === "user") {
       // console.log("user");
 
@@ -213,7 +244,7 @@ const getMyOrders = async (req, res) => {
         orders,
       })
     } else if (user.role === "owner") {
-      // console.log("owner");
+      console.log("owner");
 
       const orders = await Order.find({ "shopOrders.owner": req.userId })
         .sort({ createdAt: -1 })

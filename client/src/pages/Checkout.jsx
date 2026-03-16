@@ -128,8 +128,8 @@ const Checkout = () => {
             }
             //  online payment flow
             else {
-                const { newOrder } = res;
-                openRazorpayWindow(newOrder);
+                const { razorOrder, orderId } = res;
+                openRazorpayWindow(razorOrder, orderId);
             }
 
         } catch (err) {
@@ -138,20 +138,22 @@ const Checkout = () => {
         }
     };
 
-    const openRazorpayWindow = async (order) => {
+    const openRazorpayWindow = async (razorOrder, orderId) => {
 
         const options = {
             key: import.meta.env.VITE_TEST_API_KEY,
-            amount: order.totalAmount * 100,
+            amount: razorOrder.amount,
             currency: "INR",
-            order_id: order.razorpay_payment_id,
+            order_id: razorOrder.id,
             name: "Food Delivery",
 
             handler: async function (response) {
                 try {
                     const verifyResponse = await verifyPayment({
                         razorpayPaymentId: response.razorpay_payment_id,
-                        orderId: order._id
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpaySignature: response.razorpay_signature,
+                        orderId: orderId
                     }).unwrap();
 
                     if (verifyResponse.success) {
