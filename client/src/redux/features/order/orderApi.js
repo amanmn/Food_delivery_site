@@ -26,7 +26,6 @@ export const orderApi = createApi({
                 method: "POST",
                 body: paymentData,
             }),
-            invalidatesTags: ["Cart", "Orders", "User"],
         }),
         getOrderItems: builder.query({
             query: () => ({

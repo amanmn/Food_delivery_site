@@ -1,8 +1,7 @@
 const User = require("../models/User");
 const multer = require("multer");
 const cloudinary = require("../config/cloudinary");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-
+const CloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
 const populateUser = require("../utils/populateUser"); // if using helper
 
 // ✅ Multer + Cloudinary Setup
@@ -108,7 +107,7 @@ const updateUserLocation = async (req, res) => {
     try {
         const { location } = req.body;
         // console.log(location.coordinates);
-        
+
         const [lon, lat] = location.coordinates;
 
         if (isNaN(lon) || isNaN(lat)) {
