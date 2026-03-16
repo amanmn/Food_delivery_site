@@ -172,12 +172,14 @@ const verifyPayment = async (req, res) => {
   }
 }
 
-
 const getMyOrders = async (req, res) => {
   try {
     const user = await User.findById(req.userId)
-    // console.log(user);
-
+    
+    const page=parseInt(req.query.page) || 1;
+    const limit=parseInt(req.query.limit) || 10;
+    const skip=(page-1)*limit;
+    
     if (user.role === "user") {
       // console.log("user");
 

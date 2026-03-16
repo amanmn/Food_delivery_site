@@ -18,6 +18,7 @@ const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
+  console.log("user", user);
 
   const { data, isLoading, refetch } = useLoadUserQuery();
   const [updateUserData] = useUpdateUserDataMutation();
@@ -36,6 +37,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (data) {
+      console.log("profile-data", data?.user);
       dispatch(updateUserProfile(data));
       setNewImage(data.profilePicture);
       setNewName(data.name);
@@ -208,19 +210,63 @@ const Profile = () => {
 
         {/* Orders Section */}
         <div className="border-t border-gray-300 pt-6">
-          <h3 className="text-lg font-semibold text-gray-700">My Orders</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">My Orders</h3>
+
           {user?.orders?.length > 0 ? (
-            <ul className="space-y-3">
-              {user?.orders.map((order, index) => (
-                <li key={order.id || index} className="border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-600">Order ID: {order.id}</p>
-                  <p className="text-sm text-gray-600">Status: {order.status}</p>
-                  <p className="text-sm font-semibold text-gray-800">Total: ₹{order.total}</p>
-                </li>
+            <div className="space-y-4">
+
+              {user.orders.map((order) => (
+                <div
+                  key={order._id}
+                  className="bg-white rounded-xl shadow-md p-5 border hover:shadow-lg transition"
+                >
+
+                  {/* Order Header */}
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm text-gray-500">
+                      Order #{order._id.slice(-6)}
+                    </p>
+
+                    <span className="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium">
+                      {order.shopOrders?.[0]?.status || "pending"}
+                    </span>
+                  </div>
+
+                  {/* Items */}
+                  <div className="space-y-2">
+                    {order.items?.map((item) => (
+                      <div
+                        key={item._id}
+                        className="flex justify-between text-gray-700"
+                      >
+                        <span>
+                          {item.product?.name} × {item.quantity}
+                        </span>
+
+                        <span>
+                          ₹{item.product?.price * item.quantity}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex justify-between items-center mt-4 border-t pt-3">
+                    <p className="text-xs text-gray-500">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </p>
+
+                    <p className="font-semibold text-gray-900">
+                      ₹{order.totalAmount}
+                    </p>
+                  </div>
+
+                </div>
               ))}
-            </ul>
+
+            </div>
           ) : (
-            <p className="text-sm text-gray-600">No orders found.</p>
+            <p className="text-gray-500">No orders yet.</p>
           )}
         </div>
       </div>

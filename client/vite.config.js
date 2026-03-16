@@ -6,10 +6,11 @@ import fs from "fs";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    https: {
-      key: fs.readFileSync("./localhost+1-key.pem"),
-      cert: fs.readFileSync("./localhost+1.pem"),
-    },
+    // https: {
+    //   key: fs.readFileSync("./localhost+1-key.pem"),
+    //   cert: fs.readFileSync("./localhost+1.pem"),
+    // },
+    https:false,
     host: "localhost",
     port: 5173,
 

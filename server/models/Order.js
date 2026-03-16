@@ -10,7 +10,7 @@ const shopOrderItemSchema = new mongoose.Schema({
   price: Number,
   quantity: Number,
 
-}, { timeStamps: true });
+}, { timestamps: true });
 
 const shopOrderSchema = new mongoose.Schema({
   shop: {

@@ -45,7 +45,7 @@ const profile = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            user: req.user,
+            user,
         });
     } catch (error) {
         console.error("Error fetching user profile:", error);

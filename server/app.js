@@ -2,7 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const BASEURL = require("./config/URI.js");
 const passport = require('passport');
 // const session = require('express-session');
 
@@ -15,6 +14,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
+      "http://localhost:5173",
       process.env.FRONTEND_URL,
       "https://localhost:5173",
     ],
