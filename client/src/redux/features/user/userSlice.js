@@ -9,6 +9,7 @@ const initialState = {
     shopsInMyCity: null,
     itemsInMyCity: null,
     searchQuery: "",
+    socket: null,
 };
 
 const userSlice = createSlice({
@@ -32,6 +33,9 @@ const userSlice = createSlice({
         },
         setSearchQuery: (state, action) => {
             state.searchQuery = action.payload;
+        },
+        setSocket: (state, action) => {
+            state.socket = action.payload;
         },
     },
     extraReducers: (builder) => {
@@ -59,6 +63,7 @@ export const {
     setShopsInMyCity,
     setItemsInMyCity,
     setSearchQuery,
+    setSocket,
 } = userSlice.actions;
 
 export default userSlice.reducer;

@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { ColorRing } from 'react-loader-spinner';
 import './index.css';
+import { io } from "socket.io-client";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
@@ -25,6 +26,7 @@ import useDetectLocation from "./hooks/useDetectLocation";
 import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 import TrackOrderPage from "./pages/TrackOrderPage";
 import ShopItems from "./pages/ShopItems";
+import { setSocket } from "./redux/features/user/userSlice";
 
 // Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
@@ -52,11 +54,25 @@ function App() {
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
-  // AuthProvider handles the initial /me fetch and updates auth state in store.
-
-  // Hooks for user and shop data
   useDetectLocation();
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
+
+  useEffect(() => {
+    const socket = io(import.meta.env.VITE_SERVERURL, {
+      withCredentials: true,
+    })
+
+    dispatch(setSocket(socket));
+    socket.on("connect", () => {
+      console.log("connected", socket.id);
+      if (user._id) {
+        socket.emit("joinRoom", { userId: user._id });
+      }
+    });
+    return () => {
+      socket.disconnect();
+    };
+  }, [user._id, dispatch]);
 
   return (
     <>

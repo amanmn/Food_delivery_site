@@ -147,7 +147,7 @@ const logout = (req, res) => {
 const getMe = async (req, res) => {
     try {
         const user = req.user;
-        console.log("user:", user);
+        // console.log("user:", user);
         return res.status(200).json({ success: true, user });
     } catch (error) {
         return handleServerError(res, error, "Fetch user failed");

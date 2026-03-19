@@ -41,7 +41,7 @@ const UserSchema = new mongoose.Schema({
     }
   ],
 
-  // ✅ Add reference to Orders
+  // reference to Orders
   orders: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -61,8 +61,12 @@ const UserSchema = new mongoose.Schema({
     default: false,
   },
   otpExpires: { type: Date },
-  socketId:{
+  socketId: {
     type: String,
+  },
+  isOnline: {
+    type: Boolean,
+    default: false,
   },
   location: {
     type: {
