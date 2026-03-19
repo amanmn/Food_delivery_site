@@ -61,6 +61,9 @@ const UserSchema = new mongoose.Schema({
     default: false,
   },
   otpExpires: { type: Date },
+  socketId:{
+    type: String,
+  },
   location: {
     type: {
       type: String,

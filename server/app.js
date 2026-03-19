@@ -4,8 +4,25 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const passport = require('passport');
 // const session = require('express-session');
-
+const http = require('http');
+const { Server } = require("socket.io");
 const app = express();
+const server = http.createServer(app);
+const socketHandler = require("./socket.js");
+
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:5173",
+      process.env.FRONTEND_URL,
+      "https://localhost:5173",
+    ],
+    credentials: true,
+    methods: ['POST', 'GET', 'PUT', 'DELETE']
+  }
+})
+
+app.set("io", io);
 
 // middlewares
 app.use(express.json());
@@ -52,7 +69,7 @@ const cartRoutes = require("./routes/cartRoutes.js");
 const orderRoutes = require("./routes/orderRoutes");
 const mapRoutes = require("./routes/mapRoutes.js");
 const shopRoutes = require("./routes/shopRoute.js");
-const itemRoutes = require("./routes/itemRoutes.js")
+const itemRoutes = require("./routes/itemRoutes.js");
 
 app.use("/api/auth", authRoutes);
 app.use("/api", googleOAuth);
@@ -64,10 +81,12 @@ app.use("/api/map", mapRoutes);
 app.use("/api/shop", shopRoutes);
 app.use("/api/item", itemRoutes);
 
+socketHandler(io);
+
 
 // Start Server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
