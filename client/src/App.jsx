@@ -60,7 +60,7 @@ function App() {
   useEffect(() => {
     const socket = io(import.meta.env.VITE_SERVERURL, {
       withCredentials: true,
-    })
+    });
 
     dispatch(setSocket(socket));
     socket.on("connect", () => {
@@ -72,7 +72,7 @@ function App() {
     return () => {
       socket.disconnect();
     };
-  }, [user._id, dispatch]);
+  }, [user?._id, dispatch]);
 
   return (
     <>

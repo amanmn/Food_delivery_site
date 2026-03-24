@@ -139,6 +139,21 @@ const placeOrder = async (req, res) => {
       console.error("Error clearing cart after order:", err);
     }
 
+    // Emit real-time update to the shop owner about the new order
+    const io=req.app.get("io");
+    if(io){
+      newOrder.shopOrders.forEach(shopOrder=>{
+        const ownerId=shopOrder.owner;
+        if(ownerId){
+          io.to(String(ownerId)).emit("newOrder", {
+            orderId: newOrder._id,
+            shopOrderId: shopOrder._id,
+            message: "You have a new order!",
+          });
+        }
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
