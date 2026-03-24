@@ -45,6 +45,7 @@ const addToCart = async (req, res) => {
       await cart.save();
     }
     const populatedCart = await Cart.findById(cart._id).populate("items.product");
+    console.log("Populated Cart:", populatedCart);
 
     res.status(200).json({ success: true, message: "Item added to cart", cart: populatedCart });
   } catch (err) {

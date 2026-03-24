@@ -42,15 +42,15 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 
 function App() {
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
-    console.log("App component - Auth state:", {
+    console.log("App component :", {
       user,
       isAuthenticated
     });
   }, [user, isAuthenticated]);
-  // const [setDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
@@ -62,9 +62,9 @@ function App() {
       withCredentials: true,
     });
 
-    dispatch(setSocket(socket));
+    // dispatch(setSocket(socket));
     socket.on("connect", () => {
-      console.log("connected", socket.id);
+      console.log("connected socket - ", socket.id);
       if (user._id) {
         socket.emit("joinRoom", { userId: user._id });
       }
@@ -72,7 +72,7 @@ function App() {
     return () => {
       socket.disconnect();
     };
-  }, [user?._id, dispatch]);
+  }, [user?._id]);
 
   return (
     <>

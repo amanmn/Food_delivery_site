@@ -10,16 +10,20 @@ const populateUser = [
     options: { sort: { createdAt: -1 } }, // newest first
     populate: [
       {
-        path: "items.product"
+        path: "shopOrders.shop",
+        select: "name"
       },
       {
-        path: "shopOrders.shop"
+        path: "shopOrders.owner",
+        select: "name email"
       },
       {
-        path: "shopOrders.owner"
+        path: "shopOrders.shopOrderItems.item",
+        select: "name image price"
       },
       {
-        path: "shopOrders.shopOrderItems.item"
+        path: "shopOrders.assignedDeliveryBoy",
+        select: "name phone"
       }
     ]
   }

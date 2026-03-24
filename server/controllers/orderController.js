@@ -280,7 +280,7 @@ const getMyOrders = async (req, res) => {
             }
           ]
         })
-        .populate("user")
+        .populate("user");
 
       if (!orders) {
         return res

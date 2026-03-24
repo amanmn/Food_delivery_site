@@ -1,44 +1,30 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useSelector, useDispatch } from "react-redux";
-import GetAddressModel from "../components/cartAddressModel";
-import { updateUserProfile } from "../redux/features/user/userSlice";
-import { useUpdateUserDataMutation } from "../redux/features/user/userApi";
+import { useSelector } from "react-redux";
 import {
   useGetCartItemsQuery,
   useUpdateCartItemMutation,
   useDeleteCartItemMutation,
 } from "../redux/features/cart/cartApi";
-import { usePlaceOrderMutation } from "../redux/features/order/orderApi";
 import { motion } from "framer-motion";
-import { CiPickerEmpty, CiTrash } from "react-icons/ci"
-import { FaBeerMugEmpty, FaBoxArchive, FaMinus, FaPlus } from "react-icons/fa6";
-import { BsCart, BsCart2, BsCart3, BsCart4, BsCartDash } from "react-icons/bs";
-import { FcEmptyFilter } from "react-icons/fc";
-import { IoMdHeartEmpty } from "react-icons/io";
-import { FaRegMehBlank } from "react-icons/fa";
-import { RiCheckboxBlankFill } from "react-icons/ri";
+import { CiTrash } from "react-icons/ci"
+import { FaBoxArchive, FaMinus, FaPlus } from "react-icons/fa6";
+import { BsCart4 } from "react-icons/bs";
 
 const Cart = () => {
-  const [placeOrder] = usePlaceOrderMutation();
-  const { data, isError, isLoading } = useGetCartItemsQuery();
+  const { data, isLoading } = useGetCartItemsQuery();
   const [updateCartItem] = useUpdateCartItemMutation();
   const [deleteCartItem] = useDeleteCartItemMutation();
-  // const [updateUserData] = useUpdateUserDataMutation();
 
   const [cartItems, setCartItems] = useState([]);
-  // const [selectedAddressId, setSelectedAddressId] = useState("");
-  // const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     const items = data?.items || [];
     setCartItems(items);
-    console.log("Cart items",items);
   }, [data]);
 
   useEffect(() => {
@@ -79,22 +65,6 @@ const Cart = () => {
     }
   };
 
-  // const handleSaveAddress = async (newAddress) => {
-  //   try {
-  //     const res = await updateUserData({ newAddress }).unwrap();
-  //     const updatedUser = res.user || res;
-  //     dispatch(updateUserProfile(updatedUser));
-
-  //     const lastAddress = updatedUser.address.at(-1);
-  //     if (lastAddress) setSelectedAddressId(lastAddress._id);
-
-  //     toast.success("New address added!");
-  //     setIsAddressModalOpen(false);
-  //   } catch {
-  //     toast.error("Failed to add address.");
-  //   }
-  // };
-
   const calculateTotal = () =>
     cartItems.reduce((t, i) => t + i.quantity * (i?.product?.price || 0), 0);
 
@@ -102,8 +72,6 @@ const Cart = () => {
     return (
       <p className="text-center text-red-500 mt-10 animate-pulse">Loading...</p>
     );
-
-  // const selectedAddress = user?.address?.find((a) => a._id === selectedAddressId);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white px-4 py-8 flex justify-center">
@@ -186,56 +154,6 @@ const Cart = () => {
                 </motion.div>
               ))}
             </div>
-
-            {/* Address Section
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3 ">
-                Delivery Address
-              </h3>
-
-              {Array.isArray(user?.address) && user.address.length > 0 ? (
-                <select
-                  className="w-full cursor-pointer border border-gray-300 p-2 rounded-lg text-gray-700 shadow-sm"
-                  value={selectedAddressId}
-                  onChange={(e) => setSelectedAddressId(e.target.value)}
-                >
-                  {user.address.map((addr) => (
-                    <option key={addr._id} value={addr._id}>
-                      {addr.street}, {addr.city}, {addr.state}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <p className="text-gray-600">No address found. Please add one.</p>
-              )}
-
-              <button
-                onClick={() => setIsAddressModalOpen(true)}
-                className="w-full mt-3 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-all"
-              >
-                {user?.address?.length > 0 ? "Add Another Address" : "Enter Address"}
-              </button>
-
-              {selectedAddress && (
-                <div className="mt-4 bg-gray-50 border rounded-xl p-4">
-                  <h4 className="font-semibold text-gray-800 mb-1">
-                    Selected Address:
-                  </h4>
-                  <p className="text-gray-600 text-sm">
-                    {selectedAddress.street}, {selectedAddress.city},{" "}
-                    {selectedAddress.state}, {selectedAddress.country} -{" "}
-                    {selectedAddress.zipCode}
-                  </p>
-                </div>
-              )}
-
-              {isAddressModalOpen && (
-                <GetAddressModel
-                  onClose={() => setIsAddressModalOpen(false)}
-                  onSave={handleSaveAddress}
-                />
-              )}
-            </div> */}
 
             {/* Total + Checkout */}
             <div className="border-t mt-10 pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
