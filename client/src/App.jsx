@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,9 +10,9 @@ import { io } from "socket.io-client";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
-// import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
-// import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
-// import { updateUserProfile } from "./redux/features/user/userSlice";
+import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
+import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
+import { updateUserProfile } from "./redux/features/user/userSlice";
 
 import CreateEditShop from "../admin/pages/CreateEditShop";
 import MyShop from "../admin/pages/MyShop";
@@ -42,15 +42,24 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const { data, isSuccess, isError } = useLoadUserDataQuery();
+  
+  // const { isAuthenticated } = useSelector((state) => state.auth);
+  // const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
+    if (isSuccess && data.user) {
+      dispatch(userLoggedIn());
+      dispatch(updateUserProfile(data.user));
+    } else if (isError) {
+      dispatch(navigate("/"));
+    }
     console.log("App component :", {
       user,
       isAuthenticated
     });
-  }, [user, isAuthenticated]);
+  }, [isSuccess, isError, data, dispatch]);
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
