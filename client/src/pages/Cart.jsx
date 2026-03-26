@@ -20,7 +20,7 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
 
   const navigate = useNavigate();
-  const user = useSelector((state) => state.auth.user);
+  const user = useSelector((state) => state.user);
 
   useEffect(() => {
     const items = data?.items || [];

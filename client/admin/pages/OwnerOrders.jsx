@@ -13,7 +13,7 @@ import { FaBackwardFast, FaBackwardStep } from "react-icons/fa6";
 
 const OwnerOrders = ({ orders = [], filter }) => {
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
   const ownerId = user?._id;
 
   const [localOrders, setLocalOrders] = useState([]);

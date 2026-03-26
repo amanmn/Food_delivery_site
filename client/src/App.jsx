@@ -11,7 +11,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
-import { useLoadUserDataQuery } from "./redux/features/auth/authApi";
+import { useLoadUserQuery } from "./redux/features/user/userApi";
 import { updateUserProfile } from "./redux/features/user/userSlice";
 
 import CreateEditShop from "../admin/pages/CreateEditShop";
@@ -43,23 +43,22 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { data, isSuccess, isError } = useLoadUserDataQuery();
-  
-  // const { isAuthenticated } = useSelector((state) => state.auth);
-  // const { user } = useSelector((state) => state.user);
+  const { data, isSuccess, isError } = useLoadUserQuery();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
     if (isSuccess && data.user) {
-      dispatch(userLoggedIn());
+      dispatch(userLoggedIn(data.user));
       dispatch(updateUserProfile(data.user));
     } else if (isError) {
       dispatch(navigate("/"));
     }
     console.log("App component :", {
-      user,
+      data,
       isAuthenticated
     });
-  }, [isSuccess, isError, data, dispatch]);
+  }, [data, isAuthenticated]);
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 

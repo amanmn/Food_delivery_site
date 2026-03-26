@@ -35,7 +35,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
   const city = useSelector((state) => state.user?.city) || "Add";
 
   useEffect(() => {
