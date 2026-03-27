@@ -44,21 +44,17 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { data, isSuccess, isError } = useLoadUserQuery();
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  const { user } = useSelector((state) => state.user);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (isSuccess && data.user) {
       dispatch(userLoggedIn(data.user));
       dispatch(updateUserProfile(data.user));
+
     } else if (isError) {
       dispatch(navigate("/"));
     }
-    console.log("App component :", {
-      data,
-      isAuthenticated
-    });
-  }, [data, isAuthenticated]);
+  }, [isSuccess, isError, data, dispatch]);
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
@@ -66,6 +62,10 @@ function App() {
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
   useEffect(() => {
+    console.log("App component :", {
+      data,
+      isAuthenticated
+    });
     const socket = io(import.meta.env.VITE_SERVERURL, {
       withCredentials: true,
     });
@@ -75,6 +75,7 @@ function App() {
       console.log("connected socket - ", socket.id);
       if (user._id) {
         socket.emit("joinRoom", { userId: user._id });
+        console.log(user);
       }
     });
     return () => {
@@ -109,9 +110,11 @@ function App() {
           <Route
             path="/"
             element={
-              isAuthenticated && user?.role === "owner" ? (
+              !isAuthenticated || !user ? (
+                <HomePage />
+              ) : user?.role === "owner" ? (
                 <Navigate to="/dash" replace />
-              ) : isAuthenticated && user?.role === "deliveryBoy" ? (
+              ) : user?.role === "deliveryBoy" ? (
                 <Navigate to="/delivery" replace />
               ) : (
                 <HomePage />

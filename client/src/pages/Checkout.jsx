@@ -6,7 +6,7 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoLocationSharp, IoSearchOutline } from "react-icons/io5";
 import { TbCurrentLocation } from "react-icons/tb";
 import { MdDeliveryDining } from "react-icons/md";
-import { FaCreditCard, FaRegCreditCard } from "react-icons/fa6";
+import { FaCreditCard } from "react-icons/fa6";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { setAddress, setLocation } from "../redux/features/location/locationSlice";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -6,6 +6,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useLoginUserMutation } from "../redux/features/auth/authApi";
 import { userLoggedIn } from "../redux/features/auth/authSlice";
 import { useDispatch } from "react-redux";
+import { updateUserProfile } from "../redux/features/user/userSlice";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,11 +38,13 @@ const Login = () => {
     setApiError("");
 
     try {
-      const response = await loginUser(formData).unwrap();      
+      const response = await loginUser(formData).unwrap();
+
+      dispatch(updateUserProfile(response.user));
       dispatch(userLoggedIn(response.user));
 
       const role = response?.user?.role;
-      console.log("Role:",role);
+      console.log("Role:", role);
       toast.success("Login successful");
 
       if (role === "owner") {
