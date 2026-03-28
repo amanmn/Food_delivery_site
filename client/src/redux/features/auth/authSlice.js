@@ -27,6 +27,12 @@ const authSlice = createSlice({
     setAuthChecked: (state, action) => {
       state.authChecked = action.payload;
     },
+    updateUser: (state, action) => {
+      state.user = {
+        ...state.user,
+        ...action.payload,
+      };
+    },
   },
 });
 
@@ -34,5 +40,6 @@ export const {
   userLoggedIn,
   userLoggedOut,
   setAuthChecked,
+  userUpdated
 } = authSlice.actions;
 export default authSlice.reducer;

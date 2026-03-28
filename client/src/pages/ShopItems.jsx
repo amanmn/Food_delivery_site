@@ -13,7 +13,7 @@ const ShopItems = () => {
     );
 
     useEffect(() => {
-        console.log("shopId:", shopId);
+        console.log("shop:", shopId);
         console.log("items:", items);
         console.log("isLoading:", isLoading);
         console.log("error:", error);

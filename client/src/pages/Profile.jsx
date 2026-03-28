@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import { FaPen } from "react-icons/fa";
 import EditProfileModal from "./EditProfileModal";
 import { useLogoutUserMutation } from "../redux/features/auth/authApi";
-import { userLoggedOut } from "../redux/features/auth/authSlice";
+import { userLoggedIn, userLoggedOut } from "../redux/features/auth/authSlice";
 import { updateUserProfile } from "../redux/features/user/userSlice";
 import {
   useLoadUserQuery,
@@ -17,7 +17,7 @@ import {
 const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.auth);
   console.log("user", user);
 
   const { data, isLoading, refetch } = useLoadUserQuery();
@@ -38,6 +38,7 @@ const Profile = () => {
   useEffect(() => {
     if (data) {
       console.log("profile-data", data?.user);
+      // dispatch(userLoggedIn(data?.user));
       dispatch(updateUserProfile(data));
       setNewImage(data.profilePicture);
       setNewName(data.name);

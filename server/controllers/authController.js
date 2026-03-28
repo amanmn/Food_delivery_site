@@ -146,11 +146,17 @@ const logout = (req, res) => {
 
 const getMe = async (req, res) => {
     try {
-        const user = req.user;
+        const user = await User.findById(req.user.id)
+            .populate("orders")
+            .select("-password");
+        // const user = req.user;
         // console.log("user:", user);
-        return res.status(200).json({ success: true, user });
+        return res.status(200).json({
+            success: true,
+            user
+        });
     } catch (error) {
-        return handleServerError(res, error, "Fetch user failed");
+        return handleServerError(res, error, "Failed to fetch user data");
     }
 };
 

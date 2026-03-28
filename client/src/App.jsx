@@ -10,6 +10,7 @@ import { io } from "socket.io-client";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
+import { useGetMeQuery } from "./redux/features/auth/authApi";
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserQuery } from "./redux/features/user/userApi";
 import { updateUserProfile } from "./redux/features/user/userSlice";
@@ -43,16 +44,17 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { data, isSuccess, isError } = useLoadUserQuery();
+  const { data, isSuccess, isError, isLoading } = useGetMeQuery();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (isSuccess && data.user) {
-      dispatch(userLoggedIn(data.user));
-      dispatch(updateUserProfile(data.user));
+    if (isSuccess && data) {
+      dispatch(userLoggedIn(data));
 
-    } else if (isError) {
-      dispatch(navigate("/"));
+    }
+    if (isError) {
+      dispatch(userLoggedOut());
+      navigate("/");
     }
   }, [isSuccess, isError, data, dispatch]);
 
@@ -73,7 +75,7 @@ function App() {
     // dispatch(setSocket(socket));
     socket.on("connect", () => {
       console.log("connected socket - ", socket.id);
-      if (user._id) {
+      if (user?._id) {
         socket.emit("joinRoom", { userId: user._id });
         console.log(user);
       }

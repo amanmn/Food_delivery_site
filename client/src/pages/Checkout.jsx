@@ -19,7 +19,7 @@ const Checkout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { location, address } = useSelector((state) => state.location);
-    const { user } = useSelector((state) => state.user);
+    const { user } = useSelector((state) => state.auth);
     const { data, isError, isLoading } = useGetCartItemsQuery();
     const [paymentMethod, setPaymentMethod] = useState("cod");
     const [searchInput, setSearchInput] = useState("");
