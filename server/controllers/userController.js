@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const multer = require("multer");
-const cloudinary = require("../config/cloudinary");
+const uploadOnCloudinary = require("../config/cloudinary");
 const CloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
 const populateUser = require("../utils/populateUser"); // if using helper
 
