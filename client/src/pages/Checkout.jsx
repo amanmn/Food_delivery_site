@@ -21,7 +21,7 @@ const Checkout = () => {
     const { location, address } = useSelector((state) => state.location);
     const { user } = useSelector((state) => state.auth);
     const { data, isError, isLoading } = useGetCartItemsQuery();
-    const [paymentMethod, setPaymentMethod] = useState("cod");
+    const [  paymentMethod, setPaymentMethod] = useState("cod");
     const [searchInput, setSearchInput] = useState("");
     const [placeOrder] = usePlaceOrderMutation();
     const APIKEY = import.meta.env.VITE_GEOAPIKEY;

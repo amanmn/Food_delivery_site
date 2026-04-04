@@ -13,12 +13,12 @@ router.get('/auth/google',
 );
 
 router.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/auth/failure' }),
+    passport.authenticate('google', { failureRedirect: '/auth/failure', session: false }),
     (req, res) => {
         // Successful authentication.
         // Option A: Issue JWT and set as httpOnly cookie
         const user = req.user;
-        console.log("google-auth-user",user);
+        console.log("google-auth-user", user);
 
         const token = generateToken({ id: user._id });
 

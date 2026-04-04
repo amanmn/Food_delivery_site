@@ -3,7 +3,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const passport = require('passport');
-// const session = require('express-session');
+const session = require('express-session');
 const http = require('http');
 const { Server } = require("socket.io");
 const app = express();
@@ -39,16 +39,16 @@ app.use(
   }));
 
 
-// app.use(session({
-//   secret: process.env.SESSION_SECRET,
-//   resave: false,
-//   saveUninitialized: false,
-//   cookie: {
-//     secure: process.env.NODE_ENV === 'production', // set true in prod on HTTPS
-//     httpOnly: true,
-//     sameSite: 'lax',
-//   }
-// }));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'development', // set true in prod on HTTPS
+    httpOnly: true,
+    sameSite: 'lax',
+  }
+}));
 
 require('./config/googleOAuth2.js');
 app.use(passport.initialize());
