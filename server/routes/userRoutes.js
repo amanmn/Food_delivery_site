@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middleware/authmiddleware");
-
+const { upload } = require("../middleware/multer");
 const {
-  cloudinaryImg,
   profile,
   updateUser,
-  upload,
+  uploadProfileImage,
   updateUserLocation,
 } = require("../controllers/userController");
 
@@ -15,7 +14,7 @@ const { getDeliveryBoys } = require("../controllers/userController");
 
 router.get("/profile", verifyToken, profile);
 router.put("/update", verifyToken, updateUser);
-router.post("/upload", verifyToken, upload.single("profileImage"), cloudinaryImg);
+router.post("/upload", verifyToken, upload.single("profileImage"), uploadProfileImage);
 
 router.post('/update-location', verifyToken, updateUserLocation)
 

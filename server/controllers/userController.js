@@ -2,35 +2,32 @@ const User = require("../models/User");
 const multer = require("multer");
 const uploadOnCloudinary = require("../config/cloudinary");
 const CloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
-const populateUser = require("../utils/populateUser"); // if using helper
-
-// ✅ Multer + Cloudinary Setup
-const storage = new CloudinaryStorage({
-    cloudinary,
-    params: {
-        folder: "profile-pictures",
-        allowed_formats: ["jpg", "jpeg", "png"],
-    },
-});
-
-console.log("Cloudinary:", cloudinary);
-
-const upload = multer({
-    storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
-});
+const populateUser = require("../utils/populateUser");
 
 // ✅ Cloudinary Image Upload
-const cloudinaryImg = async (req, res) => {
+const uploadProfileImage = async (req, res) => {
     try {
+        console.log("FILE:", req.file);
+
         if (!req.file || !req.file.path) {
-            return res.status(400).json({ error: "No file uploaded" });
+            return res.status(400).json({
+                success: false,
+                error: "No file uploaded"
+            });
         }
 
-        res.status(200).json({ imageUrl: req.file.path });
+        const imageUrl = await uploadOnCloudinary(req.file.path);
+
+        res.status(200).json({
+            success: true,
+            imageUrl
+        });
     } catch (err) {
         console.error("Cloudinary upload error:", err);
-        res.status(500).json({ error: "Failed to upload image" });
+        res.status(500).json({
+            success: false,
+            error: "Upload failed"
+        });
     }
 };
 
@@ -136,10 +133,9 @@ const updateUserLocation = async (req, res) => {
 
 // ✅ Exports
 module.exports = {
-    cloudinaryImg,
     profile,
     updateUser,
-    upload,
+    uploadProfileImage,
     updateUserLocation
 };
 
