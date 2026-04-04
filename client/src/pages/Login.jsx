@@ -6,7 +6,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useLoginUserMutation } from "../redux/features/auth/authApi";
 import { userLoggedIn } from "../redux/features/auth/authSlice";
 import { useDispatch } from "react-redux";
-import { updateUserProfile } from "../redux/features/user/userSlice";
+// import { updateUserProfile } from "../redux/features/user/userSlice";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +40,7 @@ const Login = () => {
     try {
       const response = await loginUser(formData).unwrap();
 
-      dispatch(updateUserProfile(response.user));
+      // dispatch(updateUserProfile(response.user));
       dispatch(userLoggedIn(response.user));
 
       const role = response?.user?.role;
@@ -62,7 +62,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `/api/auth/google`;
+    window.location.href = `${import.meta.env.VITE_SERVERURL}/api/auth/google`;
   }
 
   return (

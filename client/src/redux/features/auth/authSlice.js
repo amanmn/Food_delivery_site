@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-
+import { userApi } from "../user/userApi";
 const initialState = {
   user: null,
   // role: null,
@@ -20,7 +20,6 @@ const authSlice = createSlice({
 
     userLoggedOut: (state) => {
       state.user = null;
-      // state.role = null;
       state.isAuthenticated = false;
       state.authChecked = true;
     },
@@ -28,18 +27,31 @@ const authSlice = createSlice({
       state.authChecked = action.payload;
     },
     updateUser: (state, action) => {
-      state.user = {
-        ...state.user,
-        ...action.payload,
-      };
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          ...action.payload,
+        };
+      }
     },
   },
+  extraReducers: (builder) => {
+    builder.addMatcher(
+      userApi.endpoints.loadUser.matchFulfilled,
+      (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.authChecked = true;
+      }
+    );
+  }
 });
 
 export const {
   userLoggedIn,
   userLoggedOut,
   setAuthChecked,
-  userUpdated
+  updateUser,
 } = authSlice.actions;
+
 export default authSlice.reducer;

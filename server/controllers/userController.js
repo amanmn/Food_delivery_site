@@ -1,14 +1,11 @@
 const User = require("../models/User");
 const multer = require("multer");
 const uploadOnCloudinary = require("../config/cloudinary");
-const CloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
 const populateUser = require("../utils/populateUser");
 
 // ✅ Cloudinary Image Upload
 const uploadProfileImage = async (req, res) => {
     try {
-        console.log("FILE:", req.file);
-
         if (!req.file || !req.file.path) {
             return res.status(400).json({
                 success: false,

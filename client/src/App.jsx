@@ -51,8 +51,7 @@ function App() {
     if (isSuccess && data) {
       dispatch(userLoggedIn(data));
 
-    }
-    if (isError) {
+    } else if (isError) {
       dispatch(userLoggedOut());
       navigate("/");
     }

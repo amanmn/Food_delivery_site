@@ -7,7 +7,8 @@ import { FaPen } from "react-icons/fa";
 import EditProfileModal from "./EditProfileModal";
 import { useLogoutUserMutation } from "../redux/features/auth/authApi";
 import { userLoggedIn, userLoggedOut } from "../redux/features/auth/authSlice";
-import { updateUserProfile } from "../redux/features/user/userSlice";
+import { updateUser } from "../redux/features/auth/authSlice";
+// import { updateUserProfile } from "../redux/features/user/userSlice";
 import {
   useLoadUserQuery,
   useUpdateUserDataMutation,
@@ -36,14 +37,15 @@ const Profile = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (data) {
+    if (data?.user) {
       console.log("profile-data", data?.user);
+      dispatch(updateUser(data.user));
       // dispatch(userLoggedIn(data?.user));
-      dispatch(updateUserProfile(data));
-      setNewImage(data.profilePicture);
-      setNewName(data.name);
-      setNewPhone(data.phone);
-      setUpdatedAddress(data.address);
+      // dispatch(updateUserProfile(data.user));
+      setNewImage(data.user.profilePicture);
+      setNewName(data.user.name);
+      setNewPhone(data.user.phone);
+      setUpdatedAddress(data.user.address);
     }
   }, [data, dispatch]);
 
@@ -96,10 +98,10 @@ const Profile = () => {
       };
 
       const response = await updateUserData(updatedData).unwrap();
-      console.log("response", response);
-
-      dispatch(updateUserProfile(response));
-      setNewImage(response.profilePicture);
+      console.log("responseData", response.user);
+      dispatch(updateUser(response.user));
+      // dispatch(updateUserProfile(response.user));
+      setNewImage(response.user.profilePicture);
       setPreviewImage("");
       setIsModified(false);
       alert("Profile updated successfully!");
@@ -199,7 +201,7 @@ const Profile = () => {
             user={user}
             onClose={() => setIsEditing(false)}
             onSave={(updatedUser) => {
-              dispatch(updateUserProfile(updatedUser));
+              dispatch(updateUser(updatedUser));
               setUpdatedAddress(updatedUser.address);
               setNewName(updatedUser.name);
               setNewPhone(updatedUser.phone);
@@ -216,7 +218,7 @@ const Profile = () => {
           {user?.orders?.length > 0 ? (
             <div className="space-y-4">
 
-              {user.orders.map((order) => (
+              {user?.orders.map((order) => (
                 <div
                   key={order._id}
                   className="bg-white rounded-xl shadow-md p-5 border hover:shadow-lg transition"
@@ -225,7 +227,7 @@ const Profile = () => {
                   {/* Order Header */}
                   <div className="flex justify-between items-center mb-3">
                     <p className="text-sm text-gray-500">
-                      Order #{order._id.slice(-6)}
+                      Order #{order?._id?.slice(-6) || "N/A"}
                     </p>
 
                     <span className="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium">
@@ -245,7 +247,7 @@ const Profile = () => {
                         </span>
 
                         <span>
-                          ₹{item.product?.price * item.quantity}
+                          ₹{(item.product?.price || 0) * item.quantity}
                         </span>
                       </div>
                     ))}
