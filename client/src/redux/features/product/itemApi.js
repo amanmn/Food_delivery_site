@@ -25,6 +25,9 @@ export const itemApi = createApi({
       }),
       keepUnusedDataFor: 0,
     }),
+    getSingleProduct: builder.query({
+      query: (id) => `/product/${id}`,
+    }),
   }),
 });
 
@@ -32,4 +35,5 @@ export const {
   useGetItemByCityQuery,
   useGetItemsByShopQuery,
   useSearchItemsQuery,
+  useGetSingleProductQuery,
 } = itemApi;

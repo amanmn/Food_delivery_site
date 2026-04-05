@@ -3,6 +3,7 @@ import Home from "../pages/Home";
 import Services from "../components/Services";
 import Menu from "../components/Menu";
 import Contact from "../components/Contact";
+import FoodDetailsView from "../components/FoodDetailsView";
 // import About from "../pages/About";
 
 const AppRouter = () => {
@@ -13,6 +14,7 @@ const AppRouter = () => {
         <Route path="/services" element={<Services />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/product/:id" element={<FoodDetailsView />} />
       </Routes>
     </Router>
   );

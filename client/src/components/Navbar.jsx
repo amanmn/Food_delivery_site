@@ -32,6 +32,7 @@ const Navbar = () => {
   const [debounced, setDebounced] = useState("");
 
   const inputRef = useRef(null);
+  const searchRef = useRef(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -87,6 +88,23 @@ const Navbar = () => {
   const toggleDropdown = () => { setShowDropdown(!showDropdown); };
 
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target)
+      ) {
+        setShowInputBox(false); // ✅ close search
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
     const resize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth >= 768) setIsOpen(false);
@@ -97,7 +115,7 @@ const Navbar = () => {
 
   return (
     <nav className={`w-full top-0 left-0 z-50 py-4 transition-all duration-300 ${isMobile ? "bg-red-500" : "bg-pink-50"}`}>
-      <div className="max-w-screen mx-auto px-4 lg:px-32 flex justify-between items-center">
+      <div className="max-w-screen-2xl mx-auto px-4 lg:px-32 flex justify-between items-center">
 
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-3">
@@ -122,7 +140,9 @@ const Navbar = () => {
 
         {/* Search Box */}
         {showInputBox && (
-          <div className="fixed top-[80px] left-[10%] w-[80%] bg-white rounded-lg shadow-xl px-6 py-4 z-50">
+          <div
+            ref={searchRef}
+            className="fixed top-[80px] mx-auto left-[20%] w-[60%] bg-white rounded-lg shadow-xl px-6 py-4 z-50">
             <div className="flex items-center gap-3">
               <FaLocationDot
                 size={24}
@@ -148,7 +168,7 @@ const Navbar = () => {
                 size={24}
                 className="cursor-pointer"
                 onClick={() => {
-                  setShowInputBox(true);
+                  setShowInputBox(false);
                   setText("");
                   setDebounced("");
                 }}
@@ -159,7 +179,7 @@ const Navbar = () => {
               <p className="text-sm text-gray-500 mt-2">Searching...</p>
             )}
 
-            <SearchItems />
+            <SearchItems onClick={() => setShowInputBox(false)} />
 
             {debounced && !isLoading && items.length === 0 && (
               <p className="text-sm text-gray-500 mt-3">No items found 😕</p>

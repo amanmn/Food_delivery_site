@@ -1,9 +1,15 @@
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useSearchItemsQuery } from "../redux/features/product/itemApi";
 
 const SearchedItems = () => {
     const city = useSelector((state) => state.user.city);
     const searchQuery = useSelector((state) => state.user.searchQuery);
+    const navigate = useNavigate();
+
+    const handleClick = (item) => {
+        navigate(`/product/${item._id}`);
+    };
 
     const {
         data: updatedItemsList = [],
@@ -26,6 +32,7 @@ const SearchedItems = () => {
                 {!isLoading && updatedItemsList?.length > 0 ? (
                     updatedItemsList.map((item) => (
                         <div
+                            onClick={() => handleClick(item)}
                             key={item._id}
                             className="bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-300 overflow-hidden"
                         >

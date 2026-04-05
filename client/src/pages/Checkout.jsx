@@ -308,7 +308,7 @@ const Checkout = () => {
 
                     <button
                         onClick={handlePlaceOrder}
-                        className="mt-5 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition"
+                        className="mt-5 w-full bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer font-semibold py-3 rounded-lg transition"
                     >
                         {paymentMethod === "cod" ? "Place your order" : "Pay & Place Order"}
                     </button>

@@ -7,7 +7,6 @@ import categories from "../category";
 import { useSelector, } from "react-redux";
 import { MdLocationCity } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { useGetShopByCityQuery } from "../redux/features/shop/shopApi";
 
 const CategoryCard = () => {
@@ -18,7 +17,7 @@ const CategoryCard = () => {
   });
 
   return (
-    <div className="bg-gray-50 lg:px-32" >
+    <div className="bg-gray-50 lg:px-32 max-w-screen-2xl mx-auto w-full" >
       <section className="py-12 px-4 sm:px-6 bg-gray-50 ">
         {/* Heading Section */}
         <div className="text-center mb-8">
