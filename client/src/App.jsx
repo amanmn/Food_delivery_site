@@ -28,6 +28,7 @@ import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 import TrackOrderPage from "./pages/TrackOrderPage";
 import ShopItems from "./pages/ShopItems";
 import { setSocket } from "./redux/features/user/userSlice";
+import { socket } from "./socket";
 
 // Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
@@ -63,26 +64,33 @@ function App() {
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
   useEffect(() => {
-    console.log("HOME PAGE LOADED");
     console.log("App component :", {
       data,
       isAuthenticated
     });
-    const socket = io(import.meta.env.VITE_SERVERURL, {
-      withCredentials: true,
+  }, []);
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("✅ Connected:", socket.id);
     });
 
-    // dispatch(setSocket(socket));
-    socket.on("connect", () => {
-      console.log("connected socket - ", socket.id);
-      if (user?._id) {
-        socket.emit("joinRoom", { userId: user._id });
-        console.log(user);
-      }
+    socket.on("disconnect", () => {
+      console.log("❌ Disconnected");
     });
+
     return () => {
-      socket.disconnect();
+      socket.off("connect");
+      socket.off("disconnect");
     };
+  }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      socket.emit("joinRoom", { userId: user._id });
+      dispatch(setSocket(socket));
+      console.log("Joined room:", user._id);
+    }
   }, [user?._id]);
 
   return (

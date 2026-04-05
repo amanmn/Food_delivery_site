@@ -33,6 +33,7 @@ const Navbar = () => {
 
   const inputRef = useRef(null);
   const searchRef = useRef(null);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -50,6 +51,7 @@ const Navbar = () => {
     if (showInputBox) {
       inputRef.current?.focus();
     }
+
   }, [showInputBox]);
 
   //search items query
@@ -85,18 +87,19 @@ const Navbar = () => {
     }
   };
 
-  const toggleDropdown = () => { setShowDropdown(!showDropdown); };
+  const toggleDropdown = () => {
+    setShowDropdown(prev => !prev);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target)
-      ) {
+      // search box close
+      if (searchRef.current && !searchRef.current.contains(event.target))
         setShowInputBox(false); // ✅ close search
-      }
-    };
 
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target))
+        setShowDropdown(false); // close dropdown
+    };
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
@@ -226,7 +229,7 @@ const Navbar = () => {
               </div>
             </button>
           )} {user ? (
-            <div className="relative">
+            <div ref={dropdownRef} className="relative">
               <img
                 loading="lazy"
                 src={user.profilePicture || defaultAvatar}

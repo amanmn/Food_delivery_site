@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const populateUser = require("../utils/populateUser");
 const Shop = require("../models/shopmodel");
 const DeliveryAssignment = require("../models/deliveryAssignment");
@@ -140,14 +141,20 @@ const placeOrder = async (req, res) => {
     }
 
     // Emit real-time update to the shop owner about the new order
-    const io=req.app.get("io");
-    if(io){
-      newOrder.shopOrders.forEach(shopOrder=>{
-        const ownerId=shopOrder.owner;
-        if(ownerId){
+    const io = req.app.get("io");
+
+    if (io) {
+      newOrder.shopOrders.forEach((shopOrder) => {
+        const ownerId = shopOrder.owner;
+        if (ownerId) {
           io.to(String(ownerId)).emit("newOrder", {
             orderId: newOrder._id,
-            shopOrderId: shopOrder._id,
+            paymentMethod: newOrder.paymentMethod,
+            user: newOrder.user,
+            shopOrders: shopOrder,
+            createdAt: newOrder.createdAt,
+            deliveryAddress: newOrder.deliveryAddress,
+            payment: newOrder.payment,
             message: "You have a new order!",
           });
         }
@@ -226,7 +233,7 @@ const getMyOrders = async (req, res) => {
     // const skip = (page - 1) * limit;
 
     if (user.role === "user") {
-      // console.log("user");
+      console.log("user");
 
       const orders = await Order.find({ user: req.userId })
         .sort({ createdAt: -1 })
@@ -260,7 +267,8 @@ const getMyOrders = async (req, res) => {
     } else if (user.role === "owner") {
       console.log("owner");
 
-      const orders = await Order.find({ "shopOrders.owner": req.userId })
+      console.log("Logged in user:", req.userId);
+      const orders = await Order.find({ "shopOrders.owner": new mongoose.Types.ObjectId(req.userId) })
         .sort({ createdAt: -1 })
         .populate({
           path: "shopOrders",

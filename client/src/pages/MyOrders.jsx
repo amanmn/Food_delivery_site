@@ -9,13 +9,13 @@ import { useNavigate } from "react-router-dom";
 const MyOrders = () => {
   const [filter, setFilter] = useState("All");
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.auth);
 
   const { data, isLoading, isError } = useGetOrderItemsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
-  const isOwner = user?.role === "owner";
 
+  const isOwner = user?.role === "owner";
   const orders = data?.orders || [];
 
   if (isLoading)
