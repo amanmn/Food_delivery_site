@@ -63,6 +63,7 @@ function App() {
   useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
 
   useEffect(() => {
+    console.log("HOME PAGE LOADED");
     console.log("App component :", {
       data,
       isAuthenticated

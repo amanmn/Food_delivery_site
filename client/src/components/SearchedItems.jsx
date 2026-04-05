@@ -1,14 +1,25 @@
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useSearchItemsQuery } from "../redux/features/product/itemApi";
 
-const SearchedItems = () => {
+import { useSearchItemsQuery } from "../redux/features/product/itemApi";
+import { setSearchQuery } from "../redux/features/user/userSlice";
+
+const SearchedItems = ({ onClick }) => {
     const city = useSelector((state) => state.user.city);
     const searchQuery = useSelector((state) => state.user.searchQuery);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const handleClick = (item) => {
-        navigate(`/product/${item._id}`);
+        console.log("CLICKED:", item._id);
+
+        // 🔥 close search FIRST
+        onClick?.();
+        dispatch(setSearchQuery("")); // Clear search query in Redux
+        // 🔥 navigate AFTER
+        setTimeout(() => {
+            navigate(`/product/${item._id}`);
+        }, 100);
     };
 
     const {

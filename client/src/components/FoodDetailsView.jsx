@@ -3,7 +3,7 @@ import { useGetSingleProductQuery } from "../redux/features/product/itemApi";
 
 const FoodDetailsView = () => {
     const { id } = useParams();
-
+    console.log("Fetching details for product ID:", id);
     const { data, isLoading } = useGetSingleProductQuery(id);
 
     if (isLoading) return <p>Loading...</p>;
