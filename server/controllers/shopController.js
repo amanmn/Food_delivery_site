@@ -1,5 +1,7 @@
 const uploadOnCloudinary = require("../config/cloudinary");
 const Shop = require("../models/shopmodel");
+const Order = require("../models/Order");
+const { default: mongoose } = require("mongoose");
 
 const createEditShop = async (req, res) => {
     try {
@@ -76,11 +78,18 @@ const getDashboardStats = async (req, res) => {
         const totalOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
         });
-
+        console.log(totalOrders, "total orders");
         const runningOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
             "shopOrders.status": { $in: ["pending", "preparing"] },
         });
+        console.log(runningOrders, "running orders");
+
+        const outForDeliveryOrders = await Order.countDocuments({
+            "shopOrders.owner": ownerId,
+            "shopOrders.status": "out_for_delivery",
+        });
+        console.log(outForDeliveryOrders, "out for delivery orders");
 
         const cancelledOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
@@ -112,9 +121,7 @@ const getDashboardStats = async (req, res) => {
         const earnings = earningsData[0]?.total || 0;
 
         // 🆕 Recent Orders
-        const recentOrders = await Order.find({
-            "shopOrders.owner": ownerId,
-        })
+        const recentOrders = await Order.find()
             .sort({ createdAt: -1 })
             .limit(5)
             .populate("user", "name phone");
@@ -126,11 +133,15 @@ const getDashboardStats = async (req, res) => {
             cancelledOrders,
             completedOrders,
             earnings,
+            outForDeliveryOrders,
             recentOrders,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Dashboard error" });
+        res.status(500).json({
+            success: false,
+            message: "Dashboard error"
+        });
     }
 };
 

@@ -13,7 +13,7 @@ import ItemProduct from "./ItemProduct";
 import { useGetDashboardStatsQuery } from "../../src/redux/features/shop/shopApi";
 
 export default function AdminDashboard() {
-  const { data, isLoading, isError } = useGetDashboardStatsQuery();
+  const { data, isLoading } = useGetDashboardStatsQuery();
 
   if (isLoading)
     return (
@@ -36,6 +36,7 @@ export default function AdminDashboard() {
     cancelledOrders = 0,
     completedOrders = 0,
     earnings = 0,
+    outForDeliveryOrders = 0,
     recentOrders = [],
   } = data;
 
@@ -61,11 +62,11 @@ export default function AdminDashboard() {
         />
 
         <StatCard
-          title="Completed Orders"
-          value={completedOrders}
-          color="bg-gradient-to-r from-green-400 to-green-600"
-          border="border-green-400"
-          icon={<FaCheck />}
+          title="Out for Delivery"
+          value={outForDeliveryOrders}
+          color="bg-gradient-to-r from-orange-400 to-orange-600"
+          border="border-orange-400"
+          icon={<FaUtensils />}
         />
 
         <StatCard
@@ -74,6 +75,14 @@ export default function AdminDashboard() {
           color="bg-gradient-to-r from-red-400 to-red-600"
           border="border-red-400"
           icon={<FaTimes />}
+        />
+
+        <StatCard
+          title="Completed Orders"
+          value={completedOrders}
+          color="bg-gradient-to-r from-green-400 to-green-600"
+          border="border-green-400"
+          icon={<FaCheck />}
         />
 
         <StatCard
