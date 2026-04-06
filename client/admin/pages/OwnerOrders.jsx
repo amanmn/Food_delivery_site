@@ -18,7 +18,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
   const ownerId = user?._id;
 
-  const [localOrders, setLocalOrders] = useState([]);
+  // const [localOrders, setLocalOrders] = useState([]);
   const [updating, setUpdating] = useState(null);
 
   const safeOrders = Array.isArray(orders) ? orders : [];
@@ -38,9 +38,6 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
 
-  // Load orders from API
-  // const localOrders = ordersData?.orders || [];
-
   useEffect(() => {
     if (!socket) return;
 
@@ -48,11 +45,11 @@ const OwnerOrders = ({ orders = [], filter }) => {
       refetch();
     };
     socket.on("orderAssigned", handleUpdate);
-    socket.on("update-status", handleUpdate);
+    socket.on("orderStatusUpdated", handleUpdate);
 
     return () => {
       socket.off("orderAssigned", handleUpdate);
-      socket.off("update-status", handleUpdate);
+      socket.off("orderStatusUpdated", handleUpdate);
     };
   }, [socket, refetch]);
 
@@ -65,7 +62,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
   }
 
   // Filter orders for this owner
-  const ownerOrders = localOrders
+  const ownerOrders = (ordersData?.orders || [])
     .map((order) => ({
       ...order,
       shopOrders: order.shopOrders?.filter(
@@ -75,7 +72,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
       ),
     }))
     .filter((order) => order.shopOrders && order.shopOrders.length > 0);
-
+    
   const safeFilter = filter?.toLowerCase() ?? "all";
 
   const filteredOrders =

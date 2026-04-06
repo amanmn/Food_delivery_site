@@ -369,21 +369,6 @@ const updateOrderStatus = async (req, res) => {
           const candidates = availableDeliveryBoys.map(b => b._id);
           console.log(candidates, "candidates");
 
-          const io = req.app.get("io");
-
-          if (io && candidates.length > 0) {
-            candidates.forEach((boyId) => {
-              io.to(String(boyId)).emit("newBroadcastOrder", {
-                assignmentId: deliveryAssignment._id,
-                orderId: order._id,
-                shopOrderId: shopOrder._id,
-                shopName: shopOrder.shop,
-                deliveryAddress: order.deliveryAddress,
-                status: "broadcasted",
-              });
-            });
-          }
-
           if (candidates.length > 0) {
             const deliveryAssignment = await DeliveryAssignment.create({
               order: order._id,
@@ -395,6 +380,21 @@ const updateOrderStatus = async (req, res) => {
 
             // Assign the assignment id to the shopOrder (store ObjectId instead of full doc)
             shopOrder.assignment = deliveryAssignment._id;
+
+            const io = req.app.get("io");
+
+            if (io && candidates.length > 0) {
+              candidates.forEach((boyId) => {
+                io.to(String(boyId)).emit("newBroadcastOrder", {
+                  assignmentId: deliveryAssignment._id,
+                  orderId: order._id,
+                  shopOrderId: shopOrder._id,
+                  shopName: shopOrder.shop,
+                  deliveryAddress: order.deliveryAddress,
+                  status: "broadcasted",
+                });
+              });
+            }
 
             deliveryBoysPayload = availableDeliveryBoys.map(boy => ({
               id: String(boy._id),
@@ -762,7 +762,6 @@ module.exports = {
   verifyPayment,
   getMyOrders,
   updateOrderStatus,
-  // assignDeliveryBoyByOwner,
   getDeliveryBoyAssignment,
   acceptAssignment,
   getCutterntOrder,

@@ -4,7 +4,7 @@ const orderSlice = createSlice({
     name: "order",
     initialState: {
         orderplace: [],
-        myOrders: null,
+        myOrders: [],
     },
     reducers: {
         placeOrder: (state, action) => {
@@ -27,6 +27,7 @@ const orderSlice = createSlice({
         updateRealTimeOrderStatus: (state, action) => {
             const { orderId, shopOrderId, status } = action.payload;
             const order = state.myOrders?.find((ord) => ord._id === orderId);
+
             if (order) {
                 const shopOrder = order.shopOrders.find((so) => so._id === shopOrderId);
                 if (shopOrder) {

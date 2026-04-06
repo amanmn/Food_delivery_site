@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { AnimatePresence } from "framer-motion";
 import { useGetOrderItemsQuery } from "../redux/features/order/orderApi";
+import { setMyOrders } from "../redux/features/order/orderSlice";
 import UserOrders from "./UserOrders";
 import OwnerOrders from "../../admin/pages/OwnerOrders";
 import { useNavigate } from "react-router-dom";
@@ -9,14 +10,22 @@ import { useNavigate } from "react-router-dom";
 const MyOrders = () => {
   const [filter, setFilter] = useState("All");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { myOrders } = useSelector((state) => state.order);
 
-  const { data, isLoading, isError } = useGetOrderItemsQuery(undefined, {
+  const { data: ordersData, isLoading, isError } = useGetOrderItemsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
+  useEffect(() => {
+    if (ordersData?.orders) {
+      dispatch(setMyOrders(ordersData.orders));
+    }
+  }, [ordersData, dispatch]);
+
+  const orders = myOrders || [];
   const isOwner = user?.role === "owner";
-  const orders = data?.orders || [];
 
   if (isLoading)
     return (

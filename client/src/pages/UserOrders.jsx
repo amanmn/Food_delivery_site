@@ -1,12 +1,36 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { updateRealTimeOrderStatus } from "../redux/features/order/orderSlice";
+import { useEffect } from "react";
 
 const UserOrders = ({ orders = [], filter }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { socket } = useSelector((state) => state.user);
 
   if (!Array.isArray(orders)) return null;
 
-  
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleOrderStatusUpdate = (data) => {
+      console.log("📦 Real-time status update:", data);
+
+      dispatch(updateRealTimeOrderStatus({
+        orderId: data.orderId,
+        shopOrderId: data.shopOrderId,
+        status: data.status
+      }));
+    };
+
+    socket.on("orderStatusUpdated", handleOrderStatusUpdate);
+
+    return () => {
+      socket.off("orderStatusUpdated", handleOrderStatusUpdate);
+    };
+  }, [socket, dispatch]);
+
 
   // Filter orders based on shopOrder status
   const filteredOrders =
@@ -31,7 +55,7 @@ const UserOrders = ({ orders = [], filter }) => {
       {filteredOrders.map((order) => {
         // Calculate main status for this order
         const mainStatus =
-          order.shopOrders?.[0]?.status || "unknown";
+          order.shopOrders?.[order.shopOrders.length - 1]?.status || "pending";
 
         return (
           <motion.div
