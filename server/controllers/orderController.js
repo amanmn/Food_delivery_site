@@ -233,7 +233,6 @@ const getMyOrders = async (req, res) => {
     // const skip = (page - 1) * limit;
 
     if (user.role === "user") {
-      console.log("user");
 
       const orders = await Order.find({ user: req.userId })
         .sort({ createdAt: -1 })
@@ -265,10 +264,14 @@ const getMyOrders = async (req, res) => {
         orders,
       })
     } else if (user.role === "owner") {
-      console.log("owner");
 
-      console.log("Logged in user:", req.userId);
-      const orders = await Order.find({ "shopOrders.owner": new mongoose.Types.ObjectId(req.userId) })
+      const orders = await Order.find({
+        "shopOrders.owner": new mongoose.Types.ObjectId(req.userId),
+        $or: [
+          { paymentMethod: "cod" },        // ✅ show COD
+          { paymentMethod: "online", payment: true } // ✅ only paid online
+        ]
+      })
         .sort({ createdAt: -1 })
         .populate({
           path: "shopOrders",
@@ -316,9 +319,15 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order ID, shopOrder ID and status are required" });
     }
 
-    const order = await Order.findOne({ _id: orderId, "shopOrders.owner": ownerId });
+    const order = await Order.findOne({
+      _id: orderId,
+      "shopOrders.owner": ownerId
+    });
 
-    if (!order) return res.status(404).json({ success: false, message: "Order not found or unauthorized" });
+    if (!order) return res.status(404).json({
+      success: false,
+      message: "Order not found or unauthorized"
+    });
 
     const shopOrder = order.shopOrders.id(shopOrderId);
 
@@ -326,7 +335,6 @@ const updateOrderStatus = async (req, res) => {
 
     shopOrder.status = status;
     await order.save();
-
 
     let deliveryBoysPayload = [];
 
@@ -360,6 +368,21 @@ const updateOrderStatus = async (req, res) => {
 
           const candidates = availableDeliveryBoys.map(b => b._id);
           console.log(candidates, "candidates");
+
+          const io = req.app.get("io");
+
+          if (io && candidates.length > 0) {
+            candidates.forEach((boyId) => {
+              io.to(String(boyId)).emit("newBroadcastOrder", {
+                assignmentId: deliveryAssignment._id,
+                orderId: order._id,
+                shopOrderId: shopOrder._id,
+                shopName: shopOrder.shop,
+                deliveryAddress: order.deliveryAddress,
+                status: "broadcasted",
+              });
+            });
+          }
 
           if (candidates.length > 0) {
             const deliveryAssignment = await DeliveryAssignment.create({
@@ -423,32 +446,109 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// const assignDeliveryBoyByOwner = async (req, res) => {
+//   try {
+//     const { orderId, shopOrderId, deliveryBoyId } = req.body;
+//     const ownerId = req.userId;
+
+//     const order = await Order.findOne({
+//       _id: orderId,
+//       "shopOrders.owner": ownerId,
+//     });
+
+//     if (!order) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Order not found",
+//       });
+//     }
+
+//     const shopOrder = order.shopOrders.id(shopOrderId);
+
+//     if (!shopOrder) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Shop order not found",
+//       });
+//     }
+
+//     // Assign delivery boy
+//     shopOrder.assignedDeliveryBoy = deliveryBoyId;
+
+//     // Update assignment
+//     const assignment = await DeliveryAssignment.findOne({
+//       order: orderId,
+//       shopOrderId: shopOrderId,
+//     });
+
+//     if (assignment) {
+//       assignment.assignedTo = deliveryBoyId;
+//       assignment.status = "assigned";
+//       await assignment.save();
+//     }
+
+//     await order.save();
+
+//     // SOCKET PART - Notify the assigned delivery
+//     const io = req.app.get("io");
+
+//     if (io) {
+//       io.to(String(deliveryBoyId)).emit("orderAssigned", {
+//         orderId,
+//         shopOrderId,
+//         message: " New delivery assigned to you",
+//       });
+//     }
+
+//     await order.populate("shopOrders.assignedDeliveryBoy", "fullName phone");
+
+//     return res.status(200).json({
+//       success: true,
+//       shopOrder: order.shopOrders.id(shopOrderId),
+//     });
+
+//   } catch (error) {
+//     console.error("Assign Error:", error);
+//     res.status(500).json({ success: false });
+//   }
+// };
+
 const getDeliveryBoyAssignment = async (req, res) => {
   try {
     const deliveryBoyId = req.userId;
 
     const assignments = await DeliveryAssignment.find({
-      broadcastedTo: deliveryBoyId,
+      $or: [
+        { broadcastedTo: deliveryBoyId },
+        { assignedTo: deliveryBoyId }
+      ]
     })
       .populate("order")
       .populate("shop");
 
+    console.log(assignments, "assignments");
+
     const formated = assignments.map(a => {
+      if (!a.order) {
+        console.log("❌ Missing order in assignment:", a._id);
+        return null;
+      }
+
       const shopOrder = a.order?.shopOrders?.find(
         (shopOrder) => String(shopOrder._id) === String(a.shopOrderId)
       );
 
       return {
         assignmentId: a._id,
-        orderId: a.order._id,
+        orderId: a.order?._id,
         shopOrderId: a.shopOrderId,
-        shopName: a.shop.name,
-        deliveryAddress: a.order.deliveryAddress,
+        shopName: a.shop?.name || "N/A",
+        deliveryAddress: a.order?.deliveryAddress,
         items: shopOrder?.shopOrderItems || [],
         subtotal: shopOrder?.subtotal || 0,
         status: a.status,
       };
-    });
+    }).filter(Boolean); // Remove nulls
 
     return res.status(200).json(formated);
   } catch (error) {
@@ -647,6 +747,7 @@ module.exports = {
   verifyPayment,
   getMyOrders,
   updateOrderStatus,
+  // assignDeliveryBoyByOwner,
   getDeliveryBoyAssignment,
   acceptAssignment,
   getCutterntOrder,

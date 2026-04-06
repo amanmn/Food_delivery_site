@@ -31,6 +31,12 @@ export const shopApi = createApi({
       }),
       invalidatesTags: ["Shop"],
     }),
+    getDashboardStats: builder.query({
+      query: () => ({
+        url: "dashboard",
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -38,4 +44,5 @@ export const {
   useGetShopByCityQuery,
   useGetMyShopQuery,
   useCreateOrEditShopMutation,
+  useGetDashboardStatsQuery,
 } = shopApi;

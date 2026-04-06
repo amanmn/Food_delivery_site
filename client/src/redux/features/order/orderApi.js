@@ -54,6 +54,14 @@ export const orderApi = createApi({
                 { type: "Orders", id: "LIST" },
             ]
         }),
+        assignDeliveryBoy: builder.mutation({
+            query: (data) => ({
+                url: "assign-delivery-boy",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Orders"],
+        }),
         getDeliveryBoyAssignments: builder.query({
             query: () => "get-assignments",
             providesTags: ["Orders"],
@@ -92,6 +100,7 @@ export const orderApi = createApi({
 export const {
     usePlaceOrderMutation,
     useVerifyPaymentMutation,
+    useAssignDeliveryBoyMutation,
     useGetOrderItemsQuery,
     useUpdateOrderStatusMutation,
     useGetDeliveryBoyAssignmentsQuery,

@@ -69,8 +69,74 @@ const getShopByCity = async (req, res) => {
     }
 }
 
+const getDashboardStats = async (req, res) => {
+    try {
+        const ownerId = req.userId;
+
+        const totalOrders = await Order.countDocuments({
+            "shopOrders.owner": ownerId,
+        });
+
+        const runningOrders = await Order.countDocuments({
+            "shopOrders.owner": ownerId,
+            "shopOrders.status": { $in: ["pending", "preparing"] },
+        });
+
+        const cancelledOrders = await Order.countDocuments({
+            "shopOrders.owner": ownerId,
+            "shopOrders.status": "cancelled",
+        });
+
+        const completedOrders = await Order.countDocuments({
+            "shopOrders.owner": ownerId,
+            "shopOrders.status": "delivered",
+        });
+
+        // 💰 Earnings
+        const earningsData = await Order.aggregate([
+            { $unwind: "$shopOrders" },
+            {
+                $match: {
+                    "shopOrders.owner": new mongoose.Types.ObjectId(ownerId),
+                    "shopOrders.status": "delivered",
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$shopOrders.subtotal" },
+                },
+            },
+        ]);
+
+        const earnings = earningsData[0]?.total || 0;
+
+        // 🆕 Recent Orders
+        const recentOrders = await Order.find({
+            "shopOrders.owner": ownerId,
+        })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate("user", "name phone");
+
+        res.status(200).json({
+            success: true,
+            totalOrders,
+            runningOrders,
+            cancelledOrders,
+            completedOrders,
+            earnings,
+            recentOrders,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Dashboard error" });
+    }
+};
+
 module.exports = {
     createEditShop,
     getMyShop,
-    getShopByCity
+    getShopByCity,
+    getDashboardStats,
 }
