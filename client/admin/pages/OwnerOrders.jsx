@@ -18,7 +18,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
   const ownerId = user?._id;
 
-  // const [localOrders, setLocalOrders] = useState([]);
+  const [localOrders, setLocalOrders] = useState([]);
   const [updating, setUpdating] = useState(null);
 
   const safeOrders = Array.isArray(orders) ? orders : [];
@@ -39,28 +39,22 @@ const OwnerOrders = ({ orders = [], filter }) => {
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
 
   // Load orders from API
-  const localOrders = ordersData?.orders || [];
-
-  // Auto refresh
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (user?._id) refetch();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [user?._id, refetch]);
+  // const localOrders = ordersData?.orders || [];
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("orderAssigned", (data) => {
-      console.log("🚚 Order Assigned:", data);
+
+    const handleUpdate = () => {
       refetch();
-    });
+    };
+    socket.on("orderAssigned", handleUpdate);
+    socket.on("update-status", handleUpdate);
 
     return () => {
-      socket.off("orderAssigned");
+      socket.off("orderAssigned", handleUpdate);
+      socket.off("update-status", handleUpdate);
     };
-  }, [socket]);
+  }, [socket, refetch]);
 
   if (isLoading) {
     return (
@@ -106,30 +100,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
       }).unwrap();
 
       if (res.success) {
-        setLocalOrders((prev) =>
-          prev.map((order) =>
-            order._id === orderId
-              ? {
-                ...order,
-                shopOrders: order.shopOrders.map((so) =>
-                  so._id === shopOrderId
-                    ? {
-                      ...so,
-                      ...res.shopOrder,
-                      availableBoys:
-                        res.shopOrder?.availableBoys ??
-                        so.availableBoys ??
-                        [],
-                      assignedDeliveryBoy:
-                        res.shopOrder?.assignedDeliveryBoy,
-                      assignment: res.shopOrder?.assignment,
-                    }
-                    : so
-                ),
-              }
-              : order
-          )
-        );
+        refetch();
       }
     } catch (err) {
       console.error("Error updating status:", err);
@@ -137,23 +108,6 @@ const OwnerOrders = ({ orders = [], filter }) => {
       setUpdating(null);
     }
   };
-
-
-  // const handleAssignBoy = async (orderId, shopOrderId, deliveryBoyId) => {
-  //   try {
-  //     const res = await assignDeliveryBoy({
-  //       orderId,
-  //       shopOrderId,
-  //       deliveryBoyId
-  //     }).unwrap();
-
-  //     if (res.success) {
-  //       refetch(); // refresh UI
-  //     }
-  //   } catch (err) {
-  //     console.error("Assign error:", err);
-  //   }
-  // };
 
   if (filteredOrders.length === 0) {
     return (
@@ -247,11 +201,11 @@ const OwnerOrders = ({ orders = [], filter }) => {
                     {shopOrder.shopOrderItems?.map((item) => (
                       <div key={item._id} className="flex items-center gap-2">
                         <img
-                          src={item.item.image}
+                          src={item?.item?.image}
                           className="w-10 h-10 rounded object-cover"
                         />
                         <div className="text-xs">
-                          <p>{item.item.name}</p>
+                          <p>{item?.item?.name}</p>
                           <p className="text-gray-400">× {item.quantity}</p>
                         </div>
                       </div>

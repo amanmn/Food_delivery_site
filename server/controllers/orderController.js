@@ -424,11 +424,26 @@ const updateOrderStatus = async (req, res) => {
           { path: "broadcastedTo", select: "fullName name email phone profilePicture location" },
           { path: "assignedTo", select: "fullName name email phone profilePicture location" }
         ]
-      }
+      },
+      { path: "user", select: "socketId" }
     ]);
 
     const updatedShopOrder = order.shopOrders.id(shopOrderId);
     console.log("Updated Shop Order:", updatedShopOrder);
+
+    const io = req.app.get("io");
+    if (io) {
+      const userSocketId = updatedOrder.user?.socketId;
+      if (userSocketId) {
+        io.to(userSocketId).emit("orderStatusUpdated", {
+          orderId: updatedOrder._id,
+          shopOrderId: updatedShopOrder._id,
+          status: updatedShopOrder.status,
+          userId: updatedOrder.user._id
+        });
+      }
+    }
+
 
     res.status(200).json({
       success: true,

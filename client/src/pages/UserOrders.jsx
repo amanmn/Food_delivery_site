@@ -1,12 +1,12 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 
 const UserOrders = ({ orders = [], filter }) => {
   const navigate = useNavigate();
 
   if (!Array.isArray(orders)) return null;
+
+  
 
   // Filter orders based on shopOrder status
   const filteredOrders =
