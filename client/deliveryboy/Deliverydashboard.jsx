@@ -15,6 +15,7 @@ import {
   useSendDeliveryOtpMutation,
   useVerifyDeliveryOtpMutation,
 } from "../src/redux/features/order/orderApi";
+import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 const DeliveryDashboard = ({ deliveryBoy }) => {
   const dispatch = useDispatch();
@@ -24,8 +25,7 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   const [otpBox, setOtpBox] = useState(null);
   const [otp, setOtp] = useState("");
 
-  const { data: assignments = [], refetch } =
-    useGetDeliveryBoyAssignmentsQuery();
+  const { data: assignments = [], refetch } = useGetDeliveryBoyAssignmentsQuery();
 
   const [logoutUser] = useLogoutUserMutation();
   const [acceptAssignment] = useAcceptDeliveryAssignmentMutation();
@@ -36,6 +36,8 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   const broadcasted = assignments.filter((o) => o.status === "broadcasted");
   const assigned = assignments.filter((o) => o.status === "assigned");
   const completed = assignments.filter((o) => o.status === "completed");
+  const activeOrder = assigned[0]; // latest assigned order
+
 
   // 🔥 SOCKET EVENTS
   useEffect(() => {
@@ -84,127 +86,134 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
     activeTab === "broadcasted"
       ? broadcasted
       : activeTab === "assigned"
-      ? assigned
-      : completed;
+        ? assigned
+        : completed;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-white p-3 sm:p-6">
       {/* 🔥 HEADER */}
-      <div className="bg-white rounded-2xl shadow p-5 flex justify-between items-center mb-6">
-        <div className="flex gap-4 items-center">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white flex items-center justify-center text-xl font-bold">
+      <div className="bg-white rounded-2xl shadow p-4 flex justify-between items-center mb-4">
+
+        <div className="flex gap-3 items-center">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex items-center justify-center text-lg font-bold">
             {deliveryBoy?.name?.charAt(0)}
           </div>
+
           <div>
-            <h2 className="text-lg font-bold">{deliveryBoy?.name}</h2>
-            <p className="text-sm text-gray-500">{deliveryBoy?.phone}</p>
+            <h2 className="text-base font-semibold">{deliveryBoy?.name}</h2>
+            <p className="text-xs text-gray-500">{deliveryBoy?.phone}</p>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+          className="bg-red-500 text-white px-3 py-1.5 text-sm rounded-lg"
         >
           Logout
         </button>
       </div>
 
+      {activeOrder && (
+        <div className="mb-4">
+          <DeliveryBoyTracking
+            data={activeOrder}
+            deliveryBoy={deliveryBoy}
+          />
+        </div>
+      )}
+
       {/* 🔥 STATS */}
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         <StatCard title="New Orders" value={broadcasted.length} icon={<Clock />} color="blue" />
         <StatCard title="Active" value={assigned.length} icon={<Truck />} color="orange" />
         <StatCard title="Completed" value={completed.length} icon={<CheckCircle />} color="green" />
       </div>
 
       {/* 🔥 TABS */}
-      <div className="flex gap-3 mb-4">
-        {["broadcasted", "assigned", "completed"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-              activeTab === tab
-                ? "bg-blue-500 text-white"
-                : "bg-white shadow text-gray-600"
+      <div className="flex gap-2 mb-3 sticky top-0 bg-gray-100 py-2 z-10">        {["broadcasted", "assigned", "completed"].map((tab) => (
+        <button
+          key={tab}
+          onClick={() => setActiveTab(tab)}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === tab
+            ? "bg-blue-500 text-white"
+            : "bg-white shadow text-gray-600"
             }`}
-          >
-            {tab.toUpperCase()}
-          </button>
-        ))}
+        >
+          {tab.toUpperCase()}
+        </button>
+      ))}
       </div>
 
       {/* 🔥 CARDS */}
-      <div className="space-y-4">
-        {currentData.length === 0 ? (
-          <p className="text-gray-500 text-center">No orders</p>
-        ) : (
-          currentData.map((order) => (
-            <div
-              key={order.assignmentId}
-              className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
-            >
-              {/* HEADER */}
-              <div className="flex justify-between mb-2">
-                <h3 className="font-bold">
-                  #{order.assignmentId.slice(-5)}
-                </h3>
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">        {currentData.length === 0 ? (
+        <p className="text-gray-500 text-center">No orders</p>
+      ) : (
+        currentData.map((order) => (
+          <div
+            key={order.assignmentId}
+            className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
+          >
+            {/* HEADER */}
+            <div className="flex justify-between mb-2">
+              <h3 className="font-bold">
+                #{order.assignmentId.slice(-5)}
+              </h3>
 
-                <StatusBadge status={order.status} />
-              </div>
-
-              {/* ADDRESS */}
-              <p className="text-sm text-gray-600 flex items-center gap-2 mb-3">
-                <MapPin size={14} />
-                {order.deliveryAddress?.text}
-              </p>
-
-              {/* ACTIONS */}
-              {activeTab === "broadcasted" && (
-                <button
-                  onClick={() => handleAccept(order.assignmentId)}
-                  className="w-full bg-blue-500 text-white py-2 rounded-lg"
-                >
-                  Accept Delivery
-                </button>
-              )}
-
-              {activeTab === "assigned" && (
-                <>
-                  {otpBox !== order.assignmentId ? (
-                    <button
-                      onClick={() => handleSendOtp(order)}
-                      className="w-full bg-green-500 text-white py-2 rounded-lg"
-                    >
-                      Mark Delivered
-                    </button>
-                  ) : (
-                    <div className="mt-3">
-                      <input
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        placeholder="Enter OTP"
-                        className="w-full border p-2 rounded-lg mb-2"
-                      />
-                      <button
-                        onClick={() => handleVerifyOtp(order)}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg"
-                      >
-                        Confirm
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {activeTab === "completed" && (
-                <p className="text-green-600 font-semibold text-sm">
-                  ✅ Delivered
-                </p>
-              )}
+              <StatusBadge status={order.status} />
             </div>
-          ))
-        )}
+
+            {/* ADDRESS */}
+            <p className="text-sm text-gray-600 flex items-center gap-2 mb-3">
+              <MapPin size={14} />
+              {order.deliveryAddress?.text}
+            </p>
+
+            {/* ACTIONS */}
+            {activeTab === "broadcasted" && (
+              <button
+                onClick={() => handleAccept(order.assignmentId)}
+                className="w-full bg-blue-500 text-white py-2 rounded-lg"
+              >
+                Accept Delivery
+              </button>
+            )}
+
+            {activeTab === "assigned" && (
+              <>
+                {otpBox !== order.assignmentId ? (
+                  <button
+                    onClick={() => handleSendOtp(order)}
+                    className="w-full bg-green-500 text-white py-2 rounded-lg"
+                  >
+                    Mark Delivered
+                  </button>
+                ) : (
+                  <div className="mt-3">
+                    <input
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="Enter OTP"
+                      className="w-full border p-2 rounded-lg mb-2"
+                    />
+                    <button
+                      onClick={() => handleVerifyOtp(order)}
+                      className="w-full bg-green-600 text-white py-2 rounded-lg"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === "completed" && (
+              <p className="text-green-600 font-semibold text-sm">
+                ✅ Delivered
+              </p>
+            )}
+          </div>
+        ))
+      )}
       </div>
     </div>
   );

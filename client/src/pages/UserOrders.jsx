@@ -15,7 +15,6 @@ const UserOrders = ({ orders = [], filter }) => {
     if (!socket) return;
 
     const handleOrderStatusUpdate = (data) => {
-      console.log("📦 Real-time status update:", data);
 
       dispatch(updateRealTimeOrderStatus({
         orderId: data.orderId,

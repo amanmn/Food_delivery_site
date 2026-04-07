@@ -29,7 +29,10 @@ const DeliveryBoyTracking = ({ data, deliveryBoy }) => {
         [customerLat, customerLon]
     ]
 
-    const center = [deliveryBoyLat, deliveryBoyLon]
+    const center = [
+        (deliveryBoyLat + customerLat) / 2, (deliveryBoyLon + customerLon) / 2
+
+    ]
 
     return (
         <div className="w-full h-[400px] mt-3 rounded-xl overflow-hidden shadow-md">
@@ -50,7 +53,7 @@ const DeliveryBoyTracking = ({ data, deliveryBoy }) => {
                 <Marker position={[customerLat, customerLon]} icon={customerIcon}>
                     <Popup>Customer</Popup>
                 </Marker>
-                <Polyline positions={path} color="blue" weight={4}/>
+                <Polyline positions={path} color="blue" weight={4} />
             </MapContainer>
         </div>
     )

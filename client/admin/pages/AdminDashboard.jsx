@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { shopApi } from "../../src/redux/features/shop/shopApi";
 import {
   FaShoppingBag,
   FaDollarSign,
@@ -11,9 +13,33 @@ import StatCard from "../components/StatsCard";
 import OrderCard from "../components/OrderItem";
 import ItemProduct from "./ItemProduct";
 import { useGetDashboardStatsQuery } from "../../src/redux/features/shop/shopApi";
-
+import { useSelector } from "react-redux";
 export default function AdminDashboard() {
-  const { data, isLoading } = useGetDashboardStatsQuery();
+  const dispatch = useDispatch();
+  const { data, isLoading, refetch } = useGetDashboardStatsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+  const { socket } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDashboardUpdate = (newData) => {
+      console.log("Received dashboard update via socket:", newData);
+      dispatch(shopApi.util.updateQueryData(
+        "getDashboardStats",
+        undefined,
+        (draft) => {
+          Object.assign(draft, newData);
+        }));
+    };
+
+    socket.on("dashboardUpdate", handleDashboardUpdate);
+
+    return () => {
+      socket.off("dashboardUpdate", handleDashboardUpdate);
+    };
+  }, [socket, refetch]);
 
   if (isLoading)
     return (
@@ -22,13 +48,6 @@ export default function AdminDashboard() {
         Loading dashboard...
       </div>
     );
-  // if (isError || !data) {
-  //   return (
-  //     <div className="text-center text-red-500 mt-20">
-  //       Failed to load dashboard data
-  //     </div>
-  //   );
-  // }
 
   const {
     totalOrders = 0,
@@ -107,6 +126,7 @@ export default function AdminDashboard() {
                 key={order._id}
                 id={order._id}
                 name={order.user?.name}
+                amount={order.totalAmount}
                 address={order.deliveryAddress?.text}
                 time={new Date(order.createdAt).toLocaleString()}
               />

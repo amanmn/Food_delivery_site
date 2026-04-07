@@ -8,7 +8,7 @@ export const shopApi = createApi({
       : "/api/shop",
     credentials: "include",
   }),
-  tagTypes: ["Shop"],
+  tagTypes: ["Shop","Dashboard"],
   endpoints: (builder) => ({
     // Get shops by city (public)
     getShopByCity: builder.query({
@@ -36,7 +36,9 @@ export const shopApi = createApi({
         url: "dashboard",
         method: "GET",
       }),
+      providesTags: ["Shop"],
     }),
+
   }),
 });
 

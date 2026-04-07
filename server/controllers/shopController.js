@@ -78,18 +78,16 @@ const getDashboardStats = async (req, res) => {
         const totalOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
         });
-        console.log(totalOrders, "total orders");
+
         const runningOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
             "shopOrders.status": { $in: ["pending", "preparing"] },
         });
-        console.log(runningOrders, "running orders");
 
         const outForDeliveryOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
             "shopOrders.status": "out_for_delivery",
         });
-        console.log(outForDeliveryOrders, "out for delivery orders");
 
         const cancelledOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
@@ -125,6 +123,19 @@ const getDashboardStats = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(5)
             .populate("user", "name phone");
+
+        const io = req.app.get("io");
+        if (io) {
+            io.to(String(ownerId)).emit("dashboardUpdate", {
+                totalOrders,
+                runningOrders,
+                cancelledOrders,
+                completedOrders,
+                earnings,
+                outForDeliveryOrders,
+                recentOrders,
+            });
+        }
 
         res.status(200).json({
             success: true,

@@ -33,7 +33,7 @@ export const orderApi = createApi({
                 method: "GET"
             }),
             providesTags: (result) =>
-                result
+                result?.orders
                     ? [
                         ...result.orders.map((ord) => ({
                             type: "Orders",
@@ -49,10 +49,7 @@ export const orderApi = createApi({
                 method: "PUT",
                 body: { orderId, shopOrderId, status },
             }),
-            invalidatesTags: (result, error, { orderId }) => [
-                { type: "Orders", id: orderId },
-                { type: "Orders", id: "LIST" },
-            ]
+            invalidatesTags: [{ type: "Orders", id: "LIST" }],
         }),
         assignDeliveryBoy: builder.mutation({
             query: (data) => ({

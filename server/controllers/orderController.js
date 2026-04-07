@@ -161,6 +161,8 @@ const placeOrder = async (req, res) => {
       });
     }
 
+    io.to(String(ownerId)).emit("dashboardUpdate");
+
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
@@ -366,6 +368,8 @@ const updateOrderStatus = async (req, res) => {
           const busyIdSet = new Set(busyIds.map(id => String(id)));
           const availableDeliveryBoys = nearByDeliveryBoys.filter(b => !busyIdSet.has(String(b._id)));
 
+          console.log("availableDeliveryBoys", availableDeliveryBoys);
+
           const candidates = availableDeliveryBoys.map(b => b._id);
           console.log(candidates, "candidates");
 
@@ -433,6 +437,7 @@ const updateOrderStatus = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
+      // emit update to user
       const userSocketId = updatedOrder.user?.socketId;
       if (userSocketId) {
         io.to(userSocketId).emit("orderStatusUpdated", {
@@ -442,6 +447,19 @@ const updateOrderStatus = async (req, res) => {
           userId: updatedOrder.user._id
         });
       }
+
+      // emit update to shop owner
+      const ownerId = updatedShopOrder.owner;
+
+      if (ownerId) {
+        io.to(String(ownerId)).emit("orderStatusUpdated", {
+          orderId: updatedOrder._id,
+          shopOrderId: updatedShopOrder._id,
+          status: updatedShopOrder.status,
+        });
+      }
+
+      io.to(String(ownerId)).emit("dashboardUpdate");
     }
 
 
@@ -460,73 +478,6 @@ const updateOrderStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "order status error" });
   }
 };
-
-// const assignDeliveryBoyByOwner = async (req, res) => {
-//   try {
-//     const { orderId, shopOrderId, deliveryBoyId } = req.body;
-//     const ownerId = req.userId;
-
-//     const order = await Order.findOne({
-//       _id: orderId,
-//       "shopOrders.owner": ownerId,
-//     });
-
-//     if (!order) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Order not found",
-//       });
-//     }
-
-//     const shopOrder = order.shopOrders.id(shopOrderId);
-
-//     if (!shopOrder) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Shop order not found",
-//       });
-//     }
-
-//     // Assign delivery boy
-//     shopOrder.assignedDeliveryBoy = deliveryBoyId;
-
-//     // Update assignment
-//     const assignment = await DeliveryAssignment.findOne({
-//       order: orderId,
-//       shopOrderId: shopOrderId,
-//     });
-
-//     if (assignment) {
-//       assignment.assignedTo = deliveryBoyId;
-//       assignment.status = "assigned";
-//       await assignment.save();
-//     }
-
-//     await order.save();
-
-//     // SOCKET PART - Notify the assigned delivery
-//     const io = req.app.get("io");
-
-//     if (io) {
-//       io.to(String(deliveryBoyId)).emit("orderAssigned", {
-//         orderId,
-//         shopOrderId,
-//         message: " New delivery assigned to you",
-//       });
-//     }
-
-//     await order.populate("shopOrders.assignedDeliveryBoy", "fullName phone");
-
-//     return res.status(200).json({
-//       success: true,
-//       shopOrder: order.shopOrders.id(shopOrderId),
-//     });
-
-//   } catch (error) {
-//     console.error("Assign Error:", error);
-//     res.status(500).json({ success: false });
-//   }
-// };
 
 const getDeliveryBoyAssignment = async (req, res) => {
   try {

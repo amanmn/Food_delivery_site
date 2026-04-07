@@ -21,14 +21,13 @@ const OwnerOrders = ({ orders = [], filter }) => {
   // const [localOrders, setLocalOrders] = useState([]);
   const [updating, setUpdating] = useState(null);
 
-  const safeOrders = Array.isArray(orders) ? orders : [];
-
   const {
     data: ordersData,
     isLoading,
     refetch,
   } = useGetOrderItemsQuery(undefined, {
     skip: !ownerId,
+    refetchOnMountOrArgChange: true,
   });
 
   // const [assignDeliveryBoy, { isLoading: assigning }] =
@@ -41,15 +40,22 @@ const OwnerOrders = ({ orders = [], filter }) => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleUpdate = () => {
+    const handleNewOrder = (newOrder) => {
+      console.log("🔥 New Order Received:", newOrder);
       refetch();
-    };
-    socket.on("orderAssigned", handleUpdate);
-    socket.on("orderStatusUpdated", handleUpdate);
+    }
+
+    const handleStatusUpdate = (data) => {
+      console.log("📦 Real-time status update:", data);
+      refetch();
+    }
+
+    socket.on("newOrder", handleNewOrder);
+    socket.on("orderStatusUpdated", handleStatusUpdate);
 
     return () => {
-      socket.off("orderAssigned", handleUpdate);
-      socket.off("orderStatusUpdated", handleUpdate);
+      socket.off("newOrder", handleNewOrder);
+      socket.off("orderStatusUpdated", handleStatusUpdate);
     };
   }, [socket, refetch]);
 
@@ -72,7 +78,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
       ),
     }))
     .filter((order) => order.shopOrders && order.shopOrders.length > 0);
-    
+
   const safeFilter = filter?.toLowerCase() ?? "all";
 
   const filteredOrders =
