@@ -362,7 +362,7 @@ const updateOrderStatus = async (req, res) => {
 
           const busyIds = await DeliveryAssignment.find({
             assignedTo: { $in: nearByIds },
-            status: { $nin: ["broadcasted", "completed"] }
+            status: { $ne: "completed" }
           }).distinct("assignedTo");
 
           const busyIdSet = new Set(busyIds.map(id => String(id)));
@@ -371,7 +371,7 @@ const updateOrderStatus = async (req, res) => {
           console.log("availableDeliveryBoys", availableDeliveryBoys);
 
           const candidates = availableDeliveryBoys.map(b => b._id);
-          console.log(candidates, "candidates");
+          console.log("Broadcasting to:", candidates);
 
           if (candidates.length > 0) {
             const deliveryAssignment = await DeliveryAssignment.create({
@@ -417,6 +417,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     shopOrder.availableBoys = deliveryBoysPayload;
+    console.log("Updated Shop Order before saving:", shopOrder);
     await order.save();
 
     const updatedOrder = await order.populate([
@@ -482,19 +483,25 @@ const updateOrderStatus = async (req, res) => {
 const getDeliveryBoyAssignment = async (req, res) => {
   try {
     const deliveryBoyId = req.userId;
-
     const assignments = await DeliveryAssignment.find({
       $or: [
-        { broadcastedTo: deliveryBoyId },
-        { assignedTo: deliveryBoyId }
+        {
+          broadcastedTo: deliveryBoyId,
+          status: "broadcasted"
+        },
+        {
+          assignedTo: deliveryBoyId,
+          status: { $in: ["assigned"] }
+        }
       ]
     })
       .populate("order")
       .populate("shop");
 
-    console.log(assignments, "assignments");
+    // console.log(assignments, "assignments");
+    const validAssignments = assignments.filter(a => a.order);
 
-    const formated = assignments.map(a => {
+    const formated = validAssignments.map(a => {
       if (!a.order) {
         console.log("❌ Missing order in assignment:", a._id);
         return null;
@@ -526,7 +533,8 @@ const acceptAssignment = async (req, res) => {
   try {
     const { assignmentId } = req.params;
     const assignment = await DeliveryAssignment.findById(assignmentId)
-    // console.log(assignment, "DeliveryAssignment");
+    console.log("assignment to accept", assignment);
+
 
     if (!assignment) {
       return res.status(404).json({ message: "Assignment not found" })
@@ -534,6 +542,12 @@ const acceptAssignment = async (req, res) => {
 
     if (assignment.status !== "broadcasted") {
       return res.status(400).json({ message: "Assignment is expired" })
+    }
+
+    if (!assignment.broadcastedTo.includes(req.userId)) {
+      return res.status(403).json({
+        message: "You are not eligible for this order"
+      });
     }
 
     const alreadyAssignment = await DeliveryAssignment.findOne({
@@ -545,21 +559,62 @@ const acceptAssignment = async (req, res) => {
       return res.status(400).json({ message: "You already have assigned to another order" })
     }
 
-    assignment.assignedTo = req.userId;
-    assignment.status = 'assigned';
-    assignment.acceptedAt = new Date();
-    await assignment.save();
+
+    // prevent second acceptance
+    const updated = await DeliveryAssignment.findOneAndUpdate(
+      {
+        _id: assignmentId,
+        status: "broadcasted"
+      },
+      {
+        assignedTo: req.userId,
+        status: "assigned",
+        acceptedAt: new Date()
+      },
+      { new: true }
+    );
+
+    console.log("Updated Assignment after acceptance:", updated);
+
+    if (!updated) {
+      return res.status(400).json({
+        message: "Order already accepted by someone else"
+      });
+    }
+    // assignment.broadcastedTo = [req.userId];
+    // await assignment.save();
+
+    if (io) {
+      updated.broadcastedTo.forEach((boyId) => {
+        if (String(boyId) !== String(req.userId)) {
+          io.to(String(boyId)).emit("assignmentCancelled", {
+            assignmentId: updated._id,
+          });
+        }
+      });
+    }
 
     const order = await Order.findById(assignment.order)
     if (!order) return res.status(400).json({ message: "order not found" })
 
     const shopOrder = order.shopOrders.find(so => String(so._id) === String(assignment.shopOrderId))
+    console.log("shopOrder", shopOrder);
+
 
     shopOrder.assignedDeliveryBoy = req.userId
     console.log(shopOrder.assignedDeliveryBoy, "assignedDeliveryBoy");
 
     await order.save()
     await order.populate('shopOrders.assignedDeliveryBoy')
+    const io = req.app.get("io");
+
+    assignment.broadcastedTo.forEach((boyId) => {
+      if (String(boyId) !== String(req.userId)) {
+        io.to(String(boyId)).emit("assignmentCancelled", {
+          assignmentId: assignment._id
+        });
+      }
+    });
 
     return res.json({
       success: true,
@@ -680,33 +735,95 @@ const sendDeliveryOtp = async (req, res) => {
 const verifyDeliveryOtp = async (req, res) => {
   try {
     const { orderId, shopOrderId, otp } = req.body;
+
     const order = await Order.findById(orderId);
     const shopOrder = order.shopOrders.id(shopOrderId);
+
     if (!order || !shopOrder) {
       return res.status(400).json({ message: "Enter valid orderId or shopOrderId" });
     }
     if (shopOrder.deliveryOtp !== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or Expired OTP" });
     }
+
     shopOrder.status = "delivered";
     shopOrder.deliveredAt = Date.now();
     shopOrder.deliveryOtp = null;
     shopOrder.otpExpires = null;
     await order.save();
 
-    await DeliveryAssignment.deleteOne({
+    const assignment = await DeliveryAssignment.findOne({
       shopOrderId: shopOrder._id,
       order: order._id,
-      assignedTo: shopOrder.assignedDeliveryBoy
-    })
+      // assignedTo: shopOrder.assignedDeliveryBoy
+    });
+    if (!assignment) {
+      console.log("❌ Assignment not found for shopOrder", shopOrder._id);
+    } else {
+      assignment.status = "completed";
+      assignment.completedAt = new Date();
+      await assignment.save();
+    }
+    console.log("✅ Assignment marked completed:", assignment._id);
 
+    await order.save();
 
+    const io = req.app.get("io");
+    if (io) {
+      io.to(String(order.user.socketId)).emit("orderStatusUpdated", {
+        orderId: order._id,
+        status: "completed"
+      });
+
+      // notify delivery boy
+      io.to(String(shopOrder.assignedDeliveryBoy)).emit("orderCompleted", {
+        orderId: order._id,
+        shopOrderId: shopOrder._id,
+      });
+      // notify owner also
+      const shopOwnerId = shopOrder.owner;
+
+      if (shopOwnerId) {
+        io.to(String(shopOwnerId)).emit("orderStatusUpdated", {
+          orderId: order._id,
+          shopOrderId: shopOrder._id,
+          status: "delivered",
+        });
+
+        io.to(String(shopOwnerId)).emit("dashboardUpdate");
+      }
+    }
 
     return res.status(200).json({ success: true, message: "OTP verified, order marked as delivered" });
   } catch (error) {
     return res.status(500).json({ success: false, message: "verify Delivery Otp error" });
   }
 }
+
+const getDeliveryStats = async (req, res) => {
+  const deliveryBoyId = req.userId;
+
+  const totalDeliveries = await DeliveryAssignment.countDocuments({
+    assignedTo: deliveryBoyId,
+    status: "completed",
+  });
+
+  const todayDeliveries = await DeliveryAssignment.countDocuments({
+    deliveryBoy: deliveryBoyId,
+    status: "completed",
+    createdAt: {
+      $gte: new Date().setHours(0, 0, 0, 0),
+    },
+  });
+
+  const earnings = totalDeliveries * 40; // example
+
+  res.json({
+    totalDeliveries,
+    todayDeliveries,
+    earnings,
+  });
+};
 
 module.exports = {
   placeOrder,
@@ -718,5 +835,6 @@ module.exports = {
   getCutterntOrder,
   getOrderById,
   sendDeliveryOtp,
-  verifyDeliveryOtp
+  verifyDeliveryOtp,
+  getDeliveryStats
 };

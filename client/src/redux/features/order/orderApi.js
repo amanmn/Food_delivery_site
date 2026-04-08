@@ -32,16 +32,19 @@ export const orderApi = createApi({
                 url: "orders",
                 method: "GET"
             }),
-            providesTags: (result) =>
-                result?.orders
-                    ? [
-                        ...result.orders.map((ord) => ({
-                            type: "Orders",
-                            id: ord._id
-                        })),
-                        { type: "Orders", id: "LIST" },
-                    ]
-                    : [{ type: "Orders", id: "LIST" }],
+            providesTags: (result) => {
+                if (!result || !result.orders) {
+                    return [{ type: "Orders", id: "LIST" }];
+                }
+
+                return [
+                    ...result.orders.map((ord) => ({
+                        type: "Orders",
+                        id: ord._id,
+                    })),
+                    { type: "Orders", id: "LIST" },
+                ];
+            },
         }),
         updateOrderStatus: builder.mutation({
             query: ({ orderId, shopOrderId, status }) => ({
@@ -91,6 +94,9 @@ export const orderApi = createApi({
             }),
             invalidatesTags: ["Orders"],
         }),
+        getDeliveryStats: builder.query({
+            query: () => "delivery/stats",
+        }),
     }),
 });
 
@@ -104,5 +110,6 @@ export const {
     useAcceptDeliveryAssignmentMutation,
     useGetOrderByIdQuery,
     useSendDeliveryOtpMutation,
-    useVerifyDeliveryOtpMutation
+    useVerifyDeliveryOtpMutation,
+    useGetDeliveryStatsQuery
 } = orderApi;

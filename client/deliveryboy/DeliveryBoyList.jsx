@@ -2,7 +2,12 @@ import React from "react";
 import DeliveryBoyCard from "./DeliveryBoyCard";
 
 const DeliveryBoyList = ({ boys }) => {
+    const { socket } = useSelector((state) => state.user);
     const safeBoys = Array.isArray(boys) ? boys : [];
+
+    socket.on("assignmentCancelled", ({ assignmentId }) => {
+        setAssignments(prev => prev.filter(a => a.assignmentId !== assignmentId));
+    });
 
     return (
         <div className="mt-4 p-3 bg-white border rounded-2xl shadow-inner">

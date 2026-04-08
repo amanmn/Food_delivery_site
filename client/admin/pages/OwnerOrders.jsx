@@ -22,13 +22,10 @@ const OwnerOrders = ({ orders = [], filter }) => {
   const [updating, setUpdating] = useState(null);
 
   const {
-    data: ordersData,
-    isLoading,
-    refetch,
-  } = useGetOrderItemsQuery(undefined, {
-    skip: !ownerId,
-    refetchOnMountOrArgChange: true,
-  });
+    data: ordersData, isLoading, refetch } = useGetOrderItemsQuery(undefined, {
+      skip: !user || user.role !== "owner",
+      refetchOnMountOrArgChange: true,
+    });
 
   // const [assignDeliveryBoy, { isLoading: assigning }] =
   //   useAssignDeliveryBoyMutation();
@@ -41,7 +38,6 @@ const OwnerOrders = ({ orders = [], filter }) => {
     if (!socket) return;
 
     const handleNewOrder = (newOrder) => {
-      console.log("🔥 New Order Received:", newOrder);
       refetch();
     }
 
@@ -222,7 +218,10 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
                   <select
                     value={shopOrder.status}
-                    disabled={updating === shopOrder._id}
+                    disabled={updating === shopOrder._id ||
+                      shopOrder.status === "delivered" ||
+                      shopOrder.status === "out_for_delivery"
+                    }
                     onChange={(e) =>
                       handleStatusChange(
                         order._id,
@@ -235,13 +234,17 @@ const OwnerOrders = ({ orders = [], filter }) => {
                     <option value="pending">Pending</option>
                     <option value="preparing">Preparing</option>
                     <option value="out_for_delivery">Out for Delivery</option>
-                    <option value="delivered">Delivered</option>
                   </select>
 
                   <p className="text-green-600 font-semibold mt-2">
                     ₹{shopOrder.subtotal}
                   </p>
                 </div>
+                {shopOrder.status === "delivered" && (
+                  <p className="text-green-600 font-semibold mt-2">
+                    ✅ Delivered
+                  </p>
+                )}
 
                 {/* DELIVERY */}
                 <div>
@@ -263,6 +266,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
                       {shopOrder.availableBoys?.length > 0 ? (
                         shopOrder.availableBoys.map((boy) => (
+
                           <div
                             key={boy.id}
                             className="flex justify-between items-center bg-gray-50 p-2 rounded-lg hover:bg-gray-100"
@@ -275,20 +279,6 @@ const OwnerOrders = ({ orders = [], filter }) => {
                                 {boy.phone}
                               </p>
                             </div>
-
-                            {/* <button
-                              disabled={assigning}
-                              onClick={() =>
-                                handleAssignBoy(
-                                  order._id,
-                                  shopOrder._id,
-                                  boy.id
-                                )
-                              }
-                              className="bg-blue-500 text-white text-xs px-3 py-1 rounded hover:bg-blue-600"
-                            >
-                              {assigning ? "Assigning..." : "Assign"}
-                            </button> */}
                           </div>
                         ))
                       ) : (
