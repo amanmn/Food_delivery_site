@@ -1,4 +1,3 @@
-import React from "react";
 import DeliveryBoyCard from "./DeliveryBoyCard";
 
 const DeliveryBoyList = ({ boys }) => {

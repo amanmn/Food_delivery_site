@@ -6,10 +6,6 @@ import {
   useGetOrderItemsQuery,
   useUpdateOrderStatusMutation,
 } from "../../src/redux/features/order/orderApi";
-import { useGetDeliveryBoysQuery } from "../../src/redux/features/user/userApi";
-import DeliveryBoyList from "../../deliveryboy/DeliveryBoyList";
-import { FaBackwardStep } from "react-icons/fa6";
-import { useAssignDeliveryBoyMutation } from "../../src/redux/features/order/orderApi";
 
 const OwnerOrders = ({ orders = [], filter }) => {
   const navigate = useNavigate();
