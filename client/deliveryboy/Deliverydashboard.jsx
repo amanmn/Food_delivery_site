@@ -19,8 +19,8 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   const { socket } = useSelector((state) => state.user);
 
   const { data: assignments = [], refetch } = useGetDeliveryBoyAssignmentsQuery();
+  console.log("Current Assignments:", assignments);
   const { data: stats } = useGetDeliveryStatsQuery();
-
 
   const [logoutUser] = useLogoutUserMutation();
   const [acceptAssignment] = useAcceptDeliveryAssignmentMutation();
@@ -35,34 +35,46 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
     (o) => o.status === "assigned"
   );
   const activeOrder = assigned.length > 0 ? assigned[0] : null;
-  const broadcasted =
-    assigned.length > 0
-      ? [] // hide if already assigned
-      : assignments.filter((o) => o.status === "broadcasted");
-
+  const broadcasted = assignments.filter(o => o.status === "broadcasted");
   const completed = assignments.filter(o => o.status === "completed");
 
   // SOCKET EVENTS
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("newBroadcastOrder", refetch);
-    socket.on("orderAssigned", refetch);
-    socket.on("orderCompleted", () => {
-      setOtpBox(null);   // hide OTP input
-      setOtp("");        // clear OTP
-      refetch();         // refresh orders
-    });
-    socket.on("assignmentCancelled", (data) => {
-      refetch();
-    });
-    return () => {
-      socket.off("newBroadcastOrder");
-      socket.off("orderAssigned");
-      socket.off("orderCompleted");
-      socket.off("assignmentCancelled");
+    const handleNewBroadcast = (data) => {
+      console.log("📦 New order for delivery:", data);
+      refetch(); // refresh list
     };
-  }, [socket]);
+
+    const handleAssignmentUpdate = (data) => {
+      console.log("📦 Assignment update:", data);
+      refetch();
+    };
+
+    const handleOrderCompleted = () => {
+      setOtpBox(null);
+      setOtp("");
+      refetch();
+    };
+    const handleAssignmentCancelled = () => {
+      setOtpBox(null);
+      setOtp("");
+      refetch();
+    };
+
+    socket.on("newBroadcastOrder", handleNewBroadcast);
+    socket.on("orderAssigned", handleAssignmentUpdate);
+    socket.on("orderCompleted", handleOrderCompleted);
+    socket.on("assignmentCancelled", handleAssignmentCancelled);
+
+    return () => {
+      socket.off("newBroadcastOrder", handleNewBroadcast);
+      socket.off("orderAssigned", handleAssignmentUpdate);
+      socket.off("orderCompleted");
+      socket.off("assignmentCancelled", handleAssignmentCancelled);
+    };
+  }, [socket, refetch]);
 
   // ACTIONS
   const handleLogout = async () => {

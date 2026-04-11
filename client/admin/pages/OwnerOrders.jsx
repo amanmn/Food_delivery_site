@@ -35,14 +35,17 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
     const handleNewOrder = (newOrder) => {
       refetch();
-    }
+    };
 
     const handleStatusUpdate = (data) => {
       console.log("📦 Real-time status update:", data);
       refetch();
-    }
+    };
 
-    socket.on("newOrder", handleNewOrder);
+    socket.on("newOrder", (data) => {
+      console.log("🔥 New order received:", data);
+      refetch();
+    });
     socket.on("orderStatusUpdated", handleStatusUpdate);
 
     return () => {
@@ -246,8 +249,14 @@ const OwnerOrders = ({ orders = [], filter }) => {
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Delivery</p>
 
-                  {/* ASSIGNED */}
-                  {shopOrder.assignedDeliveryBoy ? (
+                  {/* ✅ If delivered */}
+                  {shopOrder.status === "delivered" ? (
+                    <p className="text-green-600 font-semibold text-sm">
+                      ✅ Delivered
+                    </p>
+
+                  ) : shopOrder.assignedDeliveryBoy ? (
+                    /* ✅ Assigned */
                     <div className="bg-green-50 p-3 rounded-lg">
                       <p className="font-semibold text-green-700 text-sm">
                         {shopOrder.assignedDeliveryBoy.fullName ||
@@ -257,33 +266,34 @@ const OwnerOrders = ({ orders = [], filter }) => {
                         {shopOrder.assignedDeliveryBoy.phone}
                       </p>
                     </div>
+
                   ) : shopOrder.status === "out_for_delivery" ? (
+                    /* ✅ SHOW AVAILABLE BOYS */
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
 
                       {shopOrder.availableBoys?.length > 0 ? (
                         shopOrder.availableBoys.map((boy) => (
-
                           <div
                             key={boy.id}
-                            className="flex justify-between items-center bg-gray-50 p-2 rounded-lg hover:bg-gray-100"
+                            className="flex justify-between items-center bg-blue-50 p-2 rounded-lg"
                           >
                             <div>
                               <p className="text-xs font-medium">
                                 {boy.fullName}
                               </p>
-                              <p className="text-[10px] text-gray-400">
-                                {boy.phone}
+                              <p className="text-[10px] text-gray-500">
+                                📞 {boy.phone}
                               </p>
                             </div>
                           </div>
                         ))
                       ) : (
                         <p className="text-xs text-gray-400">
-                          No delivery boys nearby
+                          No delivery boys available
                         </p>
                       )}
-
                     </div>
+
                   ) : (
                     <p className="text-xs text-gray-400">
                       Not assigned yet

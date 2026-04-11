@@ -100,11 +100,11 @@ const placeOrder = async (req, res) => {
         payment: false,
       });
 
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { $push: { orders: newOrder._id } },
-        { new: true }
-      );
+      // const updatedUser = await User.findByIdAndUpdate(
+      //   userId,
+      //   { $push: { orders: newOrder._id } },
+      //   { new: true }
+      // );
 
       return res.status(200).json({
         success: true,
@@ -145,7 +145,8 @@ const placeOrder = async (req, res) => {
 
     if (io) {
       newOrder.shopOrders.forEach((shopOrder) => {
-        const ownerId = shopOrder.owner;
+        const ownerId = shopOrder.owner?._id || shopOrder.owner;
+
         if (ownerId) {
           io.to(String(ownerId)).emit("newOrder", {
             orderId: newOrder._id,
@@ -157,11 +158,12 @@ const placeOrder = async (req, res) => {
             payment: newOrder.payment,
             message: "You have a new order!",
           });
+
+          io.to(String(ownerId)).emit("dashboardUpdate");
         }
       });
     }
 
-    io.to(String(ownerId)).emit("dashboardUpdate");
 
     res.status(201).json({
       success: true,
@@ -215,6 +217,39 @@ const verifyPayment = async (req, res) => {
 
     await order.populate("shopOrders.shopOrderItems.item", "name image price");
     await order.populate("shopOrders.shop", "name");
+
+    const userId = order.user;
+    try {
+      await Cart.findOneAndDelete({ user: userId });
+      await User.findByIdAndUpdate(userId, { $unset: { cart: "" } });
+    } catch (err) {
+      console.error("Error clearing cart after online payment:", err);
+    }
+
+    const io = req.app.get("io");
+
+    if (io) {
+      await order.populate("shopOrders.shop");
+      await order.populate("user");
+
+      order.shopOrders.forEach((shopOrder) => {
+        const ownerId = shopOrder.owner?._id || shopOrder.owner;
+
+        if (ownerId) {
+          io.to(String(ownerId)).emit("newOrder", {
+            orderId: order._id,
+            paymentMethod: order.paymentMethod,
+            user: order.user,
+            shopOrders: shopOrder,
+            createdAt: order.createdAt,
+            deliveryAddress: order.deliveryAddress,
+            payment: order.payment,
+          });
+
+          io.to(String(ownerId)).emit("dashboardUpdate");
+        }
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -417,7 +452,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     shopOrder.availableBoys = deliveryBoysPayload;
-    console.log("Updated Shop Order before saving:", shopOrder);
+    // console.log("Updated Shop Order before saving:", shopOrder);
     await order.save();
 
     const updatedOrder = await order.populate([
@@ -483,14 +518,18 @@ const updateOrderStatus = async (req, res) => {
 const getDeliveryBoyAssignment = async (req, res) => {
   try {
     const deliveryBoyId = req.userId;
+    const deliveryBoyObjectId = new mongoose.Types.ObjectId(deliveryBoyId);
+    console.log("dboid", deliveryBoyObjectId);
+
+
     const assignments = await DeliveryAssignment.find({
       $or: [
         {
-          broadcastedTo: deliveryBoyId,
+          broadcastedTo: deliveryBoyObjectId,
           status: "broadcasted"
         },
         {
-          assignedTo: deliveryBoyId,
+          assignedTo: deliveryBoyObjectId,
           status: { $in: ["assigned"] }
         }
       ]
@@ -533,7 +572,7 @@ const acceptAssignment = async (req, res) => {
   try {
     const { assignmentId } = req.params;
     const assignment = await DeliveryAssignment.findById(assignmentId)
-    console.log("assignment to accept", assignment);
+    // console.log("assignment to accept", assignment);
 
 
     if (!assignment) {
@@ -559,7 +598,6 @@ const acceptAssignment = async (req, res) => {
       return res.status(400).json({ message: "You already have assigned to another order" })
     }
 
-
     // prevent second acceptance
     const updated = await DeliveryAssignment.findOneAndUpdate(
       {
@@ -584,37 +622,43 @@ const acceptAssignment = async (req, res) => {
     // assignment.broadcastedTo = [req.userId];
     // await assignment.save();
 
-    if (io) {
-      updated.broadcastedTo.forEach((boyId) => {
-        if (String(boyId) !== String(req.userId)) {
-          io.to(String(boyId)).emit("assignmentCancelled", {
-            assignmentId: updated._id,
-          });
-        }
-      });
-    }
-
     const order = await Order.findById(assignment.order)
     if (!order) return res.status(400).json({ message: "order not found" })
 
-    const shopOrder = order.shopOrders.find(so => String(so._id) === String(assignment.shopOrderId))
-    console.log("shopOrder", shopOrder);
-
+    const shopOrder = order.shopOrders.find(
+      so => String(so._id) === String(updated.shopOrderId)
+    );
 
     shopOrder.assignedDeliveryBoy = req.userId
     console.log(shopOrder.assignedDeliveryBoy, "assignedDeliveryBoy");
+    shopOrder.status = "out_for_delivery";
 
     await order.save()
-    await order.populate('shopOrders.assignedDeliveryBoy')
-    const io = req.app.get("io");
+    const updatedShopOrder = await Order.findById(order._id)
+      .populate("shopOrders.assignedDeliveryBoy", "fullName phone");
 
-    assignment.broadcastedTo.forEach((boyId) => {
-      if (String(boyId) !== String(req.userId)) {
-        io.to(String(boyId)).emit("assignmentCancelled", {
-          assignmentId: assignment._id
+    const io = req.app.get("io");
+    const ownerId = updatedShopOrder.owner;
+
+    if (io) {
+      if (ownerId) {
+        io.to(String(ownerId)).emit("orderStatusUpdated", {
+          orderId: order._id,
+          shopOrderId: updatedShopOrder._id,
+          assignedDeliveryBoy: updatedShopOrder.assignedDeliveryBoy,
+          status: updatedShopOrder.status,
+          assignedDeliveryBoy: { _id: req.userId },
         });
       }
-    });
+      assignment.broadcastedTo.forEach((boyId) => {
+        if (String(boyId) !== String(req.userId)) {
+          io.to(String(boyId)).emit("assignmentCancelled", {
+            assignmentId: assignment._id
+          });
+        }
+      });
+      io.to(String(ownerId)).emit("dashboardUpdate");
+    }
 
     return res.json({
       success: true,
