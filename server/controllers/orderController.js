@@ -789,7 +789,7 @@ const verifyDeliveryOtp = async (req, res) => {
     if (shopOrder.deliveryOtp !== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or Expired OTP" });
     }
-
+    order.payment = true; // Mark payment as successful if not already
     shopOrder.status = "delivered";
     shopOrder.deliveredAt = Date.now();
     shopOrder.deliveryOtp = null;
