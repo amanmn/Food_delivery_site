@@ -11,7 +11,6 @@ const ActiveDeliveryScreen = ({
     otpBox,
 }) => {
     const [verifying, setVerifying] = useState(false);
-    const [error, setError] = useState("");
     return (
         <div className="p-3">
 
