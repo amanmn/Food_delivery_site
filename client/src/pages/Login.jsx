@@ -61,10 +61,10 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href =
-      `${import.meta.env.VITE_BASEURL}/auth/google/callback`;
-  };
+const handleGoogleLogin = () => {
+  window.location.href =
+    `${import.meta.env.VITE_BASEURL}/auth/google?redirect=/profile`;
+};
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-pink-50 p-4">
