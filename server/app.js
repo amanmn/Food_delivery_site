@@ -34,6 +34,7 @@ app.use(
       "http://localhost:5173",
       process.env.FRONTEND_URL,
       "https://localhost:5173",
+      "https://food-delivery-site-opam.onrender.com",
     ],
     credentials: true,
   }));

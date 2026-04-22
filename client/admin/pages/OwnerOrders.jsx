@@ -239,11 +239,11 @@ const OwnerOrders = ({ orders = [], filter }) => {
                     ₹{shopOrder.subtotal}
                   </p>
                 </div>
-                {shopOrder.status === "delivered" && (
+                {/* {shopOrder.status === "delivered" && (
                   <p className="text-green-600 font-semibold mt-2">
                     ✅ Delivered
                   </p>
-                )}
+                )} */}
 
                 {/* DELIVERY */}
                 <div>
