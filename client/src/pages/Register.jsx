@@ -64,7 +64,8 @@ const Register = () => {
 
   const handleGoogleLogin = () => {
     if (registerIsLoading) return;
-    window.location.href = `/api/auth/google`;
+    window.location.href =
+      `${import.meta.env.VITE_BASEURL}/auth/google?redirect=/profile`;
   }
 
   return (
