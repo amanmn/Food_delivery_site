@@ -16,6 +16,7 @@ const io = new Server(server, {
       "http://localhost:5173",
       process.env.FRONTEND_URL,
       "https://localhost:5173",
+      "https://food-delivery-quickcart-ebon.vercel.app",
     ],
     credentials: true,
     methods: ['POST', 'GET', 'PUT', 'DELETE']
@@ -34,7 +35,7 @@ app.use(
       "http://localhost:5173",
       process.env.FRONTEND_URL,
       "https://localhost:5173",
-      "https://food-delivery-site-ebon.vercel.app",
+      "https://food-delivery-quickcart-ebon.vercel.app",
     ],
     credentials: true,
   }));
