@@ -61,9 +61,10 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_SERVERURL}/api/auth/google`;
-  }
+const handleGoogleLogin = () => {
+  window.location.href =
+    `${import.meta.env.VITE_BASEURL}/api/auth/google?redirect=/profile`;
+};
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-pink-50 p-4">
