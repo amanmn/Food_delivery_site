@@ -63,7 +63,7 @@ const Login = () => {
 
 const handleGoogleLogin = () => {
   window.location.href =
-    `${import.meta.env.VITE_BASEURL}/auth/google?redirect=/profile`;
+    `${import.meta.env.VITE_BASEURL}/auth/google`;
 };
 
   return (
