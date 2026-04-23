@@ -143,6 +143,8 @@ const searchItems = async (req, res) => {
             return res.status(400).json({ message: "query and city required" });
         }
 
+        const cleanQuery = query.trim().toLowerCase();
+
         // Get shops by city
         const shops = await Shop.find({ city })
             .select("_id name image")
@@ -153,9 +155,6 @@ const searchItems = async (req, res) => {
         const shopIds = shops.map(s => s._id);
 
         let items = [];
-
-        const cleanQuery = query.trim().toLowerCase();
-
         // First try text search
         items = await Item.find({
             shop: { $in: shopIds },
@@ -165,15 +164,16 @@ const searchItems = async (req, res) => {
             .populate("shop", "name image")
             .lean();
 
-        const escapeRegex = (text) =>
-            text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        if (items.length === 0) {
 
-        const safeQuery = escapeRegex(cleanQuery);
+            const escapeRegex = (text) =>
+                text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-        if (query.length < 3) {
+            const safeQuery = escapeRegex(cleanQuery);
+
             items = await Item.find({
                 shop: { $in: shopIds },
-                name: { $regex: `^${safeQuery}`, $options: "i" }
+                name: { $regex: safeQuery, $options: "i" }
             })
                 .limit(10)
                 .populate("shop", "name image")
@@ -182,11 +182,11 @@ const searchItems = async (req, res) => {
 
         return res.status(200).json(items);
 
-    } catch (error) {
-        return res.status(500).json({
-            message: `searchItems error ${error.message}`
-        })
-    }
+} catch (error) {
+    return res.status(500).json({
+        message: `searchItems error ${error.message}`
+    })
+}
 }
 
 module.exports = {
