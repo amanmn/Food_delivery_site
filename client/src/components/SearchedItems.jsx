@@ -8,6 +8,7 @@ import { setSearchQuery } from "../redux/features/user/userSlice";
 const SearchedItems = ({ onClick }) => {
     const city = useSelector((state) => state.user.city);
     const searchQuery = useSelector((state) => state.user.searchQuery);
+    const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
