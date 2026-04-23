@@ -29,7 +29,9 @@ const shopSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Item"
     }]
-}, { timestamps: true })
+}, { timestamps: true });
+
+shopSchema.index({ city: 1 });
 
 const Shop = mongoose.model("Shop", shopSchema);
 module.exports = Shop;

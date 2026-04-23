@@ -54,4 +54,6 @@ itemSchema.index({
     category: "text"
 });
 
+itemSchema.index({ name: 1 }); //for prefix search
+
 module.exports = mongoose.model("Item", itemSchema);

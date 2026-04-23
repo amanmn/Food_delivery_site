@@ -139,7 +139,9 @@ const getItemsByShop = async (req, res) => {
 const searchItems = async (req, res) => {
     try {
         const { query, city } = req.query;
-        if (!query || !city) return null;
+        if (!query || !city) {
+            return res.status(400).json({ message: "query and city required" });
+        }
 
         // Get shops by city
         const shops = await Shop.find({ city })
@@ -150,13 +152,24 @@ const searchItems = async (req, res) => {
 
         const shopIds = shops.map(s => s._id);
 
-        // Search items using - TEXT INDEX
-        const items = await Item.find({
-            shop: { $in: shopIds },
-            $text: { $search: query }
-        }).limit(10)
-            .populate("shop", "name image")
-            .lean();
+        let items;
+        if (query.length < 3) {
+            items = await Item.find({
+                shop: { $in: shopIds },
+                name: { $regex: `^${query}`, $options: "i" }
+            })
+                .limit(10)
+                .populate("shop", "name image")
+                .lean();
+        } else {
+            items = await Item.find({
+                shop: { $in: shopIds },
+                $text: { $search: query }
+            })
+                .limit(10)
+                .populate("shop", "name image")
+                .lean();
+        }
 
         return res.status(200).json(items);
 

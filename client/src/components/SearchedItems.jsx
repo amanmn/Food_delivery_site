@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -10,16 +11,19 @@ const SearchedItems = ({ onClick }) => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedQuery(searchQuery);
+        }, 300);
+    }, [searchQuery]);
+
     const handleClick = (item) => {
         console.log("CLICKED:", item._id);
 
         // 🔥 close search FIRST
         onClick?.();
         dispatch(setSearchQuery("")); // Clear search query in Redux
-        // 🔥 navigate AFTER
-        setTimeout(() => {
-            navigate(`/product/${item._id}`);
-        }, 100);
+        navigate(`/product/${item._id}`);
     };
 
     const {
@@ -28,19 +32,23 @@ const SearchedItems = ({ onClick }) => {
     } = useSearchItemsQuery(
         { query: searchQuery, city },
         {
-            skip: !city || !searchQuery || searchQuery.length < 2,
+            skip: !city || !debouncedQuery || debouncedQuery.length < 2,
         }
     );
 
     return (
         <>
             {isLoading && (
-                <p className="text-center text-lg text-gray-500">Searching...</p>
+                <div className="grid grid-cols-2 gap-4">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-40 bg-gray-200 animate-pulse rounded-xl" />
+                    ))}
+                </div>
             )}
 
             {/* 🔥 YOUR GRID (UNCHANGED) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
-                {!isLoading && updatedItemsList?.length > 0 ? (
+                {debouncedQuery.length >= 2 && !isLoading && updatedItemsList?.length > 0 ? (
                     updatedItemsList.map((item) => (
                         <div
                             onClick={() => handleClick(item)}
@@ -102,7 +110,7 @@ const SearchedItems = ({ onClick }) => {
                     ))
                 ) : (
                     <p className="text-center text-lg text-red-500 col-span-full">
-                        No items found yet.
+                        No results found
                     </p>
                 )}
             </div>
