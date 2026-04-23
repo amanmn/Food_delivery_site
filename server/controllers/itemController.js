@@ -152,19 +152,28 @@ const searchItems = async (req, res) => {
 
         const shopIds = shops.map(s => s._id);
 
-        let items;
+        let items = [];
+
+        const cleanQuery = query.trim().toLowerCase();
+
+        // First try text search
+        items = await Item.find({
+            shop: { $in: shopIds },
+            $text: { $search: cleanQuery }
+        })
+            .limit(10)
+            .populate("shop", "name image")
+            .lean();
+
+        const escapeRegex = (text) =>
+            text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        const safeQuery = escapeRegex(cleanQuery);
+
         if (query.length < 3) {
             items = await Item.find({
                 shop: { $in: shopIds },
-                name: { $regex: `^${query}`, $options: "i" }
-            })
-                .limit(10)
-                .populate("shop", "name image")
-                .lean();
-        } else {
-            items = await Item.find({
-                shop: { $in: shopIds },
-                $text: { $search: query }
+                name: { $regex: `^${safeQuery}`, $options: "i" }
             })
                 .limit(10)
                 .populate("shop", "name image")
