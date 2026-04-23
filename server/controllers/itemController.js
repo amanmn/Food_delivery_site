@@ -141,25 +141,29 @@ const searchItems = async (req, res) => {
         const { query, city } = req.query;
         if (!query || !city) return null;
 
-        const shops = await Shop.find({
-            city: { $regex: new RegExp(`${city}$`, "i") }
-        }).populate("items");   
-        if (!shops) return res.status(400).json({ message: "shops not found" });
+        // Get shops by city
+        const shops = await Shop.find({ city })
+            .select("_id name image")
+            .lean();
 
-        const shopIds = shops.map(shop => shop._id);
+        if (!shops.length) return res.status(400).json({ message: "No shops found" });
 
+        const shopIds = shops.map(s => s._id);
+
+        // Search items using - TEXT INDEX
         const items = await Item.find({
             shop: { $in: shopIds },
-            $or: [
-                { name: { $regex: query, $options: "i" } },
-                { category: { $regex: query, $options: "i" } }
-            ]
-        }).populate("shop", "name image");
+            $text: { $search: query }
+        }).limit(10)
+            .populate("shop", "name image")
+            .lean();
 
         return res.status(200).json(items);
 
     } catch (error) {
-        return res.status(500).json({ message: `searchItems error ${error}` })
+        return res.status(500).json({
+            message: `searchItems error ${error.message}`
+        })
     }
 }
 

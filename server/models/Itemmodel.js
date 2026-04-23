@@ -12,6 +12,7 @@ const itemSchema = new mongoose.Schema({
     shop: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Shop",
+        index: true,
     },
     category: {
         type: String,
@@ -28,7 +29,8 @@ const itemSchema = new mongoose.Schema({
             "Fast Food",
             "Others",
         ],
-        required: true
+        required: true,
+        index: true,
     },
     price: {
         type: Number,
@@ -38,7 +40,8 @@ const itemSchema = new mongoose.Schema({
     foodType: {
         type: String,
         enum: ["veg", "non veg"],
-        required: true
+        required: true,
+        index: true
     },
     rating: {
         average: { type: Number, default: 0 },
@@ -46,4 +49,9 @@ const itemSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-module.exports =mongoose.model("Item", itemSchema);
+itemSchema.index({
+    name: "text",
+    category: "text"
+});
+
+module.exports = mongoose.model("Item", itemSchema);
