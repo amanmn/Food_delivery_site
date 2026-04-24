@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User.js");
-const { generateToken, setTokenCookie } = require("../utils/generateToken");
+const { generateAccessToken, generateRefreshToken, setTokenCookie } = require("../utils/generateToken");
 const sendOtpNodeMailer = require("../utils/nodemailer.js");
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
@@ -62,14 +62,17 @@ const register = async (req, res) => {
 
         await user.save();
 
-        const token = generateToken({ id: user._id });
-        setTokenCookie(res, token);
+        const accessToken = generateAccessToken({ id: user._id });
+        const refreshToken = generateRefreshToken({ id: user._id });
+        setTokenCookie(res, accessToken);
+        setTokenCookie(res, refreshToken);
 
         // Return response
         return res.status(201).json({
             success: true,
             message: "User registered successfully.",
-            token,
+            token: accessToken,
+            refreshToken: refreshToken,
             user: {
                 id: user._id,
                 name: user.name,
@@ -104,8 +107,14 @@ const login = async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
 
-        const token = generateToken({ id: user._id, role: user.role });
-        setTokenCookie(res, token);
+        const accessToken = generateAccessToken({ id: user._id, role: user.role });
+        const refreshToken = generateRefreshToken({ id: user._id });
+
+        // store refresh token in redis
+        await redisClient.setEx(`refreshToken:${user._id}`, refreshToken, 7 * 24 * 60 * 60); // expires in 7 days
+
+        setTokenCookie(res, accessToken);
+        setTokenCookie(res, refreshToken);
 
         const userData = {
             id: user._id,
@@ -119,7 +128,8 @@ const login = async (req, res) => {
             success: true,
             message: "Login successfully",
             user: userData,
-            token,
+            token: accessToken,
+            refreshToken: refreshToken,
         });
 
     } catch (err) {
@@ -129,18 +139,20 @@ const login = async (req, res) => {
 
 // ✅ Logout Controller (Clear Cookie)
 const logout = (req, res) => {
-    try {
-        // clears cookies and expires immediately
-        res.clearCookie("token", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        });
-        return res.status(200).json({ success: true, message: "Logged out successfully" });
+    const token = req.cookies.refreshToken;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.REFRESH_SECRET);
+            await redisClient.del(`refreshToken:${decoded.id}`);
+        } catch (err) {
+            console.error("Error during logout token verification:", err.message);
+        }
     }
-    catch (error) {
-        return handleServerError(res, err, "Logout failed");
-    }
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({ success: true, message: "Logged out successfully" });
 
 };
 
@@ -163,14 +175,14 @@ const getMe = async (req, res) => {
 const sendOtpMail = async (req, res) => {
     try {
         const { email } = req.body;
-        // if (!email) return res.status(400).json({ success: false, message: "Email is required." })
 
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User does not exists." });
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-        user.resetOtp = otp;
+        const hashedOtp = await bcrypt.hash(otp, 10);
+        user.resetOtp = hashedOtp;
         user.otpExpires = Date.now() + OTP_TTL_MS;
         user.isOtpVerified = false;
         await user.save();

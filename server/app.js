@@ -72,7 +72,6 @@ const orderRoutes = require("./routes/orderRoutes");
 const mapRoutes = require("./routes/mapRoutes.js");
 const shopRoutes = require("./routes/shopRoute.js");
 const itemRoutes = require("./routes/itemRoutes.js");
-const redisClient = require("./config/redis.js");
 
 app.use("/api/auth", authRoutes);
 app.use("/api", googleOAuth);
@@ -83,20 +82,6 @@ app.use("/api/map", mapRoutes);
 
 app.use("/api/shop", shopRoutes);
 app.use("/api/item", itemRoutes);
-
-app.get("/redis-test", async (req, res) => {
-  try {
-    await redisClient.set("test", "working");
-    const data = await redisClient.get("test");
-
-    res.json({
-      message: "Redis working",
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 socketHandler(io);
 
