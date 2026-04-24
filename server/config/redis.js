@@ -1,7 +1,15 @@
 const { createClient } = require("redis");
 
 const redisClient = createClient({
-    url: process.env.REDIS_HOST
+    url: process.env.REDIS_URL,
+    socket: {
+        tls: true,                // for Redis Cloud
+        rejectUnauthorized: false,
+    },
+});
+
+redisClient.on("connect", () => {
+    console.log("Redis connected");
 });
 
 redisClient.on("error", (err) => {
@@ -9,14 +17,11 @@ redisClient.on("error", (err) => {
 });
 
 (async () => {
-    await redisClient.connect();
+    try {
+        await redisClient.connect();
+    } catch (err) {
+        console.error("Redis connection failed:", err);
+    }
 })();
-
-app.get("/redis-test", async (req, res) => {
-    await redisClient.set("test", "working");
-    const data = await redisClient.get("test");
-
-    res.json({ data });
-});
 
 module.exports = redisClient;
