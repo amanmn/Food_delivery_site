@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User.js");
 const { generateAccessToken, generateRefreshToken, setTokenCookie } = require("../utils/generateToken");
 const sendOtpNodeMailer = require("../utils/nodemailer.js");
+const redisClient = require("../config/redis.js");
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -91,7 +92,6 @@ const register = async (req, res) => {
     }
 };
 
-
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -137,7 +137,35 @@ const login = async (req, res) => {
     }
 };
 
-// ✅ Logout Controller (Clear Cookie)
+const refreshToken = async (req, res) => {
+    const oldRefreshToken = req.cookies.refreshToken;
+    if (!oldRefreshToken) {
+        return res.status(401).json({ success: false, message: "No token provided" });
+    }
+
+    try {
+        const decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET);
+        const storedToken = await redisClient.get(`refreshToken:${decoded.id}`);
+
+        if (!storedToken || storedToken !== oldRefreshToken) {
+            return res.status(403).json({ success: false, message: "Invalid refresh token" });
+        }
+
+        const newAccessToken = generateAccessToken({ id: decoded.id });
+        const newRefreshToken = generateRefreshToken({ id: decoded.id });
+
+        // replace old refresh token in redis
+        await redisClient.setEx(`refreshToken:${decoded.id}`, newRefreshToken, 7 * 24 * 60 * 60); // update refresh token in redis
+        setTokenCookie(res, newAccessToken);
+        setTokenCookie(res, newRefreshToken);
+        
+        return res.json({ success: true });
+
+    } catch (err) {
+        return handleServerError(res, err, "Token refresh failed");
+    }
+}
+
 const logout = (req, res) => {
     const token = req.cookies.refreshToken;
     if (token) {
@@ -199,26 +227,42 @@ const sendOtpMail = async (req, res) => {
         return res.status(200).json({ success: "true", message: "OTP sent successfully" });
     }
     catch (error) {
-        return handleServerError(res, err, "Send OTP failed");
+        return handleServerError(res, error, "Send OTP failed");
     }
 }
 
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
-        // if (!email || !otp) return res.status(400).json({ success: false, message: "Email and OTP are required." });
 
         const user = await User.findOne({ email });
-        if (!user || user.resetOtp != otp || user.otpExpires < Date.now()) return res.status(400).json({ success: false, message: "invalid or expired OTP." });
+
+        if (!user || user.otpExpires < Date.now()) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP expired or invalid"
+            });
+        }
+
+        const isValid = await bcrypt.compare(otp, user.resetOtp);
+        if (!isValid) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP"
+            });
+        }
 
         user.isOtpVerified = true;
         user.resetOtp = undefined;
         user.otpExpires = undefined;
         await user.save();
 
-        return res.status(200).json({ success: true, message: "OTP verified successfully.   " })
+        return res.status(200).json({
+            success: true,
+            message: "OTP verified successfully.   "
+        });
     } catch (error) {
-        return handleServerError(res, err, "Verify OTP failed");
+        return handleServerError(res, error, "Verify OTP failed");
     }
 }
 
@@ -241,13 +285,14 @@ const resetPassword = async (req, res) => {
 
         return res.status(200).json({ success: true, message: "password reset successfully" })
     } catch (error) {
-        return handleServerError(res, err, "Reset password failed");
+        return handleServerError(res, error, "Reset password failed");
     }
 }
 
 module.exports = {
     register,
     login,
+    refreshToken,
     logout,
     getMe,
     sendOtpMail,

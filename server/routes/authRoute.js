@@ -3,10 +3,9 @@ const router = express.Router();
 const { body } = require("express-validator");
 const validateRequest = require("../middleware/validateRequest");
 
-const { register, login, logout, getMe, sendOtpMail, verifyOtp, resetPassword } = require("../controllers/authController");
+const { register, login, logout, getMe, sendOtpMail, verifyOtp, resetPassword, refreshToken } = require("../controllers/authController");
 const { verifyToken } = require("../middleware/authmiddleware");
 
-// register route
 router.post(
     "/register",
     [
@@ -34,7 +33,6 @@ router.post(
     register
 );
 
-//  login route
 router.post(
     "/login",
     [
@@ -45,7 +43,8 @@ router.post(
     login
 );
 
-// logout protected
+router.post("/refresh-token", refreshToken);
+
 router.post("/logout", verifyToken, logout);
 
 // send-OTP route
