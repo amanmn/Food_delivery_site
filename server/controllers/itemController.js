@@ -145,12 +145,11 @@ const searchItems = async (req, res) => {
         }
 
         // Check RedisCache First
-        const cacheKey = `search:${city}:${query}`;
-        const cachedData = await redisClient.get(cacheKey);
+        const cacheKey = `search:${city.toLowerCase()}:${query.toLowerCase()}`;
+        const cached = await redisClient.get(cacheKey);
 
-        if (cachedData) {
-            console.log("Cache hit for key:", cacheKey);
-            return res.status(200).json(JSON.parse(cachedData));
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
         }
 
         const cleanQuery = query.trim().toLowerCase();
