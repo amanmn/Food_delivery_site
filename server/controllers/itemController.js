@@ -1,6 +1,7 @@
 const uploadOnCloudinary = require("../config/cloudinary");
 const Item = require("../models/Itemmodel");
 const Shop = require("../models/shopmodel");
+const redisClient = require("../config/redis");
 
 const addItem = async (req, res) => {
     try {
@@ -143,11 +144,22 @@ const searchItems = async (req, res) => {
             return res.status(400).json({ message: "query and city required" });
         }
 
+        // Check RedisCache First
+        const cacheKey = `search:${city}:${query}`;
+        const cachedData = await redisClient.get(cacheKey);
+
+        if (cachedData) {
+            console.log("Cache hit for key:", cacheKey);
+            return res.status(200).json(JSON.parse(cachedData));
+        }
+
         const cleanQuery = query.trim().toLowerCase();
 
         // Get shops by city
-        const shops = await Shop.find({ city })
-            .select("_id name image")
+        const shops = await Shop.find({
+            city: { $regex: `^${city}$`, $options: "i" }
+        })
+            .select("_id")
             .lean();
 
         if (!shops.length) return res.status(400).json({ message: "No shops found" });
@@ -180,13 +192,16 @@ const searchItems = async (req, res) => {
                 .lean();
         }
 
+        // Store in Redis Cache for 60 seconds
+        await redisClient.setEx(cacheKey, 60, JSON.stringify(items));
+
         return res.status(200).json(items);
 
-} catch (error) {
-    return res.status(500).json({
-        message: `searchItems error ${error.message}`
-    })
-}
+    } catch (error) {
+        return res.status(500).json({
+            message: `searchItems error ${error.message}`
+        })
+    }
 }
 
 module.exports = {
