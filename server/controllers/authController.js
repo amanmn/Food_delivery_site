@@ -167,7 +167,7 @@ const refreshToken = async (req, res) => {
     }
 }
 
-const logout = (req, res) => {
+const logout = async (req, res) => {
     const token = req.cookies.refreshToken;
     if (token) {
         try {
