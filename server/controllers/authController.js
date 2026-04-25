@@ -109,6 +109,7 @@ const login = async (req, res) => {
 
         const accessToken = generateAccessToken({ id: user._id, role: user.role });
         const refreshToken = generateRefreshToken({ id: user._id });
+        console.log("Generated Tokens:", { accessToken, refreshToken });
 
         // store refresh token in redis
         await redisClient.setEx(`refreshToken:${user._id}`, refreshToken, 7 * 24 * 60 * 60); // expires in 7 days
