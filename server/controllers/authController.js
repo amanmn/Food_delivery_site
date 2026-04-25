@@ -17,7 +17,6 @@ const handleServerError = (res, err, msg = "Server error") => {
 const register = async (req, res) => {
     try {
         const { name, email, password, phone, role } = req.body;
-        console.log(req.body);
 
         if (!name || !email || !password || !phone || !role) {
             return res.status(400).json({ success: false, message: "All fields are required." });
@@ -47,9 +46,6 @@ const register = async (req, res) => {
             password: hashedPassword,
         };
 
-        console.log("before", userData);
-
-
         // Handle location for deliveryBoy
         if (role === "deliveryBoy") {
             userData.location = {
@@ -59,21 +55,12 @@ const register = async (req, res) => {
         }
 
         const user = new User(userData);
-        console.log("after", user);
-
         await user.save();
-
-        const accessToken = generateAccessToken({ id: user._id });
-        const refreshToken = generateRefreshToken({ id: user._id });
-        setTokenCookie(res, accessToken);
-        setTokenCookie(res, refreshToken);
 
         // Return response
         return res.status(201).json({
             success: true,
             message: "User registered successfully.",
-            token: accessToken,
-            refreshToken: refreshToken,
             user: {
                 id: user._id,
                 name: user.name,
@@ -87,7 +74,6 @@ const register = async (req, res) => {
             return res.status(409).json({ success: false, message: "Email already in use." });
         }
 
-        console.error("Registration Error:", err);
         return handleServerError(res, err, "Registration failed");
     }
 };
@@ -112,10 +98,10 @@ const login = async (req, res) => {
         console.log("Generated Tokens:", { accessToken, refreshToken });
 
         // store refresh token in redis
-        await redisClient.setEx(`refreshToken:${user._id}`, refreshToken, 7 * 24 * 60 * 60); // expires in 7 days
+        await redisClient.setEx(`refreshToken:${user._id}`, 7 * 24 * 60 * 60, refreshToken); // expires in 7 days
 
-        setTokenCookie(res, accessToken);
-        setTokenCookie(res, refreshToken);
+        setTokenCookie(res, accessToken, "accessToken");
+        setTokenCookie(res, refreshToken, "refreshToken");
 
         const userData = {
             id: user._id,
@@ -156,10 +142,10 @@ const refreshToken = async (req, res) => {
         const newRefreshToken = generateRefreshToken({ id: decoded.id });
 
         // replace old refresh token in redis
-        await redisClient.setEx(`refreshToken:${decoded.id}`, newRefreshToken, 7 * 24 * 60 * 60); // update refresh token in redis
-        setTokenCookie(res, newAccessToken);
-        setTokenCookie(res, newRefreshToken);
-        
+        await redisClient.setEx(`refreshToken:${decoded.id}`, 7 * 24 * 60 * 60, newRefreshToken); // update refresh token in redis
+        setTokenCookie(res, newAccessToken, "accessToken");
+        setTokenCookie(res, newRefreshToken, "refreshToken");
+
         return res.json({ success: true });
 
     } catch (err) {
