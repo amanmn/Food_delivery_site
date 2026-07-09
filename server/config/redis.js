@@ -20,7 +20,8 @@ redisClient.on("error", (err) => {
     try {
         await redisClient.connect();
     } catch (err) {
-        console.error("Redis connection failed:", err);
+        // console.error("Redis connection failed:", err);
+        console.log("⚠️ Redis unavailable (Docker learning mode)");
     }
 })();
 
