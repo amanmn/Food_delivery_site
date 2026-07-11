@@ -91,7 +91,7 @@ const getDashboardStats = async (req, res) => {
 
         const cancelledOrders = await Order.countDocuments({
             "shopOrders.owner": ownerId,
-            "shopOrders.status": "cancelled",
+            "shopOrders.status": "canceled",
         });
 
         const completedOrders = await Order.countDocuments({
@@ -118,8 +118,10 @@ const getDashboardStats = async (req, res) => {
 
         const earnings = earningsData[0]?.total || 0;
 
-        // 🆕 Recent Orders
-        const recentOrders = await Order.find()
+        // Recent Orders
+        const recentOrders = await Order.find({
+            "shopOrders.owner": ownerId,
+        })
             .sort({ createdAt: -1 })
             .limit(5)
             .populate("user", "name phone");
