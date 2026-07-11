@@ -24,16 +24,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: ""  // URL to the profile image
   },
-  // address: [
-  //   {
-  //     label: { type: String, default: "Home" },
-  //     street: { type: String, required: true },
-  //     city: { type: String, required: true },
-  //     state: { type: String, required: true },
-  //     country: { type: String, required: true },
-  //     zipCode: { type: String, required: true }
-  //   },
-  // ],
+  address: [
+    {
+      label: { type: String, default: "Home" },
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      country: { type: String, required: true },
+      zipCode: { type: String, required: true }
+    },
+  ],
   cart: [
     {
       type: mongoose.Schema.Types.ObjectId,
