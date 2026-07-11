@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/add-item", verifyToken, ownerOnly, upload.single("image"), addItem)
 router.get("/get-item/:itemId", verifyToken, ownerOnly, getItemById);
 router.put("/edit-item/:itemId", verifyToken, ownerOnly, upload.single("image"), editItem)
-router.get("/delete-item/:itemId", verifyToken, ownerOnly, deleteItem);
+router.delete("/delete-item/:itemId", verifyToken, ownerOnly, deleteItem);
 
 router.get("/get-item-by-city/:city", getItemByCity);
 router.get("/get-item-by-shop/:shopId", getItemsByShop);

@@ -26,7 +26,18 @@ const socketHandler = (io) => {
         socket.on("deliveryLocationUpdate", async (data) => {
             try {
                 const userId = socket.userId;
+                if (!userId) return; // if userId not set, exit early
 
+                await User.findByIdAndUpdate(userId, {
+                    location: {
+                        type: "Point",
+                        coordinates: [data.longitude, data.latitude],
+                    },
+                    isOnline: true,
+                    socketId: socket.id,
+                });
+
+                // if currently assigned to an order
                 const assignment = await DeliveryAssignment.findOne({
                     assignedTo: userId,
                     status: "assigned",
@@ -45,19 +56,6 @@ const socketHandler = (io) => {
                     lat: data.latitude,
                     lon: data.longitude,
                 })
-                const user = await User.findByIdAndUpdate(userId, {
-                    location: {
-                        type: "Point",
-                        coordinates: [data.longitude, data.latitude],
-                    },
-                    isOnline: true,
-                    socketId: socket.id,
-                });
-
-                if (user) {
-
-                }
-
             } catch (err) {
                 console.error("Error updating user location:", err);
             }
