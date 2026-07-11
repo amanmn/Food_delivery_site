@@ -52,6 +52,15 @@ const editItem = async (req, res) => {
         const itemId = req.params.itemId;
 
         const { name, category, foodType, price } = req.body;
+
+        const shopForCheck = await Shop.findOne({ owner: req.userId });
+        if (!shopForCheck) return res.status(400).json({ message: "shop not found" });
+
+        const existingItem = await Item.findById(itemId);
+        if (!existingItem) return res.status(400).json({ message: "item not found" });
+        if (existingItem.shop.toString() !== shopForCheck._id.toString()) {
+            return res.status(403).json({ message: "You are not authorized to edit this item" });
+        }
         let image;
         if (req.file) {
             image = await uploadOnCloudinary(req.file.path);
@@ -81,12 +90,18 @@ const editItem = async (req, res) => {
 const deleteItem = async (req, res) => {
     try {
         const itemId = req.params.itemId;
-        const item = await Item.findByIdAndDelete(itemId);
-
-        if (!item) return res.status(400).json({ message: "item not found" })
-
         const shop = await Shop.findOne({ owner: req.userId });
+        if (!shop) return res.status(400).json({ message: "shop not found" });
 
+        const itemToDelete = await Item.findById(itemId);
+        if (!itemToDelete) return res.status(400).json({ message: "item not found" });
+        if (itemToDelete.shop.toString() !== shop._id.toString()) {
+            return res.status(403).json({ message: "You are not authorized to delete this item" });
+        }
+
+        const item = await Item.findByIdAndDelete(itemId);
+        if (!item) return res.status(400).json({ message: "item not found" });
+        
         shop.items = shop.items.filter(id => id.toString() !== item._id.toString());
         const existingItemIds = await Item.find({ _id: { $in: shop.items } }).select("_id");
         shop.items = existingItemIds.map(i => i._id);
