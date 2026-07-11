@@ -41,14 +41,14 @@ const socketHandler = (io) => {
                         lon: data.longitude,
                     });
                 }
-                io.to(socket.id).emit("deliveryLocationUpdate",{
+                io.to(socket.id).emit("deliveryLocationUpdate", {
                     lat: data.latitude,
                     lon: data.longitude,
                 })
                 const user = await User.findByIdAndUpdate(userId, {
                     location: {
                         type: "Point",
-                        coordinates: [data.latitude, data.longitude],
+                        coordinates: [data.longitude, data.latitude],
                     },
                     isOnline: true,
                     socketId: socket.id,

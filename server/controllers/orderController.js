@@ -24,7 +24,7 @@ const placeOrder = async (req, res) => {
   try {
     const { cartItems, paymentMethod, deliveryAddress, totalAmount } = req.body;
 
-    const userId = cartItems.user;
+    const userId = cartItems.userId;
 
     if (!cartItems || !cartItems.items || cartItems.items.length === 0) {
       return res.status(400).json({ success: false, message: "cart items is empty" });
@@ -33,8 +33,8 @@ const placeOrder = async (req, res) => {
     if (
       !deliveryAddress ||
       !deliveryAddress.text ||
-      !deliveryAddress.latitude ||
-      !deliveryAddress.longitude
+      typeof deliveryAddress.latitude !== "number" ||
+      typeof deliveryAddress.longitude !== "number"
     ) {
       return res
         .status(400)
@@ -221,7 +221,10 @@ const verifyPayment = async (req, res) => {
     const userId = order.user;
     try {
       await Cart.findOneAndDelete({ user: userId });
-      await User.findByIdAndUpdate(userId, { $unset: { cart: "" } });
+      await User.findByIdAndUpdate(userId, {
+        $unset: { cart: "" },
+        $addToSet: { orders: order._id }
+      });
     } catch (err) {
       console.error("Error clearing cart after online payment:", err);
     }
@@ -278,7 +281,7 @@ const getMyOrders = async (req, res) => {
           populate: [
             { path: "shop", select: "name" },
             { path: "shopOrderItems.item", select: "name image price" },
-            { path: "assignedDeliveryBoy", select: "fullName email phone latitude longitude " },
+            { path: "assignedDeliveryBoy", select: "name email phone location" },
             {
               path: "assignment",
               populate: [
@@ -676,13 +679,13 @@ const getCutterntOrder = async (req, res) => {
     const assignment = await DeliveryAssignment.findOne({
       assignedTo: req.userId,
       status: { $in: ["assigned"] }
-        .populate("shop", "name")
-        .populate("assignedTo", "name phone location")
-        .populate({
-          path: "order",
-          populate: [{ path: "user", select: "name email phone location", }]
-        })
     })
+      .populate("shop", "name")
+      .populate("assignedTo", "name phone location")
+      .populate({
+        path: "order",
+        populate: [{ path: "user", select: "name email phone location", }]
+      })
 
     if (!assignment) {
       return res.status(400).json({ message: "assignment not found" })
@@ -758,9 +761,13 @@ const sendDeliveryOtp = async (req, res) => {
     console.log(req.body, "sendDeliveryOtp");
 
     const order = await Order.findById(orderId).populate("user");
+    if (!order) {
+      return res.status(400).json({ message: "Enter valid orderId or shopOrderId" });
+    }
+
     const shopOrder = order.shopOrders.id(shopOrderId);
 
-    if (!order || !shopOrder) {
+    if (!shopOrder) {
       return res.status(400).json({ message: "Enter valid orderId or shopOrderId" });
     }
 
@@ -780,12 +787,16 @@ const verifyDeliveryOtp = async (req, res) => {
   try {
     const { orderId, shopOrderId, otp } = req.body;
 
-    const order = await Order.findById(orderId);
-    const shopOrder = order.shopOrders.id(shopOrderId);
-
-    if (!order || !shopOrder) {
+    const order = await Order.findById(orderId).populate("user");
+    if (!order) {
       return res.status(400).json({ message: "Enter valid orderId or shopOrderId" });
     }
+
+    const shopOrder = order.shopOrders.id(shopOrderId);
+    if (!shopOrder) {
+      return res.status(400).json({ message: "Enter valid orderId or shopOrderId" });
+    }
+    
     if (shopOrder.deliveryOtp !== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or Expired OTP" });
     }
@@ -853,7 +864,7 @@ const getDeliveryStats = async (req, res) => {
   });
 
   const todayDeliveries = await DeliveryAssignment.countDocuments({
-    deliveryBoy: deliveryBoyId,
+    assignedTo: deliveryBoyId,
     status: "completed",
     createdAt: {
       $gte: new Date().setHours(0, 0, 0, 0),

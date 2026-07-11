@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const JWT_SECRET = process.env.SECRET_KEY;
+const JWT_SECRET = process.env.ACCESS_SECRET;
 
 const unauthorized = (res, msg = 'Not authenticated') => res.status(401).json({ success: false, message: msg });
 
@@ -8,8 +8,8 @@ const verifyToken = async (req, res, next) => {
   try {
     let token = null;
 
-    if (req.cookies?.token) {
-      token = req.cookies.token;
+    if (req.cookies?.accessToken) {
+      token = req.cookies.accessToken;
     } else if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
