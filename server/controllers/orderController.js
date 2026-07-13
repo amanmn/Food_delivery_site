@@ -24,7 +24,9 @@ const placeOrder = async (req, res) => {
   try {
     const { cartItems, paymentMethod, deliveryAddress, totalAmount } = req.body;
 
-    const userId = cartItems.userId;
+
+    const userId = cartItems.user || req.userId;   //userId from cartItems if available, otherwise req.userId
+    console.log("placeOrder called with:", { userId, cartItems, paymentMethod, deliveryAddress, totalAmount });
 
     if (!cartItems || !cartItems.items || cartItems.items.length === 0) {
       return res.status(400).json({ success: false, message: "cart items is empty" });
@@ -100,11 +102,11 @@ const placeOrder = async (req, res) => {
         payment: false,
       });
 
-      // const updatedUser = await User.findByIdAndUpdate(
-      //   userId,
-      //   { $push: { orders: newOrder._id } },
-      //   { new: true }
-      // );
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $push: { orders: newOrder._id } },
+        { new: true }
+      );
 
       return res.status(200).json({
         success: true,
@@ -132,6 +134,7 @@ const placeOrder = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
+
     // Remove user's Cart now that the order was placed
     try {
       await Cart.findOneAndDelete({ user: userId });
@@ -796,7 +799,7 @@ const verifyDeliveryOtp = async (req, res) => {
     if (!shopOrder) {
       return res.status(400).json({ message: "Enter valid orderId or shopOrderId" });
     }
-    
+
     if (shopOrder.deliveryOtp !== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or Expired OTP" });
     }
