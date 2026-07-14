@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User.js");
 const { generateAccessToken, generateRefreshToken, setTokenCookie } = require("../utils/generateToken");
-const sendOtpNodeMailer = require("../utils/nodemailer.js");
+const { sendOtpNodeMailer } = require("../utils/nodemailer.js");
 const redisClient = require("../config/redis.js");
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
@@ -192,6 +192,7 @@ const sendOtpMail = async (req, res) => {
         const { email } = req.body;
 
         const user = await User.findOne({ email });
+        console.log("user:", user);
         if (!user) return res.status(404).json({ success: false, message: "User does not exists." });
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -201,7 +202,7 @@ const sendOtpMail = async (req, res) => {
         user.otpExpires = Date.now() + OTP_TTL_MS;
         user.isOtpVerified = false;
         await user.save();
-
+        console.log(`Generated OTP for ${user.email}: ${otp} (expires in 5 minutes)`);
         try {
             await sendOtpNodeMailer(email, otp);
         } catch (mailerErr) {

@@ -61,7 +61,7 @@ export const authApi = createApi({
       }),
       invalidatesTags: ["Auth"],
     }),
-    // ✅ fetch logged in user from backend
+    // fetch logged in user from backend
     getMe: builder.query({
       query: () => "me",
       transformResponse: (response) => response?.user ?? null,
