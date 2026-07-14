@@ -12,18 +12,8 @@ const Menu = ({ items: shopItems, mode, loading }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // 🏙️ Get user's current city from Redux
   const { city } = useSelector((state) => state.user);
   const isShopPage = mode === "shop";
-
-  if (mode === "shop" && loading) {
-    return (
-      <p className="text-center my-10 text-lg font-medium">
-        Loading shop items...
-      </p>
-    );
-  }
 
   const {
     data: cityItems,
@@ -112,6 +102,14 @@ const Menu = ({ items: shopItems, mode, loading }) => {
     setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
     toast.info(`Quantity updated to ${newQuantity}`);
   };
+
+  if (mode === "shop" && loading) {
+    return (
+      <p className="text-center my-10 text-lg font-medium">
+        Loading shop items...
+      </p>
+    );
+  }
 
   // Loading / Error States
   if (!city && !isShopPage) {

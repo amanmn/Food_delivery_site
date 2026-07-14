@@ -11,7 +11,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
 // import { useGetMeQuery } from "./redux/features/auth/authApi";
-import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
+// import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserQuery } from "./redux/features/user/userApi";
 import { updateUserProfile } from "./redux/features/user/userSlice";
 
