@@ -13,10 +13,15 @@ export default defineConfig(({ mode }) => {
       //   cert: fs.readFileSync("./localhost+1.pem"),
       // },
       https: false,
-      host: process.env.DOCKER ? "0.0.0.0" : "localhost",
+      host: "0.0.0.0",
       port: 5173,
 
-      // 🔥 PROXY MUST BE HERE
+      watch: {
+        usePolling: true,
+        interval: 1000,
+      },
+
+      // PROXY MUST BE HERE
       proxy: {
         "/api": {
           // target: "https://fooddeliveryhub.duckdns.org",
