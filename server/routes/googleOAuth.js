@@ -1,5 +1,5 @@
 const express = require("express");
-const { generateToken, setTokenCookie } = require("../utils/generateToken");
+const { generateAccessToken, setTokenCookie } = require("../utils/generateToken");
 const router = express.Router();
 const passport = require("passport");
 
@@ -17,12 +17,15 @@ router.get('/auth/google/callback',
     (req, res) => {
         // Successful authentication.
         // Option A: Issue JWT and set as httpOnly cookie
+
         const user = req.user;
         console.log("google-auth-user", user);
 
-        const token = generateToken({ id: user._id });
+        const token = generateAccessToken({ id: user._id });
 
-        setTokenCookie(res, token);
+        setTokenCookie(res, token, "accessToken");
+        console.log("Cookie set successfully");
+
 
         // Redirect to frontend route that knows how to handle logged-in user
         res.redirect(`${process.env.FRONTEND_URL}/auth/success`);
@@ -34,7 +37,7 @@ router.get('/auth/failure', (req, res) => res.send('Google auth failed'));
 
 // Logout (clear cookie and optionally revoke refresh token)
 router.post('/auth/logout', (req, res) => {
-    res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
+    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax' });
     req.logout?.(); // if using session
     res.json({ ok: true });
 });

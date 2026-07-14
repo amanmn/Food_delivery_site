@@ -7,6 +7,7 @@ passport.use(new GoogleStrategy({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: process.env.GOOGLE_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
+    console.log("Google profile:", profile);
     try {
         let user = await User.findOne({ googleId: profile.id });
 
@@ -20,7 +21,7 @@ passport.use(new GoogleStrategy({
             });
         }
 
-        done(null, user); // must pass user object to done
+        done(null, user); // pass user object to done
     } catch (err) {
         done(err, null);
     }
