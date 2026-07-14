@@ -10,7 +10,7 @@ import { io } from "socket.io-client";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
 
-import { useGetMeQuery } from "./redux/features/auth/authApi";
+// import { useGetMeQuery } from "./redux/features/auth/authApi";
 import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserQuery } from "./redux/features/user/userApi";
 import { updateUserProfile } from "./redux/features/user/userSlice";
@@ -44,19 +44,19 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 
 function App() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { data, isSuccess, isError, isLoading } = useGetMeQuery();
+  // const navigate = useNavigate();
+  // const { data, isSuccess, isError, isLoading } = useGetMeQuery();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    if (isSuccess && data) {
-      dispatch(userLoggedIn(data));
+  // useEffect(() => {
+  //   if (isSuccess && data) {
+  //     dispatch(userLoggedIn(data));
 
-    } else if (isError) {
-      dispatch(userLoggedOut());
-      navigate("/");
-    }
-  }, [isSuccess, isError, data, dispatch]);
+  //   } else if (isError) {
+  //     dispatch(userLoggedOut());
+  //     navigate("/");
+  //   }
+  // }, [isSuccess, isError, data, dispatch]);
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 

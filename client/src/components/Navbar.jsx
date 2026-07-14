@@ -69,9 +69,11 @@ const Navbar = () => {
   });
 
   const cartItems = cartData?.items || [];
-  const totalQuantity = new Set(
-    cartItems.map((item) => item.product?._id || item.product)
-  ).size;
+  // const totalQuantity = new Set(
+  //   cartItems.map((item) => item.product?._id || item.product)
+  // ).size;
+
+  const totalQuantity = cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
 
   // logout mutation
   const [logoutUser] = useLogoutUserMutation();
@@ -324,7 +326,7 @@ const Navbar = () => {
       <LocationModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        onSetLocation={(location) => dispatch(setCity(location))}
+        // onSetLocation={(location) => dispatch(setCity(location))}
       />
     </nav >
   );
