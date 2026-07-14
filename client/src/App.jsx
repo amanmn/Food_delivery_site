@@ -65,7 +65,7 @@ function App() {
 
   useEffect(() => {
     console.log("App component :", {
-      data,
+      user,
       isAuthenticated
     });
   }, []);
