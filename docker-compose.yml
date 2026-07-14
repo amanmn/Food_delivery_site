@@ -42,6 +42,8 @@ services:
       - /app/node_modules
     depends_on:
       - backend
+    environment:
+      DOCKER: "true"
 
 volumes:
   mongodb_data:

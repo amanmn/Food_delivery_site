@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
       //   cert: fs.readFileSync("./localhost+1.pem"),
       // },
       https: false,
-      host: "localhost",
+      host: process.env.DOCKER ? "0.0.0.0" : "localhost",
       port: 5173,
 
       // 🔥 PROXY MUST BE HERE
