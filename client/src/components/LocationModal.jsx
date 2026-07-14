@@ -44,7 +44,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
     try {
       const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(manualLocation)}&apiKey=${geoapikey}`);
       const data = await res.json();
-      // console.log(data.results[0].city);
+      console.log(data.results[0].city);
       // setManualLocation(data);
       setSuggestions(data.results || []);
     } catch (error) {
