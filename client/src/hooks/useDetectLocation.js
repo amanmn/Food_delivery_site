@@ -25,17 +25,22 @@ const useDetectLocation = () => {
             `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${APIKEY}`
           );
           const data = await res.json();
-          console.log("address", data.results[0]);
+          const result = data.results?.[0];
 
-          const city = data.results[0]?.city || data.results[0]?.county || "Unknown";
+          if (!result) {
+            toast.error("Could not resolve address for this location");
+            return;
+          }
+
+          const city = result.city || result.country;
+          const state = result.state || "Unknown";
+          const address = result.address_line2 || result.formatted;
           console.log("city", city);
-          const state = data.results[0]?.state || "Unknown";
-          const address = data.results[0]?.address_line2 || data.results[0]?.formatted
 
           dispatch(setCity(city));
           dispatch(setState(state));
           dispatch(updateSelectedAddress(address))
-          dispatch(setAddress(data?.results[0].address_line2))
+          dispatch(setAddress(address));
 
           toast.success(`Location detected ${city}`);
         } catch (error) {
@@ -66,13 +71,13 @@ const useDetectLocation = () => {
     );
   };
 
-useEffect(() => {
-  if (!city) {
-    detectLocation()
-  }
-}, [city]);
+  useEffect(() => {
+    if (!city) {
+      detectLocation()
+    }
+  }, [city]);
 
-return detectLocation;
+  return detectLocation;
 };
 
 export default useDetectLocation;

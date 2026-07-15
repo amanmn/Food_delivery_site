@@ -3,50 +3,55 @@ import { IoMdClose } from "react-icons/io";
 import { GoLocation } from "react-icons/go";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { setCity } from "../redux/features/user/userSlice";
+import { setCity, setState, updateSelectedAddress } from "../redux/features/user/userSlice";
+import { setAddress } from "../redux/features/location/locationSlice";
 import useDetectLocation from "../hooks/useDetectLocation";
 
 const LocationModal = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
   const geoapikey = import.meta.env.VITE_GEOAPIKEY;
-  const { user } = useSelector((state) => state.auth);
   const { address } = useSelector((state) => state.location);
   const [manualLocation, setManualLocation] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const detectLocation = useDetectLocation();
+  // const { user } = useSelector((state) => state.auth);
 
   const handleDetect = async () => {
     await detectLocation();
     setIsOpen(false);
   };
 
-  // Handle selecting a suggestion
-  const handleSuggestionClick = (place) => {
-    const selected = place.display_name;
-    dispatch(setCity(selected));
+  const applyPlace = (cityName, stateName, addressText) => {
+    dispatch(setCity(cityName));
+    dispatch(setState(stateName || "Unknown"));
+    dispatch(updateSelectedAddress(addressText));
+    dispatch(setAddress(addressText));
     setManualLocation("");
     setSuggestions([]);
     setIsOpen(false);
-    toast.success("Location selected");
+    toast.success(`${cityName} selected as your location`);
   };
 
-  // Handle outside click
+  const handleSuggestionClick = (place) => {
+    const cityName = place.city || place.county || place.formatted;
+    applyPlace(cityName, place.state, place.address_line2 || place.formatted);
+  };
 
-  const fetchSuggestions = async () => {
-    if (manualLocation.trim() === "") {
+  const fetchSuggestions = async (query) => {
+    if (!query || query.trim() === "") {
       setSuggestions([]);
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(manualLocation)}&apiKey=${geoapikey}`);
+      const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(query)}&format=json&apiKey=${geoapikey}`
+      );
       const data = await res.json();
       console.log(data.results[0].city);
-      // setManualLocation(data);
-      setSuggestions(data.results || []);
+      setSuggestions(data?.results || []);
     } catch (error) {
       console.error("Failed to fetch suggestions", error);
       toast.error("Failed to fetch suggestions");
@@ -56,10 +61,13 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
   };
 
   useEffect(() => {
-    setManualLocation(address);
-    const debounce = setTimeout(fetchSuggestions, 1000);
+    if (!manualLocation || manualLocation.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const debounce = setTimeout(() => fetchSuggestions(manualLocation), 500);
     return () => clearTimeout(debounce);
-  }, [address]);
+  }, [manualLocation]);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -94,7 +102,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
           type="text"
           aria-label="Search location"
           autoFocus
-          disabled={loading}
+          // disabled={loading}
           value={manualLocation}
           onChange={(e) => setManualLocation(e.target.value)}
           placeholder="Search or type your city"
@@ -102,13 +110,10 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
         />
 
         {/* Manual city confirm button */}
-        {manualLocation && suggestions.length === 0 && (
+        {manualLocation && !loading && suggestions.length === 0 && (
           <button
             onClick={() => {
-              dispatch(setCity(manualLocation.trim()));
-              setManualLocation("");
-              setIsOpen(false);
-              toast.success("City saved manually");
+              applyPlace(manualLocation.trim(), "Unknown", manualLocation.trim());
             }}
             className="mt-3 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
           >
@@ -128,7 +133,7 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
                 onClick={() => handleSuggestionClick(place)}
                 className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm"
               >
-                {place.display_name?.split(",").slice(0, 2).join(", ")}
+                {place.formatted?.split(",").slice(0, 2).join(", ")}
                 <span className="text-xs text-gray-400 ml-1">
                   {place.city || place.formatted}
                 </span>
@@ -137,8 +142,8 @@ const LocationModal = ({ isOpen, setIsOpen }) => {
           </ul>
         )}
 
-        {!loading && manualLocation && suggestions.length === 0 && (
-          <p className="text-sm text-gray-500 mt-2">No results found</p>
+        {!loading && manualLocation && manualLocation.trim().length < 2 && (
+          <p className="text-sm text-gray-500 mt-2">Type at least 2 characters</p>
         )}
 
         {/* Divider */}
