@@ -51,6 +51,7 @@ const Cart = () => {
       await updateCartItem({ itemId, quantity: updatedItem.quantity }).unwrap();
       toast.success("Quantity updated");
     } catch {
+      setCartItems(previousItems);
       toast.error("Failed to update quantity");
     }
   };

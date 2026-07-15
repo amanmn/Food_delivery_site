@@ -21,7 +21,7 @@ const Checkout = () => {
     const { location, address } = useSelector((state) => state.location);
     const { user } = useSelector((state) => state.auth);
     const { data, isError, isLoading } = useGetCartItemsQuery();
-    const [  paymentMethod, setPaymentMethod] = useState("cod");
+    const [paymentMethod, setPaymentMethod] = useState("cod");
     const [searchInput, setSearchInput] = useState("");
     const [placeOrder] = usePlaceOrderMutation();
     const APIKEY = import.meta.env.VITE_GEOAPIKEY;
@@ -85,9 +85,15 @@ const Checkout = () => {
             );
             const data = await res.json();
             const { lat, lon } = data.features[0]?.properties || {};
-            if (lat && lon) dispatch(setLocation({ lat, lon }));
+            if (lat && lon) {
+                dispatch(setLocation({ lat, lon }));
+                await getAddressByLatLng(lat, lon);
+            }else{
+                toast.error("Location not found");
+            }
         } catch (err) {
             console.error(err);
+            toast.error("failed to fetch address");
         }
     };
 
@@ -112,7 +118,6 @@ const Checkout = () => {
         };
 
         try {
-            console.log("Razorpay Key:", import.meta.env.VITE_TEST_API_KEY);
             console.log("ORDER PAYLOAD:", orderPayload);
             const res = await placeOrder(orderPayload).unwrap();
             console.log("order", res);

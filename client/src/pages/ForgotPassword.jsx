@@ -64,7 +64,7 @@ const ForgotPassword = () => {
       }
       if (verificationIsSuccess) {
         setErr("");
-        toast.success(verificationIsSuccess?.message || "Verification successful")
+        toast.success(verify?.message || "Verification successful")
         setStep(3);
       }
     }
@@ -77,7 +77,7 @@ const ForgotPassword = () => {
       }
       if (resetPasswordIsSuccess) {
         setErr("");
-        toast.success(resetPasswordIsSuccess?.message || "Verification successful")
+        toast.success(reset?.message || "Verification successful")
         navigate("/login");
       }
     }
