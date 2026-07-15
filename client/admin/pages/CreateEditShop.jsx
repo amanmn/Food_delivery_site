@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUtensils } from "react-icons/fa";
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify"
 
@@ -15,6 +15,7 @@ const CreateEditShop = () => {
     const dispatch = useDispatch();
     const detectLocation = useDetectLocation();
 
+    const { city, state, selectedAddress } = useSelector((s) => s.user);
     const { data: myShopData } = useGetMyShopQuery();
     const [createOrEditShop, { isLoading }] = useCreateOrEditShopMutation();
 
@@ -45,8 +46,7 @@ const CreateEditShop = () => {
     useEffect(() => {
         if (city) setCityName(city);
         if (state) setStateName(state);
-        if (address) setAddress(address);
-    }, [city, state, address]);
+    }, [city, state]);
 
     const handleImage = (e) => {
         const file = e.target.files[0];
