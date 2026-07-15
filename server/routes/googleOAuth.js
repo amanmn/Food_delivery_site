@@ -35,7 +35,7 @@ router.get('/auth/google/callback',
 // optional endpoints
 router.get('/auth/failure', (req, res) => res.send('Google auth failed'));
 
-// Logout (clear cookie and optionally revoke refresh token)
+// Logout (clear cookie and revoke refresh token)
 router.post('/auth/logout', (req, res) => {
     res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax' });
     req.logout?.(); // if using session
