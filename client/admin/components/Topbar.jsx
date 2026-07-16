@@ -1,9 +1,12 @@
 import { FaPlus } from "react-icons/fa";
 import { BsFillBagCheckFill } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
+import { useGetDashboardStatsQuery } from "../../src/redux/features/shop/shopApi";
 
 export default function Topbar({ onMenuClick }) {
   const navigate = useNavigate();
+  const { data: stats} = useGetDashboardStatsQuery();
+  const pendingCount = stats?.runningOrders || 0;
 
   return (
     <header className="flex items-center justify-between bg-white px-4 py-4 shadow">
@@ -57,7 +60,7 @@ export default function Topbar({ onMenuClick }) {
           <BsFillBagCheckFill size={20} />
           <span>My Orders</span>
           <span className="absolute -right-2 -top-2 text-xs text-blue-100 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">
-            0
+            {pendingCount}
           </span>
         </button>
 

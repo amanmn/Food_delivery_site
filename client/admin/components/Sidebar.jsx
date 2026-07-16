@@ -67,7 +67,7 @@ export default function Sidebar({ closeSidebar }) {
           <FaBoxOpen /> Products
         </button>
 
-        <button
+        {/* <button
           onClick={() => {
             navigate("/customers");
             closeSidebar();
@@ -75,7 +75,7 @@ export default function Sidebar({ closeSidebar }) {
           className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded w-full text-left"
         >
           <FaUsers /> Customers
-        </button>
+        </button> */}
 
         <button
           onClick={() => {
