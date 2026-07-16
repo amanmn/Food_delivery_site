@@ -14,9 +14,10 @@ import OrderCard from "../components/OrderItem";
 import ItemProduct from "./ItemProduct";
 import { useGetDashboardStatsQuery } from "../../src/redux/features/shop/shopApi";
 import { useSelector } from "react-redux";
+
 export default function AdminDashboard() {
   const dispatch = useDispatch();
-  const { data, isLoading, refetch } = useGetDashboardStatsQuery(undefined, {
+  const { data, isLoading, isError, refetch } = useGetDashboardStatsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
   const { socket } = useSelector((state) => state.user);
@@ -46,6 +47,13 @@ export default function AdminDashboard() {
       <div className="flex justify-center items-center min-h-[60vh] text-gray-600">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mr-3"></div>
         Loading dashboard...
+      </div>
+    );
+
+  if (isError || !data)
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] text-gray-500">
+        Failed to load dashboard. Please try again.
       </div>
     );
 
@@ -140,12 +148,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Products */}
-      <div className="bg-white shadow-md hover:shadow-lg transition rounded-2xl p-5 sm:p-6 border border-gray-100 mt-10">
+      {/* <div className="bg-white shadow-md hover:shadow-lg transition rounded-2xl p-5 sm:p-6 border border-gray-100 mt-10">
         <h2 className="font-bold text-xl sm:text-2xl mb-4 text-gray-900">
           🍔 Products
         </h2>
         <ItemProduct />
-      </div>
+      </div> */}
     </div>
   );
 }

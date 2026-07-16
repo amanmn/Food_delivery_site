@@ -64,7 +64,7 @@ const MyShop = () => {
                         <img
                             src={shopData?.image || "https://source.unsplash.com/800x400/?shop,store"}
                             alt={shopData?.name}
-                            className="w-full h-84 object-contain"
+                            className="w-full h-80 sm:h-96 object-contain"
                         />
                         <div className="absolute top-4 left-4 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full shadow">
                             {shopData?.status || "Active"}
@@ -92,7 +92,7 @@ const MyShop = () => {
                             </div>
                             <div className="flex items-center gap-3 text-gray-700">
                                 <FaStore className="text-purple-600" />
-                                <span>{shopData.category || "Restaurent"}</span>
+                                <span>{shopData.category || "Restaurant"}</span>
                             </div>
                         </div>
                     </div>

@@ -70,7 +70,7 @@ export default function Topbar({ onMenuClick }) {
           className="md:hidden flex items-center gap-2 cursor-pointer relative rounded-full text-blue-500 bg-blue-100 px-3 py-1 font-bold">
           <BsFillBagCheckFill size={20} />
           <span className="absolute -right-2 -top-2 text-xs text-blue-100 bg-blue-500 font-bold rounded-full px-[6px] py-[1px]">
-            0
+            {pendingCount}
           </span>
         </button>
       </div>

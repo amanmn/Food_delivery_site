@@ -14,7 +14,6 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
   const ownerId = user?._id;
 
-  // const [localOrders, setLocalOrders] = useState([]);
   const [updating, setUpdating] = useState(null);
 
   const {
@@ -22,9 +21,6 @@ const OwnerOrders = ({ orders = [], filter }) => {
       skip: !user || user.role !== "owner",
       refetchOnMountOrArgChange: true,
     });
-
-  // const [assignDeliveryBoy, { isLoading: assigning }] =
-  //   useAssignDeliveryBoyMutation();
 
   console.log("Orders Data from API:", ordersData);
 
@@ -141,11 +137,9 @@ const OwnerOrders = ({ orders = [], filter }) => {
       <div className="space-y-6">
 
         {filteredOrders.map((order) => {
-          const shopOrder = order.shopOrders[0];
-
-          return (
+          order.shopOrders.map((shopOrder) => (
             <motion.div
-              key={order._id}
+              key={shopOrder._id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-xl shadow hover:shadow-lg transition p-5"
@@ -239,24 +233,19 @@ const OwnerOrders = ({ orders = [], filter }) => {
                     ₹{shopOrder.subtotal}
                   </p>
                 </div>
-                {/* {shopOrder.status === "delivered" && (
-                  <p className="text-green-600 font-semibold mt-2">
-                    ✅ Delivered
-                  </p>
-                )} */}
 
                 {/* DELIVERY */}
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Delivery</p>
 
-                  {/* ✅ If delivered */}
+                  {/* If delivered */}
                   {shopOrder.status === "delivered" ? (
                     <p className="text-green-600 font-semibold text-sm">
                       ✅ Delivered
                     </p>
 
                   ) : shopOrder.assignedDeliveryBoy ? (
-                    /* ✅ Assigned */
+                    /* Assigned */
                     <div className="bg-green-50 p-3 rounded-lg">
                       <p className="font-semibold text-green-700 text-sm">
                         {shopOrder.assignedDeliveryBoy.fullName ||
@@ -303,7 +292,7 @@ const OwnerOrders = ({ orders = [], filter }) => {
 
               </div>
             </motion.div>
-          );
+          ))
         })}
       </div>
     </div>
