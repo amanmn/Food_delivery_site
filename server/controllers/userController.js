@@ -49,7 +49,7 @@ const profile = async (req, res) => {
     }
 };
 
-// ✅ Update Profile
+// Update User Profile
 const updateUser = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -65,38 +65,39 @@ const updateUser = async (req, res) => {
         if (
             Array.isArray(address) &&
             address.length > 0 &&
-            Object.values(address[0]).every(value => value && value.trim() !== "")
+            address[0].street?.trim() &&
+            address[0].city?.trim()
         ) {
-            updateFields.address = address;
+    updateFields.address = address;
 
-        } if (profilePicture) updateFields.profilePicture = profilePicture;
+} if (profilePicture) updateFields.profilePicture = profilePicture;
 
-        if (Object.keys(updateFields).length > 0) {
-            updateOps.$set = updateFields;
-        }
+if (Object.keys(updateFields).length > 0) {
+    updateOps.$set = updateFields;
+}
 
-        // Add new address to $push
-        if (newAddress) {
-            updateOps.$push = { address: newAddress };
-        }
+// Add new address to $push
+if (newAddress) {
+    updateOps.$push = { address: newAddress };
+}
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updateOps,
-            { new: true, runValidators: true }
-        ).select("-password");
-        console.log(updatedUser);
+const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    updateOps,
+    { new: true, runValidators: true }
+).select("-password");
+console.log(updatedUser);
 
 
-        return res.status(200).json({
-            success: true,
-            message: "Profile updated successfully",
-            user: updatedUser,
-        });
+return res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    user: updatedUser,
+});
     } catch (error) {
-        console.error("Error updating user:", error);
-        res.status(500).json({ message: "Server error" });
-    }
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Server error" });
+}
 };
 
 const updateUserLocation = async (req, res) => {
