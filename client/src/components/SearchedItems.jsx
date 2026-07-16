@@ -16,6 +16,7 @@ const SearchedItems = ({ onClick }) => {
         const timer = setTimeout(() => {
             setDebouncedQuery(searchQuery);
         }, 300);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
 
     const handleClick = (item) => {
@@ -31,9 +32,9 @@ const SearchedItems = ({ onClick }) => {
         data: updatedItemsList = [],
         isLoading,
     } = useSearchItemsQuery(
-        { query: searchQuery, city },
+        { query: debouncedQuery, city },
         {
-            skip: !city || !debouncedQuery || debouncedQuery.length < 2,
+            skip: !city || !debouncedQuery || debouncedQuery.length < 1,
         }
     );
 
@@ -47,9 +48,8 @@ const SearchedItems = ({ onClick }) => {
                 </div>
             )}
 
-            {/* 🔥 YOUR GRID (UNCHANGED) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
-                {debouncedQuery.length >= 2 && !isLoading && updatedItemsList?.length > 0 ? (
+                {debouncedQuery.length >= 1 && !isLoading && updatedItemsList?.length > 0 ? (
                     updatedItemsList.map((item) => (
                         <div
                             onClick={() => handleClick(item)}

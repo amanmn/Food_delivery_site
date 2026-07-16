@@ -12,15 +12,9 @@ const ShopItems = () => {
         { skip: !shopId }
     );
 
-    useEffect(() => {
-        console.log("shop:", shopId);
-        console.log("items:", items);
-        console.log("isLoading:", isLoading);
-        console.log("error:", error);
-    }, [shopId, items, isLoading, error]);
-
     if (isLoading) return <p>Loading shop items...</p>;
     if (error) return <p>Failed to load shop items</p>;
+    if (!items) return <p>Shop not found.</p>;
 
     return (
         <div>

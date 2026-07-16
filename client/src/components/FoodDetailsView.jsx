@@ -1,14 +1,26 @@
 import { useParams } from "react-router-dom";
 import { useGetSingleProductQuery } from "../redux/features/product/itemApi";
+import { useAddItemToCartMutation } from "../redux/features/cart/cartApi";
+import { toast } from "react-toastify";
 
 const FoodDetailsView = () => {
     const { id } = useParams();
     console.log("Fetching details for product ID:", id);
-    const { data, isLoading } = useGetSingleProductQuery(id);
+    const { data, isLoading, isError } = useGetSingleProductQuery(id);
 
     if (isLoading) return <p>Loading...</p>;
+    if (isError || !data.product) return <p>Error loading product details.</p>;
 
     const product = data?.product;
+
+    const handleAddToCart = async () => {
+        try {
+            await addItemToCart({ itemId: product._id, quantity: 1 }).unwrap();
+            toast.success("Item added to cart");
+        } catch (error) {
+            toast.error(error?.data?.message || "Failed to add item to cart");
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
@@ -37,8 +49,12 @@ const FoodDetailsView = () => {
                         {product?.description}
                     </p>
 
-                    <button className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition">
-                        Add to Cart
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={isAdding}
+                        className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition"
+                    >
+                        {isAdding ? "Adding..." : "Add to Cart"}
                     </button>
                 </div>
 

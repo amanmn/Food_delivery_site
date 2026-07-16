@@ -1,6 +1,6 @@
 const express = require('express');
 const { verifyToken, ownerOnly } = require('../middleware/authmiddleware');
-const { addItem, editItem, getItemById, deleteItem, getItemByCity, getItemsByShop, searchItems } = require('../controllers/itemController');
+const { addItem, editItem, getItemById, deleteItem, getItemByCity, getItemsByShop, searchItems, getPublicItemById } = require('../controllers/itemController');
 const { upload } = require('../middleware/multer');
 const router = express.Router();
 
@@ -12,6 +12,6 @@ router.delete("/delete-item/:itemId", verifyToken, ownerOnly, deleteItem);
 router.get("/get-item-by-city/:city", getItemByCity);
 router.get("/get-item-by-shop/:shopId", getItemsByShop);
 router.get("/search-items", searchItems);
-
+router.get("/get-public-item/:id", getPublicItemById);
 
 module.exports = router;

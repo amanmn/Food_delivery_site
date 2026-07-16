@@ -101,7 +101,7 @@ const deleteItem = async (req, res) => {
 
         const item = await Item.findByIdAndDelete(itemId);
         if (!item) return res.status(400).json({ message: "item not found" });
-        
+
         shop.items = shop.items.filter(id => id.toString() !== item._id.toString());
         const existingItemIds = await Item.find({ _id: { $in: shop.items } }).select("_id");
         shop.items = existingItemIds.map(i => i._id);
@@ -218,6 +218,17 @@ const searchItems = async (req, res) => {
     }
 }
 
+const getPublicItemById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const item = await Item.findById(id).populate("shop", "name city");
+        if (!item) return res.status(404).json({ message: "item not found" });
+        return res.status(200).json({ product: item });
+    } catch (error) {
+        return res.status(500).json({ message: `get product error ${error}` });
+    }
+};
+
 module.exports = {
     addItem,
     getItemById,
@@ -226,4 +237,5 @@ module.exports = {
     getItemByCity,
     getItemsByShop,
     searchItems,
+    getPublicItemById
 }
