@@ -9,13 +9,10 @@ const UserOrders = ({ orders = [], filter }) => {
   const dispatch = useDispatch();
   const { socket } = useSelector((state) => state.user);
 
-  if (!Array.isArray(orders)) return null;
-
   useEffect(() => {
     if (!socket) return;
 
     const handleOrderStatusUpdate = (data) => {
-
       dispatch(updateRealTimeOrderStatus({
         orderId: data.orderId,
         shopOrderId: data.shopOrderId,
@@ -30,6 +27,7 @@ const UserOrders = ({ orders = [], filter }) => {
     };
   }, [socket, dispatch]);
 
+  if (!Array.isArray(orders)) return null;
 
   // Filter orders based on shopOrder status
   const filteredOrders =

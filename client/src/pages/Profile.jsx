@@ -236,22 +236,14 @@ const Profile = () => {
                   </div>
 
                   {/* Items */}
-                  <div className="space-y-2">
-                    {order.items?.map((item) => (
-                      <div
-                        key={item._id}
-                        className="flex justify-between text-gray-700"
-                      >
-                        <span>
-                          {item.product?.name} × {item.quantity}
-                        </span>
-
-                        <span>
-                          ₹{(item.product?.price || 0) * item.quantity}
-                        </span>
+                  {order.shopOrders?.map((shopOrder) =>
+                    shopOrder.shopOrderItems?.map((item) => (
+                      <div key={item._id} className="flex justify-between text-gray-700">
+                        <span>{item.name} × {item.quantity}</span>
+                        <span>₹{(item.price || 0) * item.quantity}</span>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  )}
 
                   {/* Footer */}
                   <div className="flex justify-between items-center mt-4 border-t pt-3">

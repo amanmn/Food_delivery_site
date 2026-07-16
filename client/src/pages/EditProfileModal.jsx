@@ -30,6 +30,7 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
           country,
           zipCode,
         },
+        ...(user?.address?.slice(1) || []),
       ],
     };
 
