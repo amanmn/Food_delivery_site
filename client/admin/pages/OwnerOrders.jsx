@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,95 +6,164 @@ import {
   useUpdateOrderStatusMutation,
 } from "../../src/redux/features/order/orderApi";
 
-const OwnerOrders = ({ orders = [], filter }) => {
+const STATUS_STYLES = {
+  pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
+  preparing: "bg-blue-50 text-blue-700 ring-blue-600/20",
+  out_for_delivery: "bg-purple-50 text-purple-700 ring-purple-600/20",
+  delivered: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+  canceled: "bg-red-50 text-red-700 ring-red-600/20",
+};
+
+const STATUS_LABELS = {
+  pending: "Pending",
+  preparing: "Preparing",
+  out_for_delivery: "Out for delivery",
+  delivered: "Delivered",
+  canceled: "Canceled",
+};
+
+function StatusBadge({ status }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${
+        STATUS_STYLES[status] || "bg-gray-50 text-gray-600 ring-gray-500/20"
+      }`}
+    >
+      {STATUS_LABELS[status] || status}
+    </span>
+  );
+}
+
+function StatusControl({ shopOrder, order, updating, onChange }) {
+  const isLocked =
+    updating === shopOrder._id ||
+    shopOrder.status === "delivered" ||
+    shopOrder.status === "canceled" ||
+    shopOrder.status === "out_for_delivery";
+
+  if (isLocked) {
+    return <StatusBadge status={shopOrder.status} />;
+  }
+
+  return (
+    <select
+      value={shopOrder.status}
+      onChange={(e) => onChange(order._id, shopOrder._id, e.target.value)}
+      className="border border-gray-200 rounded-md text-xs font-medium pl-2.5 pr-7 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 cursor-pointer"
+    >
+      <option value="pending">Pending</option>
+      <option value="preparing">Preparing</option>
+      <option value="out_for_delivery">Out for delivery</option>
+      <option value="canceled">Cancel order</option>
+    </select>
+  );
+}
+
+function ItemsPreview({ items = [] }) {
+  const visible = items.slice(0, 3);
+  const extra = items.length - visible.length;
+
+  return (
+    <div className="flex items-center">
+      <div className="flex -space-x-2">
+        {visible.map((item) => (
+          <img
+            key={item._id}
+            src={item?.item?.image}
+            alt={item?.item?.name}
+            title={`${item?.item?.name} × ${item.quantity}`}
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-white"
+          />
+        ))}
+      </div>
+      {extra > 0 && (
+        <span className="ml-2 text-xs text-gray-400 font-medium">+{extra} more</span>
+      )}
+    </div>
+  );
+}
+
+function DeliveryCell({ shopOrder }) {
+  if (shopOrder.status === "delivered") {
+    return <span className="text-xs font-medium text-emerald-600">Delivered</span>;
+  }
+  if (shopOrder.status === "canceled") {
+    return <span className="text-xs font-medium text-red-500">Canceled</span>;
+  }
+  if (shopOrder.assignedDeliveryBoy) {
+    return (
+      <div>
+        <p className="text-xs font-medium text-gray-800">
+          {shopOrder.assignedDeliveryBoy.name}
+        </p>
+        <p className="text-xs text-gray-400">{shopOrder.assignedDeliveryBoy.phone}</p>
+      </div>
+    );
+  }
+  if (shopOrder.status === "out_for_delivery") {
+    return (
+      <span className="text-xs text-gray-400">
+        {shopOrder.availableBoys?.length > 0
+          ? `${shopOrder.availableBoys.length} boys notified`
+          : "No delivery boys available"}
+      </span>
+    );
+  }
+  return <span className="text-xs text-gray-300">—</span>;
+}
+
+const OwnerOrders = ({ filter }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { socket } = useSelector((state) => state.user);
 
-  const ownerId = user?._id;
-
   const [updating, setUpdating] = useState(null);
 
-  const {
-    data: ordersData, isLoading, refetch } = useGetOrderItemsQuery(undefined, {
-      skip: !user || user.role !== "owner",
-      refetchOnMountOrArgChange: true,
-    });
-
-  console.log("Orders Data from API:", ordersData);
+  const { data: ordersData, isLoading, refetch } = useGetOrderItemsQuery(undefined, {
+    skip: !user || user.role !== "owner",
+    refetchOnMountOrArgChange: true,
+  });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewOrder = (newOrder) => {
-      refetch();
-    };
+    const handleRefetch = () => refetch();
 
-    const handleStatusUpdate = (data) => {
-      console.log("📦 Real-time status update:", data);
-      refetch();
-    };
-
-    socket.on("newOrder", (data) => {
-      console.log("🔥 New order received:", data);
-      refetch();
-    });
-    socket.on("orderStatusUpdated", handleStatusUpdate);
+    socket.on("newOrder", handleRefetch);
+    socket.on("orderStatusUpdated", handleRefetch);
 
     return () => {
-      socket.off("newOrder", handleNewOrder);
-      socket.off("orderStatusUpdated", handleStatusUpdate);
+      socket.off("newOrder", handleRefetch);
+      socket.off("orderStatusUpdated", handleRefetch);
     };
   }, [socket, refetch]);
 
-  if (isLoading) {
-    return (
-      <div className="text-center text-gray-500 mt-20">
-        <p>Loading orders...</p>
-      </div>
-    );
-  }
+  const ownerId = user?._id;
 
-  // Filter orders for this owner
-  const ownerOrders = (ordersData?.orders || [])
-    .map((order) => ({
-      ...order,
-      shopOrders: order.shopOrders?.filter(
-        (shopOrder) =>
-          shopOrder?.owner === ownerId ||
-          shopOrder?.owner?._id === ownerId
-      ),
-    }))
-    .filter((order) => order.shopOrders && order.shopOrders.length > 0);
+  // Flatten: one row per (order, shopOrder) pair that belongs to this owner
+  const rows = (ordersData?.orders || []).flatMap((order) =>
+    (order.shopOrders || [])
+      .filter((so) => so?.owner === ownerId || so?.owner?._id === ownerId)
+      .map((shopOrder) => ({ order, shopOrder }))
+  );
 
   const safeFilter = filter?.toLowerCase() ?? "all";
-
-  const filteredOrders =
+  const filteredRows =
     safeFilter === "all"
-      ? ownerOrders
-      : ownerOrders.filter((order) =>
-        order.shopOrders.some(
-          (so) =>
-            so.status &&
-            so.status.toLowerCase() === safeFilter
-        )
-      );
+      ? rows
+      : rows.filter(({ shopOrder }) => shopOrder.status?.toLowerCase() === safeFilter);
 
   const handleStatusChange = async (orderId, shopOrderId, newStatus) => {
     setUpdating(shopOrderId);
-
     try {
       const res = await updateOrderStatus({
         orderId,
         shopOrderId,
         status: newStatus,
       }).unwrap();
-
-      if (res.success) {
-        refetch();
-      }
+      if (res.success) refetch();
     } catch (err) {
       console.error("Error updating status:", err);
     } finally {
@@ -103,197 +171,153 @@ const OwnerOrders = ({ orders = [], filter }) => {
     }
   };
 
-  if (filteredOrders.length === 0) {
+  if (isLoading) {
     return (
-      <div className="text-center text-gray-500 mt-20">
-        <p>No {(filter ?? "all").toLowerCase()} shop orders found</p>
+      <div className="text-center text-gray-400 mt-20 text-sm">Loading orders...</div>
+    );
+  }
+
+  if (filteredRows.length === 0) {
+    return (
+      <div className="text-center text-gray-400 mt-20 text-sm">
+        No {(filter ?? "all").toLowerCase()} orders found
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-
-      {/* HEADER */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-1 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/dash")}
-            className="px-3 py-2 bg-white shadow rounded-lg hover:shadow-md"
+            className="text-gray-400 hover:text-gray-700 transition text-sm"
           >
-            ←
+            ← Back
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Orders Dashboard
-          </h1>
+          <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
         </div>
-
-        <div className="bg-white px-4 py-2 rounded-lg shadow text-sm">
-          Total Orders: <span className="font-semibold">{filteredOrders.length}</span>
-        </div>
+        <span className="text-sm text-gray-400">
+          {filteredRows.length} order{filteredRows.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
-      {/* ORDERS LIST */}
-      <div className="space-y-6">
-
-        {filteredOrders.map((order) => {
-          order.shopOrders.map((shopOrder) => (
-            <motion.div
-              key={shopOrder._id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow hover:shadow-lg transition p-5"
-            >
-
-              {/* TOP SECTION */}
-              <div className="flex justify-between items-center border-b pb-3 mb-4">
-
-                {/* ORDER INFO */}
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    Order #{order._id.slice(-6)}
+      {/* ===== Desktop table ===== */}
+      <div className="hidden md:block border border-gray-200 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <th className="px-4 py-3">Order</th>
+              <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Items</th>
+              <th className="px-4 py-3">Payment</th>
+              <th className="px-4 py-3">Total</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Delivery</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredRows.map(({ order, shopOrder }) => (
+              <tr key={shopOrder._id} className="hover:bg-gray-50/60 transition">
+                <td className="px-4 py-3 align-top">
+                  <p className="font-medium text-gray-900">#{order._id.slice(-6)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(order.createdAt).toLocaleString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(order.createdAt).toLocaleString()}
-                  </p>
-                </div>
-
-                {/* PAYMENT STATUS */}
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-500">
-                    {order.paymentMethod}
-                  </span>
-
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <p className="font-medium text-gray-800">{order.user?.name}</p>
+                  <p className="text-xs text-gray-400">{order.user?.phone}</p>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <ItemsPreview items={shopOrder.shopOrderItems} />
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <p className="text-xs text-gray-500 capitalize">{order.paymentMethod}</p>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${order.paymentStatus === "paid"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-red-100 text-red-500"
-                      }`}
+                    className={`text-xs font-medium ${
+                      order.paymentStatus === "paid" ? "text-emerald-600" : "text-amber-600"
+                    }`}
                   >
                     {order.paymentStatus}
                   </span>
-                </div>
+                </td>
+                <td className="px-4 py-3 align-top font-semibold text-gray-900 tabular-nums">
+                  ₹{shopOrder.subtotal}
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <StatusControl
+                    shopOrder={shopOrder}
+                    order={order}
+                    updating={updating}
+                    onChange={handleStatusChange}
+                  />
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <DeliveryCell shopOrder={shopOrder} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
+      {/* ===== Mobile cards ===== */}
+      <div className="md:hidden space-y-3">
+        {filteredRows.map(({ order, shopOrder }) => (
+          <div key={shopOrder._id} className="border border-gray-200 rounded-xl p-4">
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <p className="font-medium text-gray-900 text-sm">
+                  #{order._id.slice(-6)}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {new Date(order.createdAt).toLocaleString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
+              <StatusControl
+                shopOrder={shopOrder}
+                order={order}
+                updating={updating}
+                onChange={handleStatusChange}
+              />
+            </div>
 
-              {/* MAIN GRID */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-
-                {/* CUSTOMER */}
-                <div>
-                  <p className="text-xs text-gray-400">Customer</p>
-                  <p className="font-medium">{order.user?.name}</p>
-                  <p className="text-xs text-gray-500">{order.user?.phone}</p>
-                </div>
-
-                {/* ITEMS */}
-                <div>
-                  <p className="text-xs text-gray-400 mb-1">Items</p>
-                  <div className="space-y-2">
-                    {shopOrder.shopOrderItems?.map((item) => (
-                      <div key={item._id} className="flex items-center gap-2">
-                        <img
-                          src={item?.item?.image}
-                          className="w-10 h-10 rounded object-cover"
-                        />
-                        <div className="text-xs">
-                          <p>{item?.item?.name}</p>
-                          <p className="text-gray-400">× {item.quantity}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* STATUS */}
-                <div>
-                  <p className="text-xs text-gray-400 mb-1">Status</p>
-
-                  <select
-                    value={shopOrder.status}
-                    disabled={updating === shopOrder._id ||
-                      shopOrder.status === "delivered" ||
-                      shopOrder.status === "out_for_delivery"
-                    }
-                    onChange={(e) =>
-                      handleStatusChange(
-                        order._id,
-                        shopOrder._id,
-                        e.target.value
-                      )
-                    }
-                    className="border px-3 py-1 rounded-md text-sm"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="out_for_delivery">Out for Delivery</option>
-                  </select>
-
-                  <p className="text-green-600 font-semibold mt-2">
-                    ₹{shopOrder.subtotal}
-                  </p>
-                </div>
-
-                {/* DELIVERY */}
-                <div>
-                  <p className="text-xs text-gray-400 mb-1">Delivery</p>
-
-                  {/* If delivered */}
-                  {shopOrder.status === "delivered" ? (
-                    <p className="text-green-600 font-semibold text-sm">
-                      ✅ Delivered
-                    </p>
-
-                  ) : shopOrder.assignedDeliveryBoy ? (
-                    /* Assigned */
-                    <div className="bg-green-50 p-3 rounded-lg">
-                      <p className="font-semibold text-green-700 text-sm">
-                        {shopOrder.assignedDeliveryBoy.fullName ||
-                          shopOrder.assignedDeliveryBoy.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {shopOrder.assignedDeliveryBoy.phone}
-                      </p>
-                    </div>
-
-                  ) : shopOrder.status === "out_for_delivery" ? (
-                    /* ✅ SHOW AVAILABLE BOYS */
-                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-
-                      {shopOrder.availableBoys?.length > 0 ? (
-                        shopOrder.availableBoys.map((boy) => (
-                          <div
-                            key={boy.id}
-                            className="flex justify-between items-center bg-blue-50 p-2 rounded-lg"
-                          >
-                            <div>
-                              <p className="text-xs font-medium">
-                                {boy.fullName}
-                              </p>
-                              <p className="text-[10px] text-gray-500">
-                                📞 {boy.phone}
-                              </p>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-gray-400">
-                          No delivery boys available
-                        </p>
-                      )}
-                    </div>
-
-                  ) : (
-                    <p className="text-xs text-gray-400">
-                      Not assigned yet
-                    </p>
-                  )}
-                </div>
-
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <p className="text-sm font-medium text-gray-800">{order.user?.name}</p>
+                <p className="text-xs text-gray-400">{order.user?.phone}</p>
               </div>
-            </motion.div>
-          ))
-        })}
+              <p className="font-semibold text-gray-900 tabular-nums">
+                ₹{shopOrder.subtotal}
+              </p>
+            </div>
+
+            <ItemsPreview items={shopOrder.shopOrderItems} />
+
+            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+              <span
+                className={`text-xs font-medium ${
+                  order.paymentStatus === "paid" ? "text-emerald-600" : "text-amber-600"
+                }`}
+              >
+                {order.paymentMethod} · {order.paymentStatus}
+              </span>
+              <DeliveryCell shopOrder={shopOrder} />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
