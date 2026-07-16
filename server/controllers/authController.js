@@ -192,24 +192,29 @@ const sendOtpMail = async (req, res) => {
         const { email } = req.body;
 
         const user = await User.findOne({ email });
-        console.log("user:", user);
         if (!user) return res.status(404).json({ success: false, message: "User does not exists." });
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
         const hashedOtp = await bcrypt.hash(otp, 10);
-        user.resetOtp = hashedOtp;
-        user.otpExpires = Date.now() + OTP_TTL_MS;
-        user.isOtpVerified = false;
-        await user.save();
+
+        // Store hashedOtp in Redis
+        await redisClient.set(
+            `otp:${email}`,
+            hashedOtp,
+            {
+                EX: 300 // 5 minutes
+            }
+        );
         console.log(`Generated OTP for ${user.email}: ${otp} (expires in 5 minutes)`);
         try {
             await sendOtpNodeMailer(email, otp);
         } catch (mailerErr) {
             console.error("Failed to send OTP email:", mailerErr);
-            user.resetOtp = undefined;
-            user.otpExpires = undefined;
-            await user.save();
+
+            // Remove OTP if email sending fails
+            await redisClient.del(`otp:${email}`);
+
             return res.status(500).json({ success: false, message: "Failed to send OTP email." });
         }
         return res.status(200).json({ success: "true", message: "OTP sent successfully" });
@@ -222,27 +227,33 @@ const sendOtpMail = async (req, res) => {
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
+        
+        const storedHashedOtp = await redisClient.get(`otp:${email}`);
 
-        const user = await User.findOne({ email });
-
-        if (!user || user.otpExpires < Date.now()) {
+        if (!storedHashedOtp) {
             return res.status(400).json({
                 success: false,
                 message: "OTP expired or invalid"
             });
         }
 
-        const isValid = await bcrypt.compare(otp, user.resetOtp);
+        const isValid = await bcrypt.compare(otp, storedHashedOtp);
         if (!isValid) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid OTP"
             });
         }
+        await redisClient.del(`otp:${email}`);
 
+        const user = await User.findOne({ email });
+         if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
         user.isOtpVerified = true;
-        user.resetOtp = undefined;
-        user.otpExpires = undefined;
         await user.save();
 
         return res.status(200).json({
@@ -257,10 +268,6 @@ const verifyOtp = async (req, res) => {
 const resetPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
-        // if (!email || !newPassword) return res.status(400).json({ success: false, message: "Email and newPassword are required." });
-        // if (newPassword.length < 6) {
-        //     return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
-        // }
 
         const user = await User.findOne({ email });
         if (!user || !user.isOtpVerified) return res.status(400).json({ success: false, message: "Unauthorized or OTP not verified." });

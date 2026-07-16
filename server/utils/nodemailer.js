@@ -15,7 +15,7 @@ const sendOtpNodeMailer = async (to, otp) => {
         const info = await transporter.sendMail({
             from: process.env.EMAIL,
             to,
-            subject: "Reset Your Password",
+            subject: "Reset Your Password - Food Delivery",
             html: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`, // HTML body
         });
 
@@ -32,8 +32,8 @@ const sendDeliveryOtpMail = async (assignment, otp) => {
         const info = await transporter.sendMail({
             from: process.env.EMAIL,
             to: assignment.user.email,
-            subject: "Your Delivery OTP",
-            html: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`, // HTML body
+            subject: "Your food-Delivery OTP for Delivery",
+            html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`, // HTML body
         });
 
         console.log("Message sent:", info.messageId);
