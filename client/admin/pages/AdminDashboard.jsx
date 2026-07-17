@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { shopApi } from "../../src/redux/features/shop/shopApi";
+// import { shopApi } from "../../src/redux/features/shop/shopApi";
 import {
   FaShoppingBag,
   FaDollarSign,
@@ -25,15 +25,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleDashboardUpdate = (newData) => {
-      console.log("Received dashboard update via socket:", newData);
-      dispatch(shopApi.util.updateQueryData(
-        "getDashboardStats",
-        undefined,
-        (draft) => {
-          Object.assign(draft, newData);
-        }));
-    };
+    const handleDashboardUpdate = () => {
+      refetch();
+    }
 
     socket.on("dashboardUpdate", handleDashboardUpdate);
 
