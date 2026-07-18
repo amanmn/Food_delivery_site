@@ -1,13 +1,14 @@
 const { Worker } = require("bullmq");
-const redisClient = require("../config/redis");
+const bullmqRedis = require("../config/bullmqRedis");
 
 const notificationWorker = new Worker(
     "notificationQueue",
     async (job) => {
+        
         console.log("Processing notification job:", job.data);
     },
     {
-        connection: redisClient
+        connection: bullmqRedis
     },
 );
 
