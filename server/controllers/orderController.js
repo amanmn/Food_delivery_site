@@ -8,6 +8,7 @@ const DeliveryAssignment = require("../models/deliveryAssignment");
 const { model } = require("mongoose");
 const { sendDeliveryOtpMail } = require("../utils/nodemailer");
 const crypto = require("crypto");
+const notificationQueue = require("../queues/notification.queue")
 
 const Razorpay = require("razorpay");
 const dotenv = require("dotenv");
@@ -135,6 +136,14 @@ const placeOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+    // BullMQ bg-notification added 
+    await notificationQueue.add("order-created", {
+      email: updatedUser.email,
+      userId: updatedUser._id.toString(),
+      orderId: newOrder._id.toString(),
+      message: "Your order has been placed successfully",
+    });
+
     // Remove user's Cart now that the order was placed
     try {
       await Cart.findOneAndDelete({ user: userId });
@@ -166,7 +175,6 @@ const placeOrder = async (req, res) => {
         }
       });
     }
-
 
     res.status(201).json({
       success: true,

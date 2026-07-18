@@ -38,7 +38,7 @@ function StatusControl({ shopOrder, order, updating, onChange }) {
   const isLocked =
     updating === shopOrder._id ||
     shopOrder.status === "delivered" ||
-    shopOrder.status === "canceled" ||
+    shopOrder.status === "cancelled" ||
     shopOrder.status === "out_for_delivery";
 
   if (isLocked) {

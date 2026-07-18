@@ -44,8 +44,23 @@ const sendDeliveryOtpMail = async (assignment, otp) => {
     }
 };
 
+const sendOrderConfirmationEmail = async (email, orderId, message) => {
+    const info = await transporter.sendMail({
+        from: process.env.EMAIL,
+        to: email,
+        subject: "Food_Delivery Order Placed Successfully",
+        html: `
+            <h2>Order Confirmed 🎉</h2
+            <p>${message}</p>
+            <p><strong>Order ID:</strong> ${orderId}</p>
+            <p>Thank you for ordering with us!</p>
+        `
+    });
+    return info;
+}
 
 module.exports = {
-    sendOtpNodeMailer, 
-    sendDeliveryOtpMail
+    sendOtpNodeMailer,
+    sendDeliveryOtpMail,
+    sendOrderConfirmationEmail
 };
