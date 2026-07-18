@@ -5,6 +5,7 @@ import {
   useGetOrderItemsQuery,
   useUpdateOrderStatusMutation,
 } from "../../src/redux/features/order/orderApi";
+import useSocketEvent from "../../src/hooks/useSocketEvent";
 
 const STATUS_STYLES = {
   pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
@@ -25,9 +26,8 @@ const STATUS_LABELS = {
 function StatusBadge({ status }) {
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${
-        STATUS_STYLES[status] || "bg-gray-50 text-gray-600 ring-gray-500/20"
-      }`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${STATUS_STYLES[status] || "bg-gray-50 text-gray-600 ring-gray-500/20"
+        }`}
     >
       {STATUS_LABELS[status] || status}
     </span>
@@ -115,8 +115,6 @@ function DeliveryCell({ shopOrder }) {
 const OwnerOrders = ({ filter }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { socket } = useSelector((state) => state.user);
-
   const [updating, setUpdating] = useState(null);
 
   const { data: ordersData, isLoading, refetch } = useGetOrderItemsQuery(undefined, {
@@ -126,23 +124,12 @@ const OwnerOrders = ({ filter }) => {
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleRefetch = () => refetch();
-
-    socket.on("newOrder", handleRefetch);
-    socket.on("orderStatusUpdated", handleRefetch);
-
-    return () => {
-      socket.off("newOrder", handleRefetch);
-      socket.off("orderStatusUpdated", handleRefetch);
-    };
-  }, [socket, refetch]);
+  useSocketEvent("newOrder", () => refetch());
+  useSocketEvent("orderStatusUpdated", () => refetch());
 
   const ownerId = user?._id;
 
-  // Flatten: one row per (order, shopOrder) pair that belongs to this owner
+  // one row per (order, shopOrder) pair that belongs to this owner
   const rows = (ordersData?.orders || []).flatMap((order) =>
     (order.shopOrders || [])
       .filter((so) => so?.owner === ownerId || so?.owner?._id === ownerId)
@@ -241,9 +228,8 @@ const OwnerOrders = ({ filter }) => {
                 <td className="px-4 py-3 align-top">
                   <p className="text-xs text-gray-500 capitalize">{order.paymentMethod}</p>
                   <span
-                    className={`text-xs font-medium ${
-                      order.paymentStatus === "paid" ? "text-emerald-600" : "text-amber-600"
-                    }`}
+                    className={`text-xs font-medium ${order.paymentStatus === "paid" ? "text-emerald-600" : "text-amber-600"
+                      }`}
                   >
                     {order.paymentStatus}
                   </span>
@@ -308,9 +294,8 @@ const OwnerOrders = ({ filter }) => {
 
             <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
               <span
-                className={`text-xs font-medium ${
-                  order.paymentStatus === "paid" ? "text-emerald-600" : "text-amber-600"
-                }`}
+                className={`text-xs font-medium ${order.paymentStatus === "paid" ? "text-emerald-600" : "text-amber-600"
+                  }`}
               >
                 {order.paymentMethod} · {order.paymentStatus}
               </span>

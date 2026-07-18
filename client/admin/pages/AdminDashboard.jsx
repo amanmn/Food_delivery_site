@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-// import { shopApi } from "../../src/redux/features/shop/shopApi";
 import {
   FaShoppingBag,
   FaDollarSign,
@@ -14,27 +13,16 @@ import OrderCard from "../components/OrderItem";
 import ItemProduct from "./ItemProduct";
 import { useGetDashboardStatsQuery } from "../../src/redux/features/shop/shopApi";
 import { useSelector } from "react-redux";
+import useSocketEvent from "../../src/hooks/useSocketEvent";
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
   const { data, isLoading, isError, refetch } = useGetDashboardStatsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
-  const { socket } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    if (!socket) return;
+  useSocketEvent("dashboardUpdate", () => refetch());
 
-    const handleDashboardUpdate = () => {
-      refetch();
-    }
-
-    socket.on("dashboardUpdate", handleDashboardUpdate);
-
-    return () => {
-      socket.off("dashboardUpdate", handleDashboardUpdate);
-    };
-  }, [socket, refetch]);
 
   if (isLoading)
     return (

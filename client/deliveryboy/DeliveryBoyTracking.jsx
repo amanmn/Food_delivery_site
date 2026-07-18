@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css"
 import { MapContainer, Marker, TileLayer, useMap, Popup, Polyline } from "react-leaflet";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-
+import useSocketEvent from "../src/hooks/useSocketEvent";
 
 const deliveryBoyIcon = new L.Icon({
     iconUrl: scooter,
@@ -20,20 +20,14 @@ const customerIcon = new L.Icon({
 
 const DeliveryBoyTracking = ({ data, deliveryBoy }) => {
     const [deliveryLocation, setDeliveryLocation] = useState(null);
-    const { socket } = useSelector((state) => state.user);
 
     console.log("Tracking Data:", data);
 
-    useEffect(() => {
-        if (!socket) return;
+    useSocketEvent("deliveryLocationUpdate", (data) => {
+        console.log("📍 Live Location", data);
+        setDeliveryLocation(data);
+    })
 
-        socket.on("deliveryLocationUpdate", (data) => {
-            console.log("📍 Live Location:", data);
-            setDeliveryLocation(data);
-        });
-
-        return () => socket.off("deliveryLocationUpdate");
-    }, [socket]);
 
     const deliveryBoyLat = deliveryLocation?.lat || deliveryBoy?.location?.coordinates[1] || 0
     const deliveryBoyLon = deliveryLocation?.lon || deliveryBoy?.location?.coordinates[0] || 0

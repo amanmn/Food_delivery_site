@@ -3,29 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { updateRealTimeOrderStatus } from "../redux/features/order/orderSlice";
 import { useEffect } from "react";
+import useSocketEvent from "../hooks/useSocketEvent";
 
 const UserOrders = ({ orders = [], filter }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { socket } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleOrderStatusUpdate = (data) => {
-      dispatch(updateRealTimeOrderStatus({
-        orderId: data.orderId,
-        shopOrderId: data.shopOrderId,
-        status: data.status
-      }));
-    };
-
-    socket.on("orderStatusUpdated", handleOrderStatusUpdate);
-
-    return () => {
-      socket.off("orderStatusUpdated", handleOrderStatusUpdate);
-    };
-  }, [socket, dispatch]);
+  useSocketEvent("orderStatusUpdated", (data) => {
+    dispatch(updateRealTimeOrderStatus({
+      orderId: data.orderId,
+      shopOrderId: data.shopOrderId,
+      status: data.status,
+    }));
+  });
 
   if (!Array.isArray(orders)) return null;
 

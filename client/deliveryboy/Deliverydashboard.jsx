@@ -13,10 +13,11 @@ import AvailableOrdersScreen from "./AvailableOrdersScreen";
 import DeliveryHeader from "./DeliveryHeader";
 import StatsSection from "./StatsSection";
 import { useGetDeliveryStatsQuery } from "../src/redux/features/order/orderApi";
+import { socket } from "../src/socket";
+import useSocketEvent from "../src/hooks/useSocketEvent";
 
 const DeliveryDashboard = ({ deliveryBoy }) => {
   const dispatch = useDispatch();
-  const { socket } = useSelector((state) => state.user);
 
   const { data: assignments = [], refetch } = useGetDeliveryBoyAssignmentsQuery();
   console.log("Current Assignments:", assignments);
@@ -39,74 +40,35 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   const completed = assignments.filter(o => o.status === "completed");
 
   useEffect(() => {
-    if (!socket) return;
-
     let watchId;
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition((position) => {
         const { latitude, longitude } = position.coords;
-
-        socket.emit("deliveryLocationUpdate", {
-          latitude,
-          longitude,
-        })
-      },
-        (error) => {
-          console.error("Geolocation error:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 0,
-          timeout: 5000,
-        }
-      );
+        socket.emit("deliveryLocationUpdate", { latitude, longitude });
+      }, (error) => {
+        console.error("Geolocation error:", error);
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000,
+      });
     }
-
     return () => {
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-      }
+      if (watchId) navigator.geolocation.clearWatch(watchId);
     };
+  }, [deliveryBoy._id]);
 
-  }, [socket, deliveryBoy._id]);
 
   // SOCKET EVENTS
-  useEffect(() => {
-    if (!socket) return;
+  useSocketEvent("newBroadcastOrder", () => refetch());
+  useSocketEvent("orderAssigned", () => refetch());
+  useSocketEvent("orderCompleted", () => {
+    setOtpBox(null);
+    setOtp("");
+    refetch();
+  });
+  useSocketEvent("assignmentCancelled", () => refetch());
 
-    const handleNewBroadcast = (data) => {
-      console.log("📦 New order for delivery:", data);
-      refetch(); // refresh list
-    };
-
-    const handleAssignmentUpdate = (data) => {
-      console.log("📦 Assignment update:", data);
-      refetch();
-    };
-
-    const handleOrderCompleted = () => {
-      setOtpBox(null);
-      setOtp("");
-      refetch();
-    };
-    const handleAssignmentCancelled = () => {
-      setOtpBox(null);
-      setOtp("");
-      refetch();
-    };
-
-    socket.on("newBroadcastOrder", handleNewBroadcast);
-    socket.on("orderAssigned", handleAssignmentUpdate);
-    socket.on("orderCompleted", handleOrderCompleted);
-    socket.on("assignmentCancelled", handleAssignmentCancelled);
-
-    return () => {
-      socket.off("newBroadcastOrder", handleNewBroadcast);
-      socket.off("orderAssigned", handleAssignmentUpdate);
-      socket.off("orderCompleted");
-      socket.off("assignmentCancelled", handleAssignmentCancelled);
-    };
-  }, [socket, refetch]);
 
   // ACTIONS
   const handleLogout = async () => {

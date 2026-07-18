@@ -27,8 +27,7 @@ import useDetectLocation from "./hooks/useDetectLocation";
 import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 import TrackOrderPage from "./pages/TrackOrderPage";
 import ShopItems from "./pages/ShopItems";
-import { setSocket } from "./redux/features/user/userSlice";
-import { socket } from "./socket";
+import { socket, joinSocketRoom } from "./socket";
 
 // Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
@@ -44,19 +43,7 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 
 function App() {
   const dispatch = useDispatch();
-  // const navigate = useNavigate();
-  // const { data, isSuccess, isError, isLoading } = useGetMeQuery();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-
-  // useEffect(() => {
-  //   if (isSuccess && data) {
-  //     dispatch(userLoggedIn(data));
-
-  //   } else if (isError) {
-  //     dispatch(userLoggedOut());
-  //     navigate("/");
-  //   }
-  // }, [isSuccess, isError, data, dispatch]);
 
   const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
@@ -70,28 +57,11 @@ function App() {
     });
   }, []);
 
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("✅ Connected:", socket.id);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("❌ Disconnected");
-    });
-
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-    };
-  }, []);
-
-  useEffect(() => {
-    if (user?._id) {
-      socket.emit("joinRoom", { userId: user._id });
-      dispatch(setSocket(socket));
-      console.log("Joined room:", user._id);
-    }
-  }, [user?._id]);
+useEffect(() => {
+  if (user?._id) {
+    joinSocketRoom(user._id);
+  }
+}, [user?._id]);
 
   return (
     <>
