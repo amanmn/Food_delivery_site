@@ -16,7 +16,7 @@ bullmqRedis.on("ready", () => {
 });
 
 bullmqRedis.on("error", () => {
-    console.log("BullMQ Redis error", err);
+    console.log("BullMQ Redis error");
 });
 
 module.exports = bullmqRedis;

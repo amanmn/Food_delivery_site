@@ -4,7 +4,6 @@ const bullmqRedis = require("../config/bullmqRedis");
 const notificationWorker = new Worker(
     "notificationQueue",
     async (job) => {
-        
         console.log("Processing notification job:", job.data);
     },
     {
