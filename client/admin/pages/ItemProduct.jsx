@@ -9,9 +9,9 @@ import { useGetMyShopQuery } from "../../src/redux/features/shop/shopApi";
 const ItemProduct = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-   const {data:shopData, isLoading, error} = useGetMyShopQuery();
-    console.log("ShopData:",shopData);
-    
+    const { data: shopData, isLoading, error } = useGetMyShopQuery();
+    console.log("ShopData:", shopData);
+
     const shopItems = shopData?.items || [];
 
     const handleDeleteItem = async (itemId) => {
@@ -70,7 +70,7 @@ const ItemProduct = () => {
                                                 : "bg-red-100 text-red-700"
                                                 }`}
                                         >
-                                            {item.available ? "Available" : "Sold Out"}
+                                            {!item.available ? "Available" : "Sold Out"}
                                         </span>
                                     </div>
 

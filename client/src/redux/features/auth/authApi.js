@@ -1,20 +1,23 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../baseQueryWithReauth";
 
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_BASEURL
-      ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
-      : "/api/auth",
-    credentials: "include",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth?.user?.token;
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    }
-  }),
+  baseQuery: baseQueryWithReauth,
+
+  // baseQuery: fetchBaseQuery({
+  //   baseUrl: import.meta.env.VITE_BASEURL
+  //     ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
+  //     : "/api/auth",
+  //   credentials: "include",
+  //   prepareHeaders: (headers, { getState }) => {
+  //     const token = getState().auth?.user?.token;
+  //     if (token) {
+  //       headers.set("Authorization", `Bearer ${token}`);
+  //     }
+  //     return headers;
+  //   }
+  // }),
   tagTypes: ["Auth"],
   endpoints: (builder) => ({
     registerUser: builder.mutation({

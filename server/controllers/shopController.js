@@ -1,6 +1,7 @@
 const uploadOnCloudinary = require("../config/cloudinary");
 const Shop = require("../models/shopmodel");
 const Order = require("../models/Order");
+const Item = require("../models/Itemmodel")
 const { default: mongoose } = require("mongoose");
 
 const createEditShop = async (req, res) => {
@@ -52,6 +53,33 @@ const getMyShop = async (req, res) => {
         return res.status(500).json({ message: `getmyshop  error ${error}` })
     }
 }
+
+const deleteShop = async (req, res) => {
+    try {
+        const ownerId = req.userId;
+        const shop = await Shop.findOne({ owner: ownerId });
+        if (!shop) return res.status(404).json({ message: "Shop not found" });
+
+        // checking for active orders 
+        const activeOrders = await Order.countDocuments({
+            "shopOrders.shop": shop._id,
+            "shopOrders.status": { $in: ["pending", "accepted", "preparing", "out_for_delivery"] },
+        });
+
+        if (activeOrders > 0) {
+            return res.status(400).json({
+                message: `Cannot delete shop: ${activeOrders} active order(s) still in progress. Complete or cancel them first.`,
+            });
+        }
+
+        await Item.deleteMany({ shop: shop._id });
+        await Shop.findByIdAndDelete(shop._id);
+
+        return res.status(200).json({ message: "Shop deleted successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: `delete shop error ${error}` });
+    }
+};
 
 const getShopByCity = async (req, res) => {
     try {
@@ -158,9 +186,11 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
+
 module.exports = {
     createEditShop,
     getMyShop,
+    deleteShop,
     getShopByCity,
     getDashboardStats,
 }

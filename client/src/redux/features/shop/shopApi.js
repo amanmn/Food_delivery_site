@@ -8,7 +8,7 @@ export const shopApi = createApi({
       : "/api/shop",
     credentials: "include",
   }),
-  tagTypes: ["Shop","Dashboard"],
+  tagTypes: ["Shop", "Dashboard"],
   endpoints: (builder) => ({
     // Get shops by city (public)
     getShopByCity: builder.query({
@@ -20,6 +20,14 @@ export const shopApi = createApi({
     getMyShop: builder.query({
       query: () => "get-myshop",
       providesTags: ["Shop"],
+    }),
+
+    deleteShop: builder.mutation({
+      query: () => ({
+        url: "delete-shop",
+        method: "DELETE"
+      }),
+      invalidatesTags: ["Shop"]
     }),
 
     // Create or edit shop
@@ -45,6 +53,7 @@ export const shopApi = createApi({
 export const {
   useGetShopByCityQuery,
   useGetMyShopQuery,
+  useDeleteShopMutation,
   useCreateOrEditShopMutation,
   useGetDashboardStatsQuery,
 } = shopApi;
