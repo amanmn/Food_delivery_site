@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
 import {
   FaShoppingBag,
   FaDollarSign,
@@ -16,10 +15,11 @@ import { useSelector } from "react-redux";
 import useSocketEvent from "../../src/hooks/useSocketEvent";
 
 export default function AdminDashboard() {
-  const dispatch = useDispatch();
   const { data, isLoading, isError, refetch } = useGetDashboardStatsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
+  const { user } = useSelector((state) => state.auth);
+  const ownerId = user?._id;
 
   useSocketEvent("dashboardUpdate", () => refetch());
 
@@ -111,16 +111,21 @@ export default function AdminDashboard() {
 
         {recentOrders.length > 0 ? (
           <div className="space-y-4">
-            {recentOrders.map((order) => (
-              <OrderCard
-                key={order._id}
-                id={order._id}
-                name={order.user?.name}
-                amount={order.totalAmount}
-                address={order.deliveryAddress?.text}
-                time={new Date(order.createdAt).toLocaleString()}
-              />
-            ))}
+            {recentOrders.map((order) => {
+              const myShopOrder = order.shopOrders?.find(
+                (so) => so.owner === ownerId || so.owner?._id === ownerId
+              );
+              return (
+                <OrderCard
+                  key={order._id}
+                  id={order._id}
+                  name={order.user?.name}
+                  amount={myShopOrder?.subtotal ?? order.totalAmount}
+                  address={order.deliveryAddress?.text}
+                  time={new Date(order.createdAt).toLocaleString()}
+                />
+              );
+            })}
           </div>
         ) : (
           <p className="text-gray-500 text-sm">
