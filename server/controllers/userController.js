@@ -3,7 +3,7 @@ const multer = require("multer");
 const uploadOnCloudinary = require("../config/cloudinary");
 const populateUser = require("../utils/populateUser");
 
-// ✅ Cloudinary Image Upload
+// Cloudinary Image Upload
 const uploadProfileImage = async (req, res) => {
     try {
         if (!req.file || !req.file.path) {
@@ -28,7 +28,7 @@ const uploadProfileImage = async (req, res) => {
     }
 };
 
-// ✅ Get Profile
+// Get Profile
 const profile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
@@ -129,7 +129,7 @@ const updateUserLocation = async (req, res) => {
     }
 }
 
-// ✅ Exports
+// Exports
 module.exports = {
     profile,
     updateUser,

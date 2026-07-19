@@ -533,8 +533,6 @@ const getDeliveryBoyAssignment = async (req, res) => {
   try {
     const deliveryBoyId = req.userId;
     const deliveryBoyObjectId = new mongoose.Types.ObjectId(deliveryBoyId);
-    console.log("dboid", deliveryBoyObjectId);
-
 
     const assignments = await DeliveryAssignment.find({
       $or: [
@@ -548,7 +546,10 @@ const getDeliveryBoyAssignment = async (req, res) => {
         }
       ]
     })
-      .populate("order")
+      .populate({
+        path: "order",
+        populate: { path: "user", select: "name phone" }
+      })
       .populate("shop");
 
     // console.log(assignments, "assignments");
@@ -573,6 +574,9 @@ const getDeliveryBoyAssignment = async (req, res) => {
         items: shopOrder?.shopOrderItems || [],
         subtotal: shopOrder?.subtotal || 0,
         status: a.status,
+        user: a.order?.user
+          ? { name: a.order.user.name, phone: a.order.user.phone }
+          : null,
       };
     }).filter(Boolean); // Remove nulls
 
