@@ -137,7 +137,7 @@ module.exports = {
     updateUserLocation
 };
 
-// ✅ Get all delivery boys (for owner/admin or authenticated clients)
+// Get all delivery boys (for owner/admin or authenticated clients)
 const getDeliveryBoys = async (req, res) => {
     try {
         const boys = await User.find({ role: 'deliveryBoy' })

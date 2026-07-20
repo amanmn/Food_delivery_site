@@ -833,8 +833,8 @@ const verifyDeliveryOtp = async (req, res) => {
       assignment.status = "completed";
       assignment.completedAt = new Date();
       await assignment.save();
+      console.log("✅ Assignment marked completed:", assignment._id);
     }
-    console.log("✅ Assignment marked completed:", assignment._id);
 
     await order.save();
 

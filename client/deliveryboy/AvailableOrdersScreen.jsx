@@ -1,5 +1,5 @@
 const AvailableOrdersScreen = ({ orders, onAccept }) => {
-    console.log("🔥 Orders UI:", orders);
+    // console.log("🔥 Orders UI:", orders);
 
     return (
         <div className="p-3">
@@ -15,7 +15,7 @@ const AvailableOrdersScreen = ({ orders, onAccept }) => {
                     >
                         {/* ORDER ID */}
                         <p className="text-sm text-gray-600">
-                            Order ID: {order.orderId}
+                            Order ID: #{order.orderId?.slice(-6)}
                         </p>
 
                         <hr className="my-2" />
