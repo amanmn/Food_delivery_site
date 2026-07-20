@@ -26,7 +26,7 @@ const verifyToken = async (req, res, next) => {
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-      
+
       if (!decoded?.id) {
         req.user = null;
         return next();
@@ -66,11 +66,23 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+// check 401 for token rotation( old refresh -> new tokens )
+const requireAuth = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Not authenticated",
+    });
+  }
+
+  next();
+};
+
+
 const requireRole = (...allowedRoles) => (req, res, next) => {
   try {
     if (!req.user) return unauthorized(res, 'Not authenticated');
 
-    // console.log(req.user);
     if (!allowedRoles.includes(req.user.role)) return res.status(403).json({ success: false, message: 'Access Denied: Insufficient permissions' });
 
     return next();
@@ -102,6 +114,7 @@ const deliveryOnly = requireRole("deliveryBoy");
 
 module.exports = {
   verifyToken,
+  requireAuth,
   requireRole,
   ownerOnly,
   deliveryOnly

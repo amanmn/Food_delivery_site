@@ -20,7 +20,7 @@ const setTokenCookie = (res, token, name) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: name === "accessToken"
-      ? 24 * 60 * 60 * 1000       // 1 day
+      ? 60 * 1000       // 1m
       : 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };

@@ -4,7 +4,7 @@ const { body } = require("express-validator");
 const validateRequest = require("../middleware/validateRequest");
 
 const { register, login, logout, getMe, sendOtpMail, verifyOtp, resetPassword, refreshToken } = require("../controllers/authController");
-const { verifyToken } = require("../middleware/authmiddleware");
+const { verifyToken, requireAuth } = require("../middleware/authmiddleware");
 
 router.post(
     "/register",
@@ -79,8 +79,8 @@ router.post(
     resetPassword
 );
 
-// ✅ Get Logged-In User Info ---> GET : /api/auth/me
-router.get("/me", verifyToken, getMe);
+// Get Logged-In User Info ---> GET : /api/auth/me
+router.get("/me", verifyToken, requireAuth, getMe);
 
 
 module.exports = router;

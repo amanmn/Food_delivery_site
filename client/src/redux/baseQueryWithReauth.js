@@ -1,71 +1,70 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_BASEURL
-    ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
-    : "/api/auth",
+    baseUrl: import.meta.env.VITE_BASEURL
+        ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
+        : "/api/auth",
 
-  credentials: "include",
-  prepareHeaders: (headers, { getState }) => {
-    const token = getState().auth?.user?.token;
+    credentials: "include",
+    prepareHeaders: (headers, { getState }) => {
+        const token = getState().auth?.user?.token;
 
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
+        if (token) {
+            headers.set("Authorization", `Bearer ${token}`);
+        }
 
-    return headers;
-  },
+        return headers;
+    },
 });
 
-export const baseQueryWithReauth = async (
-  args,
-  api,
-  extraOptions
-) => {
-    
-  let result = await baseQuery(
-    args,
-    api,
-    extraOptions
-  );
+// only stores the current refresh request
+let refreshPromise = null;
 
-  // server return 401?
-  if (result?.error?.status === 401) {
-
-    console.log(
-      "Access token expired. Trying refresh token..."
-    );
-
-    // ask backend for new access token
-    const refreshResult = await baseQuery(
-      {
-        url: "refresh-token",
-        method: "POST",
-      },
-      api,
-      extraOptions
-    );
-
-    // refresh successful?
-    if (refreshResult?.data) {
-      console.log(
-        "Access token refreshed successfully"
-      );
-
-      // retry original request
-      result = await baseQuery(
+export const baseQueryWithReauth = async (args, api, extraOptions) => {
+    let result = await baseQuery(
         args,
         api,
         extraOptions
-      );
+    );
 
-    } else {
+    // server return 401?
+    if (result?.error?.status === 401) {
+        console.log("Access token expired");
 
-      console.log(
-        "Refresh token expired. Login again."
-      );
+        // refresh is already running than wait for it
+        if (!refreshPromise) {
+            console.log("Starting refresh request...");
+
+            // ask backend for new access token
+            refreshPromise = await baseQuery(
+                {
+                    url: "refresh-token",
+                    method: "POST",
+                },
+                api,
+                extraOptions
+            ).finally(() => {
+                refreshPromise = null;
+            });
+        } else {
+            console.log("Refresh already running. Waiting...");
+        }
+
+        const refreshResult = await refreshPromise;
+
+        // refresh successful?
+        if (refreshResult?.data) {
+            console.log("Token refreshed successfully");
+
+            // retry original request
+            result = await baseQuery(
+                args,
+                api,
+                extraOptions
+            )
+        } else {
+            console.log("Refresh token expired. Login again.")
+        }
     }
-  }
-
-  return result;
+    return result;
 };
