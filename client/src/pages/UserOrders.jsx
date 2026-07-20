@@ -1,48 +1,66 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { updateRealTimeOrderStatus } from "../redux/features/order/orderSlice";
-import { useEffect } from "react";
 import useSocketEvent from "../hooks/useSocketEvent";
+
+const statusStyles = {
+  pending: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
+  preparing: "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+  out_for_delivery: "bg-purple-100 text-purple-700 ring-1 ring-purple-200",
+  delivered: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
+  cancelled: "bg-rose-100 text-rose-700 ring-1 ring-rose-200",
+};
 
 const UserOrders = ({ orders = [], filter }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   useSocketEvent("orderStatusUpdated", (data) => {
-    dispatch(updateRealTimeOrderStatus({
-      orderId: data.orderId,
-      shopOrderId: data.shopOrderId,
-      status: data.status,
-    }));
+    dispatch(
+      updateRealTimeOrderStatus({
+        orderId: data.orderId,
+        shopOrderId: data.shopOrderId,
+        status: data.status,
+      })
+    );
   });
 
   if (!Array.isArray(orders)) return null;
 
-  // Filter orders based on shopOrder status
   const filteredOrders =
     filter === "All"
       ? orders
       : orders.filter((order) =>
-        order.shopOrders?.some(
-          (shopOrder) =>
-            shopOrder.status?.toLowerCase() === filter.toLowerCase()
-        )
-      );
+          order.shopOrders?.some(
+            (shopOrder) =>
+              shopOrder.status?.toLowerCase() === filter.toLowerCase()
+          )
+        );
 
   if (filteredOrders.length === 0)
     return (
-      <div className="text-center text-gray-500 mt-20">
-        <p className="text-lg sm:text-xl">No {filter} orders found 🛍️</p>
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-pink-100 flex items-center justify-center text-4xl mb-4 shadow-inner">
+          🛍️
+        </div>
+        <p className="text-lg sm:text-xl font-semibold text-gray-800">
+          No {filter} orders found
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          Your delicious journey awaits — place your first order!
+        </p>
       </div>
     );
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
       {filteredOrders.map((order) => {
-        // Calculate main status for this order
         const mainStatus =
           order.shopOrders?.[order.shopOrders.length - 1]?.status || "pending";
+        const statusClass =
+          statusStyles[mainStatus?.toLowerCase()] ||
+          "bg-gray-100 text-gray-700 ring-1 ring-gray-200";
 
         return (
           <motion.div
@@ -51,51 +69,59 @@ const UserOrders = ({ orders = [], filter }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="bg-white border border-gray-100 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col"
+            whileHover={{ y: -4 }}
+            className="group relative bg-white/90 backdrop-blur-xl border border-orange-100/70 rounded-3xl shadow-[0_8px_30px_-12px_rgba(255,107,53,0.15)] hover:shadow-[0_20px_45px_-15px_rgba(255,107,53,0.35)] transition-all duration-300 overflow-hidden flex flex-col min-w-0"
           >
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
-              <div>
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">
-                  Order ID:{" "}
-                  <span className="text-gray-500 font-normal">
-                    {order._id.slice(-8).toUpperCase()}
-                  </span>
+            {/* Ambient glow */}
+            <div className="pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br from-orange-400/20 to-pink-500/20 blur-3xl opacity-60 group-hover:opacity-100 transition-opacity" />
+
+            {/* Header */}
+            <div className="relative p-4 sm:p-5 border-b border-orange-100/70 flex justify-between items-start gap-3 bg-gradient-to-r from-orange-50 via-amber-50/60 to-transparent">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-orange-500">
+                  Order
+                </p>
+                <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate font-display">
+                  #{order._id.slice(-8).toUpperCase()}
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </p>
               </div>
 
               <span
-                className={`text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full ${mainStatus === "pending"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : mainStatus === "delivered"
-                    ? "bg-green-100 text-green-700"
-                    : mainStatus === "preparing"
-                      ? "bg-blue-100 text-blue-700"
-                      : mainStatus === "out_for_delivery"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-gray-100 text-gray-700"
-                  }`}
+                className={`shrink-0 text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${statusClass}`}
               >
-                {mainStatus.charAt(0).toUpperCase() + mainStatus.slice(1)}
+                {mainStatus
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())}
               </span>
             </div>
 
-            {/* ===== Order Items ===== */}
-            <div className="p-5 flex-1">
+            {/* Items */}
+            <div className="p-4 sm:p-5 flex-1 min-w-0">
               {order.shopOrders?.map((shopOrder) => (
-                <div key={shopOrder._id} className="mb-5">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    🏪 {shopOrder.shop?.name || "Shop"}
-                  </h4>
-                  <div className="space-y-3">
+                <div key={shopOrder._id} className="mb-5 last:mb-0">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white text-sm shadow-sm">
+                      🏪
+                    </span>
+                    <h4 className="font-semibold text-gray-800 text-sm truncate">
+                      {shopOrder.shop?.name || "Shop"}
+                    </h4>
+                  </div>
+
+                  <div className="space-y-2">
                     {shopOrder.shopOrderItems?.map((item) => (
                       <div
                         key={item._id}
-                        className="flex justify-between items-center bg-gray-50 rounded-2xl p-2.5 hover:bg-gray-100 transition-all"
+                        className="flex justify-between items-center gap-3 bg-gradient-to-r from-orange-50/60 to-transparent hover:from-orange-100/60 rounded-2xl p-2 transition-all min-w-0"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <img
                             src={
                               item?.image ||
@@ -103,10 +129,10 @@ const UserOrders = ({ orders = [], filter }) => {
                               "https://via.placeholder.com/50?text=Food"
                             }
                             alt={item?.name || item?.item?.name}
-                            className="w-14 h-14 rounded-xl object-cover border"
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-orange-100 shrink-0"
                           />
-                          <div>
-                            <p className="font-medium text-gray-800 text-sm">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-800 text-sm truncate">
                               {item?.name || item?.item?.name}
                             </p>
                             <p className="text-xs text-gray-500">
@@ -114,7 +140,7 @@ const UserOrders = ({ orders = [], filter }) => {
                             </p>
                           </div>
                         </div>
-                        <p className="font-semibold text-gray-700 text-sm">
+                        <p className="font-bold text-gray-900 text-sm shrink-0">
                           ₹{item?.price * item?.quantity}
                         </p>
                       </div>
@@ -124,31 +150,32 @@ const UserOrders = ({ orders = [], filter }) => {
               ))}
             </div>
 
-            <div className="border-t border-gray-100 px-5 py-4 flex flex-row sm:flex-row justify-between items-center gap-3 bg-gray-50">
-              <div className="flex flex-col items-start">
-                <p className="text-sm text-gray-600">
-                  Payment:{" "}
+            {/* Footer */}
+            <div className="border-t border-orange-100/70 px-4 sm:px-5 py-4 flex flex-col xs:flex-row sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-orange-50/40 to-pink-50/30">
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500">
+                  Payment ·{" "}
                   <span
-                    className={`font-semibold ${order.paymentStatus === "pending"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                      }`}
+                    className={`font-semibold ${
+                      order.paymentStatus === "pending"
+                        ? "text-amber-600"
+                        : "text-emerald-600"
+                    }`}
                   >
                     {order.paymentStatus
                       ? order.paymentStatus.charAt(0).toUpperCase() +
-                      order.paymentStatus.slice(1)
+                        order.paymentStatus.slice(1)
                       : "Unknown"}
                   </span>
                 </p>
-                <p className="text-lg font-semibold text-green-700">
+                <p className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent font-display">
                   ₹{order.totalAmount}
                 </p>
               </div>
 
-              {/* Track Order Button */}
               <button
                 onClick={() => navigate(`/track-order/${order._id}`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-md transition-all duration-200"
+                className="shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.03] active:scale-95 transition-all duration-200"
               >
                 🚚 Track Order
               </button>
