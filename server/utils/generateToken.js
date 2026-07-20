@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 // Generate Tokens
 const generateAccessToken = (payload) => {
   return jwt.sign(payload, process.env.ACCESS_SECRET, {
-    expiresIn: "1d",
+    expiresIn: "1m",
   });
 };
 
@@ -13,7 +13,7 @@ const generateRefreshToken = (payload) => {
   });
 }
 
-// ✅ Set token as HTTP-only cookie
+// Set token as HTTP-only cookie
 const setTokenCookie = (res, token, name) => {
   res.cookie(name, token, {
     httpOnly: true,
