@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 // Generate Tokens
 const generateAccessToken = (payload) => {
   return jwt.sign(payload, process.env.ACCESS_SECRET, {
-    expiresIn: "1m",
+    expiresIn: "1h",
   });
 };
 
@@ -20,7 +20,7 @@ const setTokenCookie = (res, token, name) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: name === "accessToken"
-      ? 60 * 1000       // 1m
+      ? 60 * 60 * 1000       // 1h
       : 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
