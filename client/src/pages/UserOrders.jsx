@@ -6,7 +6,7 @@ import useSocketEvent from "../hooks/useSocketEvent";
 
 const statusStyles = {
   pending: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
-  preparing: "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+  preparing: "bg-orange-200 text-orange-700 ring-1 ring-orange-200",
   out_for_delivery: "bg-purple-100 text-purple-700 ring-1 ring-purple-200",
   delivered: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
   cancelled: "bg-rose-100 text-rose-700 ring-1 ring-rose-200",
@@ -175,7 +175,7 @@ const UserOrders = ({ orders = [], filter }) => {
 
               <button
                 onClick={() => navigate(`/track-order/${order._id}`)}
-                className="shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.03] active:scale-95 transition-all duration-200"
+                className="shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r cursor-pointer from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.03] active:scale-95 transition-all duration-200"
               >
                 🚚 Track Order
               </button>

@@ -12,7 +12,7 @@ const FILTERS = [
   { key: "All", label: "All" },
   { key: "Pending", label: "Pending" },
   { key: "Preparing", label: "Preparing" },
-  { key: "out_for_delivery", label: "On the way" },
+  { key: "out_for_delivery", label: "out_for_delivery" },
   { key: "Delivered", label: "Delivered" },
 ];
 
