@@ -689,6 +689,30 @@ const acceptAssignment = async (req, res) => {
   }
 }
 
+const declineAssignment = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const assignment = await DeliveryAssignment.findById(assignmentId);
+
+    if (!assignment) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    if (assignment.status !== "broadcasted") {
+      return res.status(400).json({ message: "This order is no longer available" });
+    }
+
+    assignment.broadcastedTo = assignment.broadcastedTo.filter(
+      (id) => id.toString() !== req.userId.toString()
+    );
+    await assignment.save();
+
+    return res.status(200).json({ success: true, message: "Order declined" });
+  } catch (error) {
+    return res.status(500).json({ message: `decline assignment error ${error}` });
+  }
+};
+
 const getCutterntOrder = async (req, res) => {
   try {
     const assignment = await DeliveryAssignment.findOne({
@@ -895,6 +919,41 @@ const getDeliveryStats = async (req, res) => {
   });
 };
 
+const getDeliveryHistory = async (req, res) => {
+  try {
+    const deliveryBoyId = req.userId;
+
+    const completed = await DeliveryAssignment.find({
+      assignedTo: deliveryBoyId,
+      status: "completed",
+    })
+      .sort({ completedAt: -1 })
+      .limit(50)
+      .populate("shop", "name")
+      .populate({ path: "order", select: "shopOrders deliveryAddress" });
+
+    const history = completed.map((a) => {
+      const shopOrder = a.order?.shopOrders?.find(
+        (so) => String(so._id) === String(a.shopOrderId)
+      );
+      return {
+        assignmentId: a._id,
+        shopName: a.shop?.name || "N/A",
+        completedAt: a.completedAt,
+        subtotal: shopOrder?.subtotal || 0,
+        earning: 40,
+        deliveryAddress: a.order?.deliveryAddress?.text || "",
+      };
+    });
+
+    return res.status(200).json({ history });
+  } catch (error) {
+    return res.status(500).json({ message: `get delivery history error ${error}` });
+  }
+};
+
+
+
 module.exports = {
   placeOrder,
   verifyPayment,
@@ -903,8 +962,10 @@ module.exports = {
   getDeliveryBoyAssignment,
   acceptAssignment,
   getCutterntOrder,
+  declineAssignment,
   getOrderById,
   sendDeliveryOtp,
   verifyDeliveryOtp,
-  getDeliveryStats
+  getDeliveryStats,
+  getDeliveryHistory,
 };

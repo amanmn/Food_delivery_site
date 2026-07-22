@@ -1,23 +1,17 @@
-const DeliveryHeader = ({ deliveryBoy, onLogout }) => {
+const DeliveryHeader = ({ deliveryBoy, onLogout, onToggleHistory, showingHistory }) => {
     return (
-        <div className="bg-white shadow p-3 flex justify-between items-center rounded-xl mb-3">
-
-            {/* LEFT */}
+        <div className="bg-white shadow p-4 flex justify-between items-center">
             <div>
-                <h2 className="font-bold text-md">
-                    {deliveryBoy?.name || "Delivery Boy"}
-                </h2>
-                <p className="text-xs text-gray-500">
-                    {deliveryBoy?.phone}
-                </p>
+                <h2 className="font-bold text-lg">{deliveryBoy?.name}</h2>
+                <p className="text-green-600 text-sm">● Online</p>
             </div>
-
-            {/* RIGHT */}
             <div className="flex items-center gap-2">
-                <span className="text-green-600 text-xs font-semibold">
-                    ● Online
-                </span>
-
+                <button
+                    onClick={onToggleHistory}
+                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
+                >
+                    {showingHistory ? "Back" : "History"}
+                </button>
                 <button
                     onClick={onLogout}
                     className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm"
@@ -25,7 +19,6 @@ const DeliveryHeader = ({ deliveryBoy, onLogout }) => {
                     Logout
                 </button>
             </div>
-
         </div>
     );
 };

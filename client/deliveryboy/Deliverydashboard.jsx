@@ -9,11 +9,13 @@ import {
   useSendDeliveryOtpMutation,
   useVerifyDeliveryOtpMutation,
   useGetDeliveryStatsQuery,
+  useDeclineAssignmentMutation
 } from "../src/redux/features/order/orderApi";
 import ActiveDeliveryScreen from "./ActiveDeliveryScreen";
 import AvailableOrdersScreen from "./AvailableOrdersScreen";
 import DeliveryHeader from "./DeliveryHeader";
 import StatsSection from "./StatsSection";
+import DeliveryHistory from "./DeliveryHistory";
 import { socket } from "../src/socket";
 import useSocketEvent from "../src/hooks/useSocketEvent";
 
@@ -27,9 +29,11 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   const [acceptAssignment] = useAcceptDeliveryAssignmentMutation();
   const [sendDeliveryOtp] = useSendDeliveryOtpMutation();
   const [verifyDeliveryOtp] = useVerifyDeliveryOtpMutation();
+  const [declineAssignment] = useDeclineAssignmentMutation();
 
   const [otpBox, setOtpBox] = useState(null);
   const [otp, setOtp] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   const assigned = assignments.filter((o) => o.status === "assigned");
   const activeOrder = assigned.length > 0 ? assigned[0] : null;
@@ -39,6 +43,16 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   useEffect(() => {
     let watchId;
     if (navigator.geolocation) {
+      // when dashboard opens
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          socket.emit("deliveryLocationUpdate", { latitude, longitude });
+        },
+        (error) => console.error("Initial location error:", error)
+      );
+
+      // keep updating as they move
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -52,6 +66,7 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
   }, [deliveryBoy?._id]);
+
 
   // Real-time events — one line each, no manual cleanup needed
   useSocketEvent("newBroadcastOrder", () => refetch());
@@ -68,6 +83,7 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   });
 
   const handleLogout = async () => {
+    socket.emit("goOffline");
     await logoutUser();
     dispatch(userLoggedOut());
   };
@@ -79,6 +95,15 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
     } catch (err) {
       toast.error(err?.data?.message || "This order was already taken by someone else");
       refetch();
+    }
+  };
+
+  const handleDecline = async (assignmentId) => {
+    try {
+      await declineAssignment(assignmentId).unwrap();
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to decline order");
     }
   };
 
@@ -117,9 +142,16 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
 
   return (
     <>
-      <DeliveryHeader deliveryBoy={deliveryBoy} onLogout={handleLogout} />
+      <DeliveryHeader
+        deliveryBoy={deliveryBoy}
+        onLogout={handleLogout}
+        onToggleHistory={() => setShowHistory((v) => !v)}
+        showingHistory={showHistory}
+      />
 
-      {activeOrder ? (
+      {showHistory ? (
+        <DeliveryHistory />
+      ) : activeOrder ? (
         <ActiveDeliveryScreen
           order={activeOrder}
           deliveryBoy={deliveryBoy}
@@ -132,7 +164,7 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
       ) : (
         <>
           <StatsSection stats={stats} />
-          <AvailableOrdersScreen orders={broadcasted} onAccept={handleAccept} />
+          <AvailableOrdersScreen orders={broadcasted} onAccept={handleAccept} onDecline={handleDecline} />
         </>
       )}
     </>

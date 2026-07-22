@@ -14,13 +14,13 @@ const ActiveDeliveryScreen = ({
     return (
         <div className="p-3">
 
-            {/* 🔥 MAP */}
+            {/* MAP */}
             <DeliveryBoyTracking data={order} deliveryBoy={deliveryBoy} />
 
-            {/* 🔥 ORDER DETAILS */}
+            {/* ORDER DETAILS */}
             <div className="bg-white p-4 rounded-xl shadow mt-3">
                 <h2 className="font-bold text-lg mb-2">
-                    Order #{order.assignmentId.slice(-5)}
+                    Order #{order.assignmentId.slice(-6)}
                 </h2>
 
                 <p className="text-sm text-gray-600">
@@ -34,10 +34,30 @@ const ActiveDeliveryScreen = ({
                 <p className="text-sm">
                     📞 {order.user?.phone}
                 </p>
-            </div>
+                <div className="flex gap-2 mt-3">
+                    {order.deliveryAddress?.latitude && order.deliveryAddress?.longitude && (
+                        <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 text-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition"
+                        >
+                            📍 Get Directions
+                        </a>
+                    )}
+                    {order.user?.phone && (
+                        <a
+                            href={`tel:${order.user.phone}`}
+                            className="flex-1 text-center bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition"
+                        >
+                            📞 Call Customer
+                        </a>
+                    )}
+                </div>
+            </div >
 
-            {/* 🔥 DELIVERY ACTION */}
-            <div className="mt-4">
+            {/* DELIVERY ACTION */}
+            <div className="mt-4" >
                 {otpBox !== order.assignmentId ? (
                     <button
                         onClick={() => onSendOtp(order)}
@@ -80,7 +100,7 @@ const ActiveDeliveryScreen = ({
                         </button>
                     </div>
                 )}
-            </div>
+            </div >
         </div >
     );
 };

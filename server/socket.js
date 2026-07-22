@@ -61,14 +61,16 @@ const socketHandler = (io) => {
             }
         })
 
-        socket.on("disconnect", async () => {
+        socket.on("goOffline", async () => {
             try {
-                await User.findOneAndUpdate(
-                    { socketId: socket.id },
+                const userId = socket.userId;
+                if (!userId) return;
+
+                await User.findOneAndUpdate(userId,
                     {
                         isOnline: false,
-                        socketId: null,
                     });
+                console.log("User marked offline:", userId);
             } catch (error) {
                 console.error("Error updating user on disconnect:", error);
             }

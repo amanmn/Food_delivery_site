@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { placeOrder, getMyOrders, updateOrderStatus, getDeliveryBoyAssignment, acceptAssignment, getCutterntOrder, getOrderById, sendDeliveryOtp, verifyDeliveryOtp, verifyPayment, getDeliveryStats } = require("../controllers/orderController");
+const { placeOrder, getMyOrders, updateOrderStatus, getDeliveryBoyAssignment, acceptAssignment, getCutterntOrder, getOrderById, sendDeliveryOtp, verifyDeliveryOtp, verifyPayment, getDeliveryStats, declineAssignment, getDeliveryHistory } = require("../controllers/orderController");
 const { verifyToken, deliveryOnly } = require("../middleware/authmiddleware");
 
 router.post("/place-order", verifyToken, placeOrder);
@@ -8,6 +8,7 @@ router.post("/verify-payment", verifyToken, verifyPayment);
 router.get("/orders", verifyToken, getMyOrders);
 router.put("/update-status", verifyToken, updateOrderStatus); // owner
 // router.post("/assign-delivery-boy", verifyToken, assignDeliveryBoyByOwner); // owner
+
 router.get("/get-assignments", verifyToken, deliveryOnly, getDeliveryBoyAssignment); // deliveryBoy
 router.get("/get-current-order", verifyToken, getCutterntOrder);
 router.post("/accept-assignment/:assignmentId", verifyToken, deliveryOnly, acceptAssignment); // deliveryBoy
@@ -15,5 +16,6 @@ router.post("/send-delivery-otp", verifyToken, deliveryOnly, sendDeliveryOtp); /
 router.post("/verify-delivery-otp", verifyToken, deliveryOnly, verifyDeliveryOtp); // deliveryBoy
 router.get("/get-order-by-id/:orderId", verifyToken, getOrderById); // deliveryBoy
 router.get("/delivery/stats", verifyToken, deliveryOnly, getDeliveryStats); // deliveryBoy
-
+router.post("/decline-assignment/:assignmentId", verifyToken, deliveryOnly, declineAssignment);  // deliveryBoy
+router.get("/delivery/history", verifyToken, deliveryOnly, getDeliveryHistory); // deliveryBoy
 module.exports = router;

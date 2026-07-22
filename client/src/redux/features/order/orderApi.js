@@ -97,6 +97,15 @@ export const orderApi = createApi({
         getDeliveryStats: builder.query({
             query: () => "delivery/stats",
         }),
+        declineAssignment: builder.mutation({
+            query: (assignmentId) => ({
+                url: `/decline-assignment/${assignmentId}`,
+                method: "POST",
+            }),
+        }),
+        getDeliveryHistory: builder.query({
+            query: () => "/delivery/history",
+        }),
     }),
 });
 
@@ -111,5 +120,7 @@ export const {
     useGetOrderByIdQuery,
     useSendDeliveryOtpMutation,
     useVerifyDeliveryOtpMutation,
-    useGetDeliveryStatsQuery
+    useGetDeliveryStatsQuery,
+    useDeclineAssignmentMutation,
+    useGetDeliveryHistoryQuery,
 } = orderApi;
