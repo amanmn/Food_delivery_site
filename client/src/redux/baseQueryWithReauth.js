@@ -38,7 +38,7 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
             // ask backend for new access token
             refreshPromise = await baseQuery(
                 {
-                    url: "refresh-token",
+                    url: "/auth/refresh-token",
                     method: "POST",
                 },
                 api,

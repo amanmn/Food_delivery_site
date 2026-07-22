@@ -1,11 +1,14 @@
 const User = require("../models/User");
-const multer = require("multer");
 const uploadOnCloudinary = require("../config/cloudinary");
 const populateUser = require("../utils/populateUser");
 
 // Cloudinary Image Upload
 const uploadProfileImage = async (req, res) => {
     try {
+        console.log("File path:", req.file.path);
+        console.log("File size:", req.file.size);
+        console.log("File exists:", require("fs").existsSync(req.file.path));
+        
         if (!req.file || !req.file.path) {
             return res.status(400).json({
                 success: false,
@@ -13,7 +16,14 @@ const uploadProfileImage = async (req, res) => {
             });
         }
 
+
         const imageUrl = await uploadOnCloudinary(req.file.path);
+        if (!imageUrl) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to upload image to Cloudinary",
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -21,7 +31,7 @@ const uploadProfileImage = async (req, res) => {
         });
     } catch (err) {
         console.error("Cloudinary upload error:", err);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             error: "Upload failed"
         });
@@ -68,36 +78,36 @@ const updateUser = async (req, res) => {
             address[0].street?.trim() &&
             address[0].city?.trim()
         ) {
-    updateFields.address = address;
+            updateFields.address = address;
 
-} if (profilePicture) updateFields.profilePicture = profilePicture;
+        } if (profilePicture) updateFields.profilePicture = profilePicture;
 
-if (Object.keys(updateFields).length > 0) {
-    updateOps.$set = updateFields;
-}
+        if (Object.keys(updateFields).length > 0) {
+            updateOps.$set = updateFields;
+        }
 
-// Add new address to $push
-if (newAddress) {
-    updateOps.$push = { address: newAddress };
-}
+        // Add new address to $push
+        if (newAddress) {
+            updateOps.$push = { address: newAddress };
+        }
 
-const updatedUser = await User.findByIdAndUpdate(
-    userId,
-    updateOps,
-    { new: true, runValidators: true }
-).select("-password");
-console.log(updatedUser);
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateOps,
+            { new: true, runValidators: true }
+        ).select("-password");
+        console.log(updatedUser);
 
 
-return res.status(200).json({
-    success: true,
-    message: "Profile updated successfully",
-    user: updatedUser,
-});
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user: updatedUser,
+        });
     } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Server error" });
-}
+        console.error("Error updating user:", error);
+        res.status(500).json({ message: "Server error" });
+    }
 };
 
 const updateUserLocation = async (req, res) => {
