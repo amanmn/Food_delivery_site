@@ -2,8 +2,8 @@ import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_BASEURL
-        ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
-        : "/api/auth",
+        ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/`
+        : "/api",
 
     credentials: "include",
     prepareHeaders: (headers, { getState }) => {

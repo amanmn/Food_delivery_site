@@ -1,20 +1,15 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../baseQueryWithReauth";
 
 export const orderApi = createApi({
     reducerPath: "orderApi",
-    baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_BASEURL
-            ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/order`
-            : "/api/order",
-        credentials: 'include',
-    }),
-
+    baseQuery: baseQueryWithReauth,
     tagTypes: ["Cart", "Orders", "User"],
 
     endpoints: (builder) => ({
         placeOrder: builder.mutation({
             query: (orderData) => ({
-                url: "place-order",
+                url: "/order/place-order",
                 method: "POST",
                 body: orderData,
             }),
@@ -22,14 +17,14 @@ export const orderApi = createApi({
         }),
         verifyPayment: builder.mutation({
             query: (paymentData) => ({
-                url: "verify-payment",
+                url: "/order/verify-payment",
                 method: "POST",
                 body: paymentData,
             }),
         }),
         getOrderItems: builder.query({
             query: () => ({
-                url: "orders",
+                url: "/order/orders",
                 method: "GET"
             }),
             providesTags: (result) => {
@@ -48,7 +43,7 @@ export const orderApi = createApi({
         }),
         updateOrderStatus: builder.mutation({
             query: ({ orderId, shopOrderId, status }) => ({
-                url: `update-status`,
+                url: `/order/update-status`,
                 method: "PUT",
                 body: { orderId, shopOrderId, status },
             }),
@@ -56,31 +51,31 @@ export const orderApi = createApi({
         }),
         assignDeliveryBoy: builder.mutation({
             query: (data) => ({
-                url: "assign-delivery-boy",
+                url: "/order/assign-delivery-boy",
                 method: "POST",
                 body: data,
             }),
             invalidatesTags: ["Orders"],
         }),
         getDeliveryBoyAssignments: builder.query({
-            query: () => "get-assignments",
+            query: () => "/order/get-assignments",
             providesTags: ["Orders"],
         }),
         acceptDeliveryAssignment: builder.mutation({
             query: (assignmentId) => ({
-                url: `accept-assignment/${assignmentId}`,
+                url: `/order/accept-assignment/${assignmentId}`,
                 method: "POST",
                 body: assignmentId,
             }),
             invalidatesTags: ["Orders"],
         }),
         getOrderById: builder.query({
-            query: (orderId) => `get-order-by-id/${orderId}`,
+            query: (orderId) => `/order/get-order-by-id/${orderId}`,
             providesTags: ["Orders"],
         }),
         sendDeliveryOtp: builder.mutation({
             query: ({ assignmentId, orderId, shopOrderId }) => ({
-                url: `send-delivery-otp`,
+                url: `/order/send-delivery-otp`,
                 method: "POST",
                 body: { assignmentId, orderId, shopOrderId },
             }),
@@ -88,23 +83,23 @@ export const orderApi = createApi({
         }),
         verifyDeliveryOtp: builder.mutation({
             query: ({ assignmentId, orderId, shopOrderId, otp }) => ({
-                url: `verify-delivery-otp`,
+                url: `/order/verify-delivery-otp`,
                 method: "POST",
                 body: { assignmentId, orderId, shopOrderId, otp },
             }),
             invalidatesTags: ["Orders"],
         }),
         getDeliveryStats: builder.query({
-            query: () => "delivery/stats",
+            query: () => "/order/delivery/stats",
         }),
         declineAssignment: builder.mutation({
             query: (assignmentId) => ({
-                url: `/decline-assignment/${assignmentId}`,
+                url: `/order//decline-assignment/${assignmentId}`,
                 method: "POST",
             }),
         }),
         getDeliveryHistory: builder.query({
-            query: () => "/delivery/history",
+            query: () => "/order//delivery/history",
         }),
     }),
 });

@@ -5,32 +5,19 @@ export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: baseQueryWithReauth,
 
-  // baseQuery: fetchBaseQuery({
-  //   baseUrl: import.meta.env.VITE_BASEURL
-  //     ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/auth`
-  //     : "/api/auth",
-  //   credentials: "include",
-  //   prepareHeaders: (headers, { getState }) => {
-  //     const token = getState().auth?.user?.token;
-  //     if (token) {
-  //       headers.set("Authorization", `Bearer ${token}`);
-  //     }
-  //     return headers;
-  //   }
-  // }),
   tagTypes: ["Auth"],
   endpoints: (builder) => ({
     registerUser: builder.mutation({
       query: (formData) => ({
         url: "register",
-        method: "POST",
+        method: "/auth/POST",
         body: formData
       }),
       invalidatesTags: [],
     }),
     loginUser: builder.mutation({
       query: (formData) => ({
-        url: "login",
+        url: "/auth/login",
         method: "POST",
         body: formData
       }),
@@ -38,35 +25,35 @@ export const authApi = createApi({
     }),
     sendOtp: builder.mutation({
       query: ({ email }) => ({
-        url: "send-otp",
+        url: "/auth/send-otp",
         method: "POST",
         body: { email },
       }),
     }),
     verifyOtp: builder.mutation({
       query: ({ email, otp }) => ({
-        url: "verify-otp",
+        url: "/auth/verify-otp",
         method: "POST",
         body: { email, otp },
       }),
     }),
     resetPassword: builder.mutation({
       query: ({ email, newPassword }) => ({
-        url: "reset-password",
+        url: "/auth/reset-password",
         method: "POST",
         body: { email, newPassword },
       }),
     }),
     logoutUser: builder.mutation({
       query: () => ({
-        url: "logout",
+        url: "/auth/logout",
         method: "POST",
       }),
       invalidatesTags: ["Auth"],
     }),
     // fetch logged in user from backend
     getMe: builder.query({
-      query: () => "me",
+      query: () => "auth/me",
       transformResponse: (response) => response?.user ?? null,
       providesTags: ["Auth"],
       // keep the user cached for 5 minutes to avoid refetch on quick remounts/navigation

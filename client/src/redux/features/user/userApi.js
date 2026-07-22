@@ -1,18 +1,15 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../baseQueryWithReauth";
 
 export const userApi = createApi({
   reducerPath: "userApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_BASEURL
-      ? `${import.meta.env.VITE_BASEURL.replace(/\/$/, "")}/user`
-      : "/api/user",
-    credentials: "include",
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["User"],
+
   endpoints: (builder) => ({
     // user profile
     loadUser: builder.query({
-      query: () => "/profile",
+      query: () => "/user/profile",
       transformResponse: (response) => response.user,
       providesTags: ["User"],
     }),
@@ -20,7 +17,7 @@ export const userApi = createApi({
     // Update user info
     updateUserData: builder.mutation({
       query: (formData) => ({
-        url: "/update",
+        url: "/user/update",
         method: "PUT",
         body: formData,
       }),
@@ -29,7 +26,7 @@ export const userApi = createApi({
 
     updateUserAddress: builder.mutation({
       query: (addressData) => ({
-        url: "/update-address",
+        url: "/user/update-address",
         method: "PUT",
         body: addressData,
       }),
@@ -39,7 +36,7 @@ export const userApi = createApi({
     // Upload profile image
     uploadProfileImage: builder.mutation({
       query: (formData) => ({
-        url: "/upload",
+        url: "/user/upload",
         method: "POST",
         body: formData,
       }),
@@ -49,7 +46,7 @@ export const userApi = createApi({
     // Update delivery boy’s live location (admin or delivery role)
     updateDeliveryLocation: builder.mutation({
       query: (locationData) => ({
-        url: "/update-location", // ✅ handled in backend for delivery boy
+        url: "/user/update-location", // ✅ handled in backend for delivery boy
         method: "POST",
         body: locationData,
       }),
@@ -58,7 +55,7 @@ export const userApi = createApi({
 
     // Get all delivery boys
     getDeliveryBoys: builder.query({
-      query: () => "/delivery-boys",
+      query: () => "/user/delivery-boys",
       transformResponse: (res) => res.boys,
       providesTags: ["User"],
     }),

@@ -552,7 +552,7 @@ const getDeliveryBoyAssignment = async (req, res) => {
       })
       .populate("shop");
 
-    // console.log(assignments, "assignments");
+    console.log(assignments, "assignments");
     const validAssignments = assignments.filter(a => a.order);
 
     const formated = validAssignments.map(a => {
