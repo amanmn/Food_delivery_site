@@ -5,10 +5,7 @@ const populateUser = require("../utils/populateUser");
 // Cloudinary Image Upload
 const uploadProfileImage = async (req, res) => {
     try {
-        console.log("File path:", req.file.path);
-        console.log("File size:", req.file.size);
-        console.log("File exists:", require("fs").existsSync(req.file.path));
-        
+
         if (!req.file || !req.file.path) {
             return res.status(400).json({
                 success: false,
