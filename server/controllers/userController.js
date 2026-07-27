@@ -35,7 +35,7 @@ const uploadProfileImage = async (req, res) => {
     }
 };
 
-// Get Profile
+// Get User Profile
 const profile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)

@@ -10,7 +10,7 @@ const useSocketEvent = (eventName, handler) => {
   useEffect(() => {
     if (!eventName) return;
     const listener = (...args) => {
-      console.log("📡 socket event received:", eventName, args);
+      console.log("socket event received:", eventName, args);
       handlerRef.current(...args);
     }
     socket.on(eventName, listener);

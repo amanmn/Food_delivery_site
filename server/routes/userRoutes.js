@@ -9,7 +9,7 @@ const {
   updateUserLocation,
 } = require("../controllers/userController");
 
-// getDeliveryBoys is exported separately from controller file
+// getDeliveryBoys is exported separately from controller
 const { getDeliveryBoys } = require("../controllers/userController");
 
 router.get("/profile", verifyToken, profile);
