@@ -79,7 +79,7 @@ router.post(
     resetPassword
 );
 
-// Get Logged-In User Info ---> GET : /api/auth/me
+// Get Logged-In User Info ---> /api/auth/me
 router.get("/me", verifyToken, requireAuth, getMe);
 
 
