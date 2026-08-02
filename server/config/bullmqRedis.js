@@ -1,5 +1,6 @@
 const IORedis = require("ioredis");
 
+// connection to the redis server
 const bullmqRedis = new IORedis({
     host: process.env.REDIS_HOST || "localhost",
     port: Number(process.env.REDIS_PORT) || 6379,
