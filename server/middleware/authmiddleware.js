@@ -42,7 +42,6 @@ const verifyToken = async (req, res, next) => {
 
     const user = await User.findById(decoded.id)
       .select("-password -__v -refreshToken");
-    // console.log(user);
 
     if (!user) return unauthorized(res, 'User not found');
 
@@ -96,8 +95,6 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
 // specific role middleware
 const ownerOnly = requireRole("owner");
 const deliveryOnly = requireRole("deliveryBoy");
-// const userOnly = requireRole("user");
-
 
 // const adminOnly = () => (req, res, next) => {
 //   try {
