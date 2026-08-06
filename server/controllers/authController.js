@@ -50,7 +50,7 @@ const register = async (req, res) => {
         if (role === "deliveryBoy") {
             userData.location = {
                 type: "Point",
-                coordinates: [0, 0], // default or actual coordinates
+                coordinates: [0, 0], // default or real coordinates
             };
         }
 
