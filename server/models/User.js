@@ -38,6 +38,7 @@ const UserSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Cart",
+      default: null
     }
   ],
 
@@ -90,8 +91,6 @@ const UserSchema = new mongoose.Schema({
   },
   passwordChangedAt: { type: Date },
   refreshToken: { type: String, select: false },
-  createdAt: { type: Date, default: Date.now },
-
 }, { timestamps: true });
 
 UserSchema.index({ location: "2dsphere" })

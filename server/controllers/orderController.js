@@ -11,8 +11,6 @@ const crypto = require("crypto");
 const notificationQueue = require("../queues/notification.queue")
 
 const Razorpay = require("razorpay");
-const dotenv = require("dotenv");
-dotenv.config();
 
 const razorpay = new Razorpay({
   key_id: process.env.Test_API_Key,
