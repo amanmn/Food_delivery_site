@@ -1,19 +1,13 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { ColorRing } from 'react-loader-spinner';
 import './index.css';
-import { io } from "socket.io-client";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
-import { useUpdateDeliveryLocationMutation } from "./redux/features/user/userApi";
-
-// import { useGetMeQuery } from "./redux/features/auth/authApi";
-// import { userLoggedIn, userLoggedOut } from "./redux/features/auth/authSlice";
 import { useLoadUserQuery } from "./redux/features/user/userApi";
-import { updateUserProfile } from "./redux/features/user/userSlice";
 
 import CreateEditShop from "../admin/pages/CreateEditShop";
 import MyShop from "../admin/pages/MyShop";
@@ -27,7 +21,7 @@ import useDetectLocation from "./hooks/useDetectLocation";
 import useDeliveryBoyTracker from "./hooks/useDeliveryBoyTracker";
 import TrackOrderPage from "./pages/TrackOrderPage";
 import ShopItems from "./pages/ShopItems";
-import { socket, joinSocketRoom } from "./socket";
+import { joinSocketRoom } from "./socket";
 
 // Lazy pages
 const HomePage = lazy(() => import("./pages/Home"));
@@ -45,10 +39,10 @@ function App() {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
+  // const [updateDeliveryLocation] = useUpdateDeliveryLocationMutation();
 
   useDetectLocation();
-  useDeliveryBoyTracker(user?.role, updateDeliveryLocation);
+  useDeliveryBoyTracker(user?.role);
 
   useEffect(() => {
     console.log("App component :", {
@@ -57,11 +51,11 @@ function App() {
     });
   }, []);
 
-useEffect(() => {
-  if (user?._id) {
-    joinSocketRoom(user._id);
-  }
-}, [user?._id]);
+  useEffect(() => {
+    if (user?._id) {
+      joinSocketRoom(user._id);
+    }
+  }, [user?._id]);
 
   return (
     <>

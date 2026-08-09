@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { userLoggedOut } from "../src/redux/features/auth/authSlice";
@@ -38,35 +38,6 @@ const DeliveryDashboard = ({ deliveryBoy }) => {
   const assigned = assignments.filter((o) => o.status === "assigned");
   const activeOrder = assigned.length > 0 ? assigned[0] : null;
   const broadcasted = assignments.filter((o) => o.status === "broadcasted");
-
-  // Location watcher
-  useEffect(() => {
-    let watchId;
-    if (navigator.geolocation) {
-      // when dashboard opens
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          socket.emit("deliveryLocationUpdate", { latitude, longitude });
-        },
-        (error) => console.error("Initial location error:", error)
-      );
-
-      // keep updating as they move
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          socket.emit("deliveryLocationUpdate", { latitude, longitude });
-        },
-        (error) => console.error("Geolocation error:", error),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-      );
-    }
-    return () => {
-      if (watchId) navigator.geolocation.clearWatch(watchId);
-    };
-  }, [deliveryBoy?._id]);
-
 
   // Real-time events — one line each, no manual cleanup needed
   useSocketEvent("newBroadcastOrder", () => refetch());

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { setDeliveryLocation, clearDeliveryLocation } from "../redux/features/deliveryBoyLocation/deliveryLocationSlice";
 import { toast } from "react-toastify";
+import { socket } from "../socket";
 
 const useDeliveryBoyTracker = (role, updateDeliveryLocation) => {
   const dispatch = useDispatch();
@@ -11,7 +12,12 @@ const useDeliveryBoyTracker = (role, updateDeliveryLocation) => {
   useEffect(() => {
     if (role !== "deliveryBoy") {
       dispatch(clearDeliveryLocation());
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+
       return;
     }
 
@@ -22,29 +28,46 @@ const useDeliveryBoyTracker = (role, updateDeliveryLocation) => {
 
     const trackLocation = async (pos) => {
       const { latitude, longitude } = pos.coords;
+
+      // Update Redux
       dispatch(setDeliveryLocation({ lat: latitude, lon: longitude }));
 
-      try {
-        await updateDeliveryLocation({
-          location: { type: "Point", coordinates: [longitude, latitude] },
-        });
-      } catch (err) {
-        console.error("❌ Error updating backend:", err);
+      //  Send live location through Socket.IO
+      socket.emit("deliveryLocationUpdate", {
+        latitude,
+        longitude,
+      });
+    };
+
+    const handleError = (error) => {
+      console.error("❌ Geolocation error:", error);
+
+      if (error.code === 1) {
+        toast.error("Please allow location access!");
+      } else if (error.code === 2) {
+        toast.error("Unable to determine your location.");
+      } else if (error.code === 3) {
+        toast.error("Location request timed out.");
       }
     };
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       trackLocation,
-      (err) => {
-        if (err.code === 1) toast.error("Please allow location access!");
-      },
-      { enableHighAccuracy: true, maximumAge: 0 }
+      handleError,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000,
+      }
     );
 
     return () => {
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
     };
-  }, [role, updateDeliveryLocation, dispatch]);
+  }, [role, dispatch]);
 
 };
 

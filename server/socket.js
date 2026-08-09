@@ -7,16 +7,21 @@ const socketHandler = (io) => {
         console.log("User connected:", socket.id);
 
         socket.on("joinRoom", async ({ userId }) => {
-            console.log("userId:", userId);
-            socket.userId = userId; // attach userId to socket for later use
-            socket.join(userId); // create a room for the user
-
             try {
-                const user = await User.findByIdAndUpdate(userId, {
+                if (!userId) return;
+
+                console.log("userId:", userId);
+                socket.userId = userId; // attach userId to socket for later use
+                socket.join(String(userId)); // create a room for the user
+
+                await User.findByIdAndUpdate(userId, {
                     socketId: socket.id,
                     isOnline: true,
-                }, { new: true });
-                console.log("User updated:", user);
+                },
+                    { new: true }
+                );
+
+                console.log("✅ User socket registered:", userId);
             }
             catch (err) {
                 console.error("Error updating user socketId:", err);
@@ -28,13 +33,32 @@ const socketHandler = (io) => {
                 const userId = socket.userId;
                 if (!userId) return; // if userId not set, exit early
 
-                await User.findByIdAndUpdate(userId, {
+                const { latitude, longitude } = data;
+
+                if (
+                    typeof latitude !== "number" ||
+                    typeof longitude !== "number"
+                ) {
+                    console.log("⚠️ Invalid location:", data);
+                    return;
+                }
+
+                // save delivery boy location
+                await User.findByIdAndUpdate(
+                    userId, {
                     location: {
                         type: "Point",
-                        coordinates: [data.longitude, data.latitude],
+                        coordinates: [longitude, latitude],
                     },
                     isOnline: true,
                     socketId: socket.id,
+
+                });
+
+                console.log("📍 Location saved:", {
+                    userId,
+                    latitude,
+                    longitude,
                 });
 
                 // if currently assigned to an order
@@ -44,20 +68,26 @@ const socketHandler = (io) => {
                 })
                 if (!assignment) return;
 
+                // get customer
                 const order = await Order.findById(assignment.order).populate("user");
 
-                if (order?.user?.socketId) {
-                    io.to(order.user.socketId).emit("deliveryLocationUpdate", {
-                        lat: data.latitude,
-                        lon: data.longitude,
-                    });
+                if (!order?.user?.socketId) {
+                    console.log("⚠️ Customer socket not available");
+                    return;
                 }
-                io.to(socket.id).emit("deliveryLocationUpdate", {
-                    lat: data.latitude,
-                    lon: data.longitude,
-                })
+
+                io.to(order.user.socketId).emit("deliveryLocationUpdate", {
+                    lat: latitude,
+                    lon: longitude,
+                });
+
+                console.log(
+                    "📡 Location sent to customer:",
+                    order.user._id
+                );
+
             } catch (err) {
-                console.error("Error updating user location:", err);
+                console.error("❌ Error updating user location:", err);
             }
         })
 
@@ -66,7 +96,7 @@ const socketHandler = (io) => {
                 const userId = socket.userId;
                 if (!userId) return;
 
-                await User.findOneAndUpdate(userId,
+                await User.findByIdAndUpdate(userId,
                     {
                         isOnline: false,
                     });
@@ -75,8 +105,30 @@ const socketHandler = (io) => {
                 console.error("Error updating user on disconnect:", error);
             }
 
-        })
-    })
-}
+        });
+
+        socket.on("disconnect", async () => {
+            try {
+                const userId = socket.userId;
+
+                if (!userId) return;
+
+                await User.findByIdAndUpdate(userId, {
+                    isOnline: false,
+                });
+
+                console.log(
+                    "🔴 User disconnected:",
+                    userId
+                );
+            } catch (error) {
+                console.error(
+                    "❌ Error handling disconnect:",
+                    error
+                );
+            }
+        });
+    });
+};
 
 module.exports = socketHandler
