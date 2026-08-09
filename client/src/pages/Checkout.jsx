@@ -23,19 +23,20 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [searchInput, setSearchInput] = useState("");
   const [placeOrder] = usePlaceOrderMutation();
-  const APIKEY = import.meta.env.VITE_GEOAPIKEY;
   const [verifyPayment] = useVerifyPaymentMutation();
+
+  const APIKEY = import.meta.env.VITE_GEOAPIKEY;
 
   const position = [location?.lat || 22.7196, location?.lon || 75.8577];
 
   const calculateTotal = () =>
-    data?.items?.reduce((t, i) => t + i.quantity * (i?.product?.price || 0), 0) || 0;
+    data?.cart?.items?.reduce((t, i) => t + i.quantity * (i?.product?.price || 0), 0) || 0;
 
   const deliveryFee = calculateTotal() > 500 ? 0 : 40;
   const AmountWithDeliveryFee = calculateTotal() + deliveryFee;
 
   useEffect(() => {
-    setSearchInput(address);
+    setSearchInput(address || "");
   }, [address]);
 
   const getAddressByLatLng = async (lat, lon) => {
@@ -97,7 +98,7 @@ const Checkout = () => {
     }
 
     const orderPayload = {
-      cartItems: { items: data?.items, user: user._id },
+      cartItems: { items: data?.cart?.items, user: user._id },
       paymentMethod,
       totalAmount: AmountWithDeliveryFee,
       deliveryAddress: {
@@ -235,11 +236,10 @@ const Checkout = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label
-                className={`relative flex items-center gap-3 border-2 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all ${
-                  paymentMethod === "cod"
-                    ? "border-[#ff6b35] bg-gradient-to-br from-orange-50 to-pink-50 shadow-[0_8px_20px_-10px_rgba(255,107,53,0.4)]"
-                    : "border-gray-200 hover:border-orange-300 bg-white"
-                }`}
+                className={`relative flex items-center gap-3 border-2 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all ${paymentMethod === "cod"
+                  ? "border-[#ff6b35] bg-gradient-to-br from-orange-50 to-pink-50 shadow-[0_8px_20px_-10px_rgba(255,107,53,0.4)]"
+                  : "border-gray-200 hover:border-orange-300 bg-white"
+                  }`}
               >
                 <input
                   type="radio"
@@ -259,11 +259,10 @@ const Checkout = () => {
               </label>
 
               <label
-                className={`relative flex items-center gap-3 border-2 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all ${
-                  paymentMethod === "online"
-                    ? "border-[#ff6b35] bg-gradient-to-br from-orange-50 to-pink-50 shadow-[0_8px_20px_-10px_rgba(255,107,53,0.4)]"
-                    : "border-gray-200 hover:border-orange-300 bg-white"
-                }`}
+                className={`relative flex items-center gap-3 border-2 rounded-2xl p-3 sm:p-4 cursor-pointer transition-all ${paymentMethod === "online"
+                  ? "border-[#ff6b35] bg-gradient-to-br from-orange-50 to-pink-50 shadow-[0_8px_20px_-10px_rgba(255,107,53,0.4)]"
+                  : "border-gray-200 hover:border-orange-300 bg-white"
+                  }`}
               >
                 <input
                   type="radio"
@@ -296,7 +295,7 @@ const Checkout = () => {
             {isLoading ? (
               <p className="py-2 text-gray-400">Loading...</p>
             ) : (
-              data?.items?.map((item, i) => (
+              data?.cart?.items?.map((item, i) => (
                 <div key={i} className="flex justify-between items-start gap-3 py-2.5 min-w-0">
                   <span className="flex-1 min-w-0 break-words">
                     <span className="font-medium">{item.product?.name}</span>

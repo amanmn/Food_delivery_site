@@ -94,12 +94,12 @@ export const orderApi = createApi({
         }),
         declineAssignment: builder.mutation({
             query: (assignmentId) => ({
-                url: `/order//decline-assignment/${assignmentId}`,
+                url: `/order/decline-assignment/${assignmentId}`,
                 method: "POST",
             }),
         }),
         getDeliveryHistory: builder.query({
-            query: () => "/order//delivery/history",
+            query: () => "/order/delivery/history",
         }),
     }),
 });

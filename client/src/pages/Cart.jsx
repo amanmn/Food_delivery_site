@@ -23,7 +23,7 @@ const Cart = () => {
   const user = useSelector((state) => state.user);
 
   useEffect(() => {
-    const items = data?.items || [];
+    const items = data?.cart?.items || [];
     setCartItems(items);
   }, [data]);
 

@@ -11,14 +11,17 @@ const server = http.createServer(app);
 const socketHandler = require("./socket.js");
 const helmet = require("helmet");
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL,
+  "https://localhost:5173",
+  "https://food-delivery-quickcart-ebon.vercel.app"
+].filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      process.env.FRONTEND_URL,
-      "https://localhost:5173",
-      "https://food-delivery-quickcart-ebon.vercel.app",
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['POST', 'GET', 'PUT', 'DELETE']
   }
@@ -27,20 +30,22 @@ const io = new Server(server, {
 app.set("io", io);
 
 // middlewares
-app.use(express.json());
+
+// prevents unnecessarily huge JSON requests
+app.use(express.json({
+  limit: "1mb"
+}));
+app.use(express.urlencoded({
+  extended: true,
+  limit: "1mb"
+}));
 app.use(cookieParser());
 app.use(helmet());
 
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      process.env.FRONTEND_URL,
-      "https://localhost:5173",
-      "https://food-delivery-quickcart-ebon.vercel.app",
-    ],
+    origin: allowedOrigins,
     credentials: true,
   }));
 

@@ -34,13 +34,11 @@ const UserSchema = new mongoose.Schema({
       zipCode: { type: String, required: true }
     },
   ],
-  cart: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Cart",
-      default: null
-    }
-  ],
+  cart: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Cart",
+    default: null
+  },
 
   // reference to Orders
   orders: [

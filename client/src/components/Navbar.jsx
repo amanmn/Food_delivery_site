@@ -68,7 +68,7 @@ const Navbar = () => {
     skip: !user,
   });
 
-  const cartItems = cartData?.items || [];
+  const cartItems = cartData?.cart?.items || [];
   // const totalQuantity = new Set(
   //   cartItems.map((item) => item.product?._id || item.product)
   // ).size;
@@ -326,7 +326,7 @@ const Navbar = () => {
       <LocationModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        // onSetLocation={(location) => dispatch(setCity(location))}
+      // onSetLocation={(location) => dispatch(setCity(location))}
       />
     </nav >
   );

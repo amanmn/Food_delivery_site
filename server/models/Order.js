@@ -118,10 +118,7 @@ const OrderSchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number
   },
-  // assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }, // Admin handling the order
-  createdAt: { type: Date, default: Date.now },
-},
-  { timestamps: true }
+}, { timestamps: true }
 );
 
 module.exports = mongoose.model("Order", OrderSchema);

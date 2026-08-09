@@ -24,7 +24,7 @@ const placeOrder = async (req, res) => {
     const { cartItems, paymentMethod, deliveryAddress, totalAmount } = req.body;
 
 
-    const userId = cartItems.user || req.userId;   //userId from cartItems if available, otherwise req.userId
+    const userId = req.userId;
     console.log("placeOrder called with:", { userId, cartItems, paymentMethod, deliveryAddress, totalAmount });
 
     if (!cartItems || !cartItems.items || cartItems.items.length === 0) {
@@ -70,6 +70,11 @@ const placeOrder = async (req, res) => {
           return sum + Number(i.product.price) * Number(i.quantity);
         }, 0);
 
+        const calculatedTotal = shopOrders.reduce(
+          (sum, shopOrder) => sum + shopOrder.subtotal,
+          0
+        );
+
         return {
           shop: shop._id,
           owner: shop.owner?._id,
@@ -86,7 +91,7 @@ const placeOrder = async (req, res) => {
     // razorpay order -- online method
     if (paymentMethod === "online") {
       const razorOrder = await razorpay.orders.create({
-        amount: Math.round(totalAmount * 100), // amount in paise
+        amount: Math.round(calculatedTotal * 100), // amount in paise
         currency: "INR",
         receipt: `receipt_${Date.now()}`,
       })
@@ -95,7 +100,7 @@ const placeOrder = async (req, res) => {
         user: userId,
         paymentMethod,
         deliveryAddress,
-        totalAmount,
+        totalAmount: calculatedTotal,
         shopOrders,
         razorpayOrderId: razorOrder.id,
         payment: false,
@@ -399,7 +404,10 @@ const updateOrderStatus = async (req, res) => {
             role: "deliveryBoy",
             location: {
               $near: {
-                $geometry: { type: "Point", coordinates: [lonNum, latNum] },
+                $geometry: {
+                  type: "Point",
+                  coordinates: [lonNum, latNum]
+                },
                 $maxDistance: 5000
               }
             }
@@ -650,20 +658,20 @@ const acceptAssignment = async (req, res) => {
     shopOrder.status = "out_for_delivery";
 
     await order.save()
-    const updatedShopOrder = await Order.findById(order._id)
+    const updatedOrder = await Order.findById(order._id)
       .populate("shopOrders.assignedDeliveryBoy", "fullName phone");
 
     const io = req.app.get("io");
-    const ownerId = updatedShopOrder.owner;
+    const ownerId = shopOrder.owner;
 
     if (io) {
       if (ownerId) {
         io.to(String(ownerId)).emit("orderStatusUpdated", {
           orderId: order._id,
-          shopOrderId: updatedShopOrder._id,
-          assignedDeliveryBoy: updatedShopOrder.assignedDeliveryBoy,
-          status: updatedShopOrder.status,
-          assignedDeliveryBoy: { _id: req.userId },
+          shopOrderId: shopOrder._id,
+          assignedDeliveryBoy: shopOrder.assignedDeliveryBoy,
+          status: shopOrder.status,
+          // assignedDeliveryBoy: { _id: req.userId },
         });
       }
       assignment.broadcastedTo.forEach((boyId) => {
@@ -750,7 +758,8 @@ const getCutterntOrder = async (req, res) => {
     }
 
     return res.status(200).json({
-      assignmentId: assignment.order._id,
+      assignmentId: assignment._id,
+      orderId: assignment.order._id,
       user: assignment.order.user,
       shopOrder,
       deliveryAddress: assignment.order.deliveryAddress,
@@ -837,7 +846,7 @@ const verifyDeliveryOtp = async (req, res) => {
     if (shopOrder.deliveryOtp !== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or Expired OTP" });
     }
-    order.payment = true; // Mark payment as successful if not already
+    // order.payment = true; // Mark payment as successful if not already
     shopOrder.status = "delivered";
     shopOrder.deliveredAt = Date.now();
     shopOrder.deliveryOtp = null;
