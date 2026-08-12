@@ -176,6 +176,7 @@ const DeliveryBoyTracking = ({ data, deliveryBoy }) => {
         }
 
         const route = result.routes[0];
+
         const coordinates =
           route.geometry.coordinates.map(
             ([longitude, latitude]) => [
