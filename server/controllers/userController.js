@@ -128,7 +128,7 @@ const updateUserLocation = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: "user is not found" })
         }
-        // console.log(user, "user");
+        console.log(user, "user");
 
         return res.status(200).json({ message: "location updated" });
     } catch (error) {
